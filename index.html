@@ -208,7 +208,10 @@
   /* 상단바에선 배지가 '칸' 우상단(아이콘 옆)에 선다. .nav-lbl이 relative면 배지가 라벨에 앵커돼
      글자 위에 겹친다(실사고) — 그래서 상단바에서는 .nav-lbl의 기준점을 풀어 .nav-item에 붙인다. */
   .nav-lbl { position: static; }
-  .nav-badge { position: absolute; top: 2px; right: 4px; }
+  /* 자리 계산(2026-09-02): 네 자리 '1000' 배지 폭 34.49px(navBadgeSvg 실측), 탭 칸 64px →
+     right = (64 - 34.49) / 2 = 14.75px. 그 자리에 두면 네 자리일 때 칸 가운데(아이콘과 같은 중심)에 서고,
+     오른쪽 경계가 고정이라 자릿수가 줄면 왼쪽으로만 짧아진다. */
+  .nav-badge { position: absolute; top: 2px; right: 14.75px; }
   .nav-badge svg { display: block; }
   .nav-badge rect { fill: var(--ev-unread); }
   .nav-badge path { fill: var(--bg); }
@@ -376,9 +379,13 @@
   /* 기념일은 프로필 칸의 오른쪽 끝에 붙는다 — 오른쪽 경계가 프로필 탭의 오른쪽 경계와 일치한다.
      문구가 칸(64px)보다 넓으므로 흐름에서 빼내 왼쪽으로 넘치게 둔다(일정 줄과 같은 문법). */
   .tab-aux[data-for="members"] { overflow: visible; position: relative; }
-  .tab-aux[data-for="members"] .celebration-box {
+  .tab-aux[data-for="members"] .celeb-wrap {
     position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+    display: flex; align-items: center; gap: 6px;   /* 여럿이면 왼쪽으로 나열된다(오른쪽 경계 고정) */
   }
+  /* 둘 이상이면 약식 문구로 — 전체 문구를 여러 개 늘어놓으면 옆 칸을 침범한다 */
+  .tab-aux.celeb-many .celebration-box .tb-t-pc { display: none; }
+  .tab-aux.celeb-many .celebration-box .tb-t-mb { display: inline; }
   .tab-aux[data-for="content"] { overflow: visible; position: relative; }
   .tab-aux[data-for="content"] .sch-line {
     position: absolute; left: 50%; transform: translateX(-50%);
@@ -2757,7 +2764,8 @@
     /* 일정 줄은 흐름 안으로 되돌린다 — 가로 보조바에서 '양옆 빈 탭 자리를 빌리는' 절대배치가
        세로 목록에도 남아 있어 줄이 칸 밖으로 나가 사이드 목록을 넘쳤다(반복 지적된 자리). */
     .tab-aux[data-for="members"] { overflow: hidden; position: static; }
-    .tab-aux[data-for="members"] .celebration-box { position: static; transform: none; }
+    /* 세로 배치에서는 흐름 안에서 왼쪽부터 오른쪽으로 나열된다 */
+    .tab-aux[data-for="members"] .celeb-wrap { position: static; transform: none; }
     .tab-aux[data-for="content"] { overflow: hidden; position: static; }
     /* 제목과 남은 시간을 두 줄로 — 한 줄이면 기둥 폭을 이 줄이 정해버린다 */
     .tab-aux[data-for="content"] .sch-line { position: static; transform: none; width: auto; max-width: 100%;
@@ -3149,7 +3157,7 @@
 </main>
 
 <script>
-const BUILD = '2026-09-02j';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
+const BUILD = '2026-09-02k';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
 console.log('[build] front ' + BUILD);
 const WORKER_URL = 'https://chuntaverse.crenop.workers.dev';
 const BASE_TITLE = '천타버스';
@@ -3256,11 +3264,9 @@ const MEMBER_BIRTHDAYS = {
   window.syncBtnL = syncBtnL;
   if (btnL) btnL.addEventListener('click', () => {
     if (tabletPinned()) {
-      // 좌우가 한 자리를 주고받는다: 기둥을 접으면 조작부가 그 자리를 바로 넘겨받고, 조작부를 닫으면 기둥이 선다.
-      // 그 탭에 조작부가 없으면(버튼이 숨겨진 상태) 넘겨줄 상대가 없으므로 기둥만 접는다.
-      const hasPanel = btnR && getComputedStyle(btnR).visibility !== 'hidden' && btnR.offsetParent !== null;
-      if (body.classList.contains('drawer-r')) setDrawer('r', false);
-      else if (hasPanel) { body.classList.remove('side-off'); setDrawer('r', true); }
+      // 닫기는 닫기만 한다(2026-09-02 철회): 반대쪽을 자동으로 열면 둘 중 하나가 늘 열려 있어
+      // '양쪽 다 치우고 본문만 크게 보기'라는 선택지가 사라진다.
+      if (body.classList.contains('drawer-r')) setDrawer('r', false);   // 조작부가 밀어낸 상태면 기둥 되부르기
       else body.classList.toggle('side-off');
       syncBtnL();
       return;
@@ -4520,7 +4526,12 @@ function updatePageTitle() {
   // 기념일은 가로·세로 어느 배치에서나 자기 동선(프로필)의 탭 칸에 산다 — 별도 보조바 자리를 두지 않는다(2026-09-02).
   // 가로 배치에서는 그 칸에서 오른쪽 끝에 맞춰 서므로, 기념일의 오른쪽 경계가 프로필 탭의 오른쪽 경계와 일치한다.
   const auxMembers = document.querySelector('.tab-aux[data-for="members"]');
-  if (auxMembers) auxMembers.innerHTML = celebrations.join('');
+  // 여럿일 때를 위해 한 묶음으로 싼다 — 낱개를 절대배치하면 서로 겹친다.
+  // 가로 배치에서 둘 이상이면 긴 문구가 옆 칸을 침범하므로 약식('이름 종류')으로 줄인다.
+  if (auxMembers) {
+    auxMembers.innerHTML = celebrations.length ? `<span class="celeb-wrap">${celebrations.join('')}</span>` : '';
+    auxMembers.classList.toggle('celeb-many', celebrations.length > 1);
+  }
   const lead = document.getElementById('subbarLead');
   if (lead) lead.innerHTML = topbarLinksHtml('left');
   const sbRight = document.getElementById('subbarRight');
