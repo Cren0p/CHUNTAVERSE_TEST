@@ -167,6 +167,12 @@
     position: relative;
   }
   .nav-item:hover { color: var(--text); background: var(--surface2); }
+  /* 새 좋아요 요청 표시 — 구 보조바 버튼의 점을 탭으로 옮긴 것(2026-08-31). 생방송 점과 같은 자리·크기 */
+  .nav-item.has-new::after {
+    content: ''; position: absolute; top: 4px; right: 6px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--ev-unread);
+  }
   .nav-item.active { color: var(--accent); background: var(--surface2); border-bottom-color: var(--accent); }
   .nav-icon {
     width: 18px;
@@ -479,7 +485,6 @@
   .rk-row.out .rk-rank, .rk-row.out .rk-gap { color: var(--rk-out); }
   .rk-ev-title { color: var(--rk-c, var(--text)); }
   .rk-head-right { display: inline-flex; align-items: center; gap: 10px; }
-  .rk-refresh { font-size: 10px; font-weight: 400; color: var(--muted); white-space: nowrap; }
   /* 순위 모달일 때만 패널 테두리·헤더가 대회 색을 따른다(좋아요 요청·일정 모달은 기존 에메랄드 유지) */
   /* 테두리는 다른 모달과 같은 40% 강도로 — 원색 100%는 화면을 압도한다(2026-08-04 지적).
      헤더 밑줄은 기본 --border 유지(색이 두 겹으로 겹치면 과해짐). 대회 색은 아이콘·제목 글자에만 남긴다. */
@@ -900,8 +905,10 @@
   }
   .filter-toggle-all:hover { border-color: var(--accent); }
 
+  /* 3열 고정(2026-08-31): 좁은 폭에서 7열로 눕히던 규칙 3개(멤버·종류·케미멤버)를 폐지했다.
+     그건 필터가 '위쪽 가로 띠'였을 때의 배치인데, 이제 그 폭에서 필터는 우측 서랍(세로)이라 근거가 사라졌다.
+     서랍 폭도 PC 기둥과 같은 280px라 칸 크기가 PC와 같아진다. */
   .filter-members { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; flex: 1; min-width: 0; }
-  @media (max-width: 1100px) { .filter-members { grid-template-columns: repeat(7, calc((100% - 36px) / 7)); } }   /* 상단 strip: 7열(13명=7+6, 크루 탭과 동일 줄바꿈 — 2026-08-02) — 필터 상단 전환(1100px)과 한 세트. 종류 필터와 동일한 calc 고정(1fr은 배율에 따라 칸별 1px 차 발생 + 같은 패널의 종류 그리드와 셀 폭 어긋남). gap 6px×6=36px */
   .filter-member {
     position: relative;
     aspect-ratio: 1;
@@ -938,7 +945,6 @@
   .filter-type .filter-icon { width: 55%; height: 55%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
   .filter-type .filter-icon svg { width: 100%; height: 100%; }   /* SVG에 박힌 width/height 무시하고 셀 비례로 스케일(비율은 meet로 유지) */
   /* 모바일 strip: 종류도 멤버와 동일 6열(5종 + 우측 빈칸 1) */
-  @media (max-width: 1100px) { .filter-types { grid-template-columns: repeat(7, calc((100% - 36px) / 7)); } }   /* 필터 상단 전환(1100px)과 한 세트 — 멤버 필터와 열수·calc 동일(버튼 크기 일관, 종류 5개+빈칸 2). 1fr은 나머지 1px를 일부 칸에만 줘 박스 크기가 갈림 → 모든 칸 동일 calc값으로 고정(gap 6px×6=36px). 남는 px는 우측 여백 */
   .filter-type[data-type="soop"] .filter-icon { color: var(--ev-start); }
   .filter-type[data-type="chat"] .filter-icon { color: #a78bfa; }
   .filter-type[data-type="post"] .filter-icon { color: var(--ev-post); }
@@ -1314,16 +1320,7 @@
     margin-bottom: 16px;
   }
 
-  /* ── [요약 | 달력 종류 필터] 한 행 (2026-08-29 확정) ──
-     넓으면 좌 요약(기존 flex:1)·우 필터가 같은 행, 좁으면 flex-wrap이 실측으로 행을 나눈다(수동 분기점 없음 —
-     wrap 자체가 '안 들어가면 내려간다'라 눈대중 분기가 필요 없다). 같은 행일 땐 stretch로 두 박스 높이 통일,
-     행 분리 시 각자 자연 높이(확정 스펙). 셀·알약·켜짐/꺼짐 시각은 이벤트 탭 종류 필터 원본 클래스 그대로. */
-  .ss-filter-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch; justify-content: center; }
-  .ss-filter-row .stats-detail-summary { flex: 1 1 max-content; }   /* 갈림 판정 = '요약 한 줄 폭'. 요약이 한 줄로
-     못 앉는 폭이면 필터가 아랫줄로 내려가고, 전폭을 되찾은 요약은 종전 1줄 → 5/3 두 줄 → 세로 흐름을 그대로 탄다.
-     (1차 배포의 min-width:0은 무한 수축 허용이라 행이 영영 안 갈라지고 요약 내부만 뭉갰다 — Crenop 적발) */
-  .cal-type-filter { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 12px; background: var(--surface); border: 1px solid var(--border); box-sizing: border-box; }
-  .cal-type-filter .filter-type { width: 34px; }
+  /* [요약 | 종류 필터] 한 행(.ss-filter-row)은 2026-08-31 폐지 — 필터가 없어져 요약만 남으므로 래퍼가 필요 없다. */
 
   .stats-detail-body {
     display: flex; flex-direction: column; gap: 16px;
@@ -1366,7 +1363,6 @@
   /* ── 썸네일 달력 v3(2026-08-29): 베이스=원형 컴팩트(공용 .calendar-day를 절대 오염시키지 않는다 — 일정 모달 회귀 교훈).
      PC 썸네일 폼은 통계 전용 스코프(.stats-detail-body) + min-width 1361 컨테이너에서만 켠다. ── */
   .cd-top { display: contents; }                 /* 컴팩트: 날짜 숫자를 셀 중앙 흐름에 그대로 */
-  .cd-thumb { display: none; }                   /* 썸네일은 PC 폼에서만 — 칩은 v4부터 컴팩트에도 상시 표시 */
   /* v4 컴팩트 칩: 2열 고정 슬롯 그리드(1행 숲|VOD · 2행 숲글|카페 · 3행 유튜브 — Crenop 지정).
      슬롯(grid-area) 고정이라 0으로 빠진 항목이 있어도 남은 칩의 자리가 안 흔들린다. */
   .cd-chips { min-width: 0; }   /* 폼별 배치는 분기에서: PC=flex 한 줄 / 컴팩트=display:contents(셀 그리드에 직접 배치, 아래 v7) */
@@ -1388,22 +1384,17 @@
   /* v9: 컴팩트 셀 — Crenop 지정 슬롯 복원(제가 컨펌 없이 되돌렸던 것 원위치): 1행 [빈칸|유튜브] ·
      2행 [숲방송|숲게시글] · 3행 [VOD|카페]. 1행1열 빈칸은 좌상단 고정 날짜와의 충돌 회피 — 묶음이 '셀 전체'
      정중앙(지정)에 앉아도 날짜 영역과 안 겹치는 이유가 이 빈칸이다. 0개 항목은 비표시하되 슬롯 고정. */
-  @container (max-width: 1360px) {
-    .stats-detail-body .calendar-day { position: relative; padding: 3px; justify-content: center; align-items: center; gap: 0; }
-    .stats-detail-body .calendar-day .calendar-daynum { position: absolute; top: 3px; left: 5px; line-height: 13px; }
-    .stats-detail-body .cd-chips { display: grid; grid-template-columns: auto auto; gap: 2px 6px; justify-items: start; }
-    .stats-detail-body .cd-s-yt   { grid-area: 1 / 2; }
-    .stats-detail-body .cd-s-soop { grid-area: 2 / 1; }
-    .stats-detail-body .cd-s-post { grid-area: 2 / 2; }
-    .stats-detail-body .cd-s-vod  { grid-area: 3 / 1; }
-    .stats-detail-body .cd-s-cafe { grid-area: 3 / 2; }
-    .stats-detail-body .calendar-day .cd-chip .cd-full { display: none; }   /* v13: '달력 셀'만 아이콘 단독(숫자 제거) — 일별 요약 헤더 숫자까지 사라지던 과대 스코프 교정(Crenop 적발) */
-    .stats-detail-body .calendar-day .cd-chip .cd-ic { display: inline-flex; }
-  }
-  .cd-thumb { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; background: var(--surface); }
-  .cd-thumb:empty { background: transparent; }   /* v5 상시 예약의 빈 박스는 높이만 잡고 음영 없이 투명(Crenop 지정) — 이미지가 든 박스만 로딩 자리 배경 유지 */
-  .cd-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  /* (.cd-thumb-n 개수 배지는 v4에서 제거 — 칩의 film 숫자가 담당, 썸네일을 가리지 않는다) */
+  /* 폭 조건 없음(2026-08-31): 썸네일 폼이 사라져 폭으로 셀 모양을 가를 이유가 없다 — 어느 폭에서나 컴팩트 */
+  .stats-detail-body .calendar-day { position: relative; padding: 3px; justify-content: center; align-items: center; gap: 0; }
+  .stats-detail-body .calendar-day .calendar-daynum { position: absolute; top: 3px; left: 5px; line-height: 13px; }
+  .stats-detail-body .cd-chips { display: grid; grid-template-columns: auto auto; gap: 2px 6px; justify-items: start; }
+  .stats-detail-body .cd-s-yt   { grid-area: 1 / 2; }
+  .stats-detail-body .cd-s-soop { grid-area: 2 / 1; }
+  .stats-detail-body .cd-s-post { grid-area: 2 / 2; }
+  .stats-detail-body .cd-s-vod  { grid-area: 3 / 1; }
+  .stats-detail-body .cd-s-cafe { grid-area: 3 / 2; }
+  .stats-detail-body .calendar-day .cd-chip .cd-full { display: none; }   /* v13: '달력 셀'만 아이콘 단독(숫자 제거) — 일별 요약 헤더 숫자까지 사라지던 과대 스코프 교정(Crenop 적발) */
+  .stats-detail-body .calendar-day .cd-chip .cd-ic { display: inline-flex; }
   /* 일별 요약 VOD 슬롯 — 파트 전부 나열(랩), 규격은 달력 셀과 동일 200px(VOD 썸네일 문법 단일화) */
   .ds-vods { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
   .ds-vod { width: 200px; text-decoration: none; color: inherit; display: block; }
@@ -1443,16 +1434,10 @@
     padding: 16px;
     flex-direction: column;
   }
-  @container (min-width: 1361px) {   /* PC 썸네일 폼 — 통계 전용 스코프 */
-    .stats-member-header, .stats-detail-body .calendar { max-width: 1450px; margin-left: auto; margin-right: auto; width: 100%; box-sizing: border-box; }   /* margin 축약형(0 auto)은 헤더의 기존 margin-bottom:16px까지 지워 요약~달력 여백이 사라졌다(1차 배포 실수) — 좌우 낱개만 */   /* 200px 셀 ×7 + gap 24 + 패딩 24 (+테두리). 연/월·요약(+필터) 행도 같은 상한 — 한 선언 공유라 달력 폭을 바꾸면 함께 움직인다(2026-08-29 폭 정렬 확정: 종전엔 두 행만 전폭이라 넓은 화면에서 달력보다 삐져나왔다) */
-    .stats-detail-body .calendar-day { aspect-ratio: auto; align-items: stretch; justify-content: flex-start; padding: 5px; gap: 4px; min-height: 118px; }   /* 썸네일 없는 날도 행 높이 유지 */
-    .stats-detail-body .cd-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 4px; width: 100%; }
-    .stats-detail-body .cd-top .calendar-daynum { line-height: 14px; }
-    .stats-detail-body .cd-chips { display: flex; flex-wrap: wrap; gap: 2px 7px; justify-content: flex-end; margin-top: 1px; align-items: center; }   /* v10: 칩 첫 줄을 날짜 라인(14px) 광학 중심에 */
-    .stats-detail-body .cd-thumb { display: block; }
-    /* (요일 날짜색 규칙은 v5에서 베이스로 이동 — 컴팩트 포함 통계 전 폼 공통 적용) */
-  }
-  @container (min-width: 801px) and (max-width: 1360px) {   /* 중간 폭 — 컴팩트 달력 + 우측 일별 요약(구형 2열 복원, Crenop 지정) */
+  /* 썸네일 폼 폐지(2026-08-31): 셀에 16:9 그림을 넣으려면 달력만 1450px가 필요해, 그 폭을 못 만드는
+     화면에서는 아예 못 보는 기능이었다. 썸네일 모아보기는 달력 탭이 맡고, 여기는 통계 본분(컴팩트 셀)으로 돌아간다.
+     남은 폼은 둘 — 넓으면 [달력 | 일별 요약] 좌우, 좁으면 위아래. */
+  @container (min-width: 801px) {   /* 중간 폭 — 컴팩트 달력 + 우측 일별 요약(구형 2열 복원, Crenop 지정) */
     .stats-detail-body { display: grid; grid-template-columns: minmax(0, 500px) minmax(300px, 1fr); grid-template-areas: "cal detail" "heat detail"; grid-template-rows: auto 1fr; gap: 16px; align-items: start; }   /* rows auto·1fr(2026-08-29): 우측 요약이 두 행에 걸치는데 행 규칙이 없으면 요약의 남는 높이가 1행에도 배분돼 히트맵이 달력에서 밀려 내려갔다 — 1행은 달력 높이만, 나머지는 전부 2행이 흡수해 히트맵이 달력 바로 아래 고정 */
     .stats-detail-body .calendar { grid-area: cal; }
     .stats-detail-body .toh-wrap { grid-area: heat; margin: 0; }
@@ -1775,7 +1760,6 @@
     gap: 6px;
     flex: 1; min-width: 0;
   }
-  @media (max-width: 900px) { .chem-filter-members { grid-template-columns: repeat(7, calc((100% - 36px) / 7)); } }   /* 모바일 strip: 7열(13명=7+6, 이벤트 필터와 동일 — 2026-08-02) — calc 고정(1fr 배율 라운딩 차단). gap 6px×6=36px */
   /* 그리드 = 섹션(라벨+카드 묶음) 세로 스택(2026-08-09 재구성: sticky 라벨을 위해 2인·모두 포함도 N인과 같은
      섹션 상자 구조로 통일). 카드 열수는 각 섹션 안의 .chem-group-grid가 컨테이너 쿼리로 판단한다. */
   .chem-grid {
@@ -1861,10 +1845,6 @@
   /* 종류 필터(2026-08-08): 이벤트 탭 .filter-type 재사용. 3열에 2×2 + 우측 열 빈칸, 아이콘은 전부 흰색 */
   .chem-filter-types { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; flex: 1; min-width: 0; }
   .chem-filter-types .filter-type .filter-icon { color: var(--text); }
-  @media (max-width: 900px) {
-    .chem-filter-types { grid-template-columns: repeat(7, calc((100% - 36px) / 7)); }   /* 멤버 strip과 버튼 크기 통일 */
-    .chem-filter-types .chem-type-spacer { display: none; }   /* 한 줄 전환 시 빈칸 없이 4개 연속 */
-  }
   .chem-body {
     display: flex; align-items: center;
     gap: 10px; justify-content: center;
@@ -2274,6 +2254,25 @@
   .crew-act-sub:first-child { margin-top: 0; }
   /* 프로필 하단 영상 스트립. 폭(max-width)은 인라인으로 호출부가 준다 — 크루 1300 / 멤버 1000으로 위 블록과 좌우를 맞춘다. */
   .video-strip-section { margin: 20px auto 0; }
+  /* 컨텐츠 신청 — 좌: 요청 목록 / 우: 컨텐츠 버튼 + 그 컨텐츠의 순위.
+     좌우를 반씩 나눈다 — 둘 다 읽는 내용이라 한쪽을 좁은 기둥으로 밀 이유가 없다. */
+  .apply-wrap {
+    padding: 20px 24px; max-width: 1400px; width: 100%; margin: 0 auto; flex: 1;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start;   /* 요청 목록과 순위는 둘 다 본문 — 한쪽을 기둥 취급하지 않는다 */
+  }
+  .apply-main { background: var(--surface); border: 1px solid var(--border); min-width: 0; }
+  .apply-side { position: sticky; top: 20px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .apply-btns { display: flex; flex-direction: column; gap: 8px; }
+  .apply-btn { width: 100%; justify-content: flex-start; }
+  .apply-btn.on { background: rgba(var(--tb-rgb), 0.28); border-color: rgb(var(--tb-rgb)); }
+  .apply-rank { background: var(--surface); border: 1px solid var(--border); padding: 12px; min-width: 0; }
+  @media (max-width: 1100px) {
+    /* 순위·버튼은 조작부라 위로 — 요청 목록이 길어 아래에 두면 스크롤로 내려가야 닿는다.
+       필터가 아니므로 우측 서랍으로 보내지 않는다(서랍은 걸러내기 전용). */
+    .apply-wrap { grid-template-columns: 1fr; }
+    .apply-side { position: static; order: -1; }
+  }
+
   /* 디스코그래피 — 멤버별 묶음. 스트립 자체는 프로필에서 쓰던 것을 그대로 쓴다(문법 통일) */
   .disco-wrap { padding: 20px 24px; max-width: 1400px; width: 100%; margin: 0 auto; flex: 1; }
   .disco-member + .disco-member { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--border); }
@@ -2564,7 +2563,7 @@
        PC(상단바 / 우측 기둥)와 1:1로 맞는다. 바깥 가림막을 눌러 닫는다. */
     .filter-panel, .chem-filter-panel {
       position: fixed; top: 0; right: 0; bottom: 0;
-      width: var(--sidebar-w); max-width: 84vw;
+      width: 280px; max-width: 88vw;   /* PC 우측 기둥과 같은 폭 — 3열 칸이 78px로 PC와 같아진다(200px면 46px로 쪼그라든다) */
       transform: translateX(100%);
       transition: transform 0.22s ease;
       overflow-y: auto; overscroll-behavior: contain;
@@ -2608,7 +2607,8 @@
   .g-xlabel { fill:var(--muted); font-size:12px; text-anchor:middle; }
   .g-vlabel { font-size:12px; font-weight:700; paint-order:stroke; stroke:var(--bg); stroke-width:4px; stroke-linejoin:round; }
   /* 이벤트 종류 필터: 6열(1행) 전환 시 2/3행 그룹용 빈칸 숨김 — 그리드 전환(1100px)과 반드시 한 세트(900px이던 시절 900~1100 구간에서 1행 중간에 구멍 잔존 버그, 2026-07-13 수정) */
-  @media (max-width:1100px){ .evt-type-spacer { display:none; } }
+  /* evt-type-spacer: 종류 그리드를 3열로 채우는 빈칸. 구 7열(1행) 전환에서만 숨겼는데
+     그 전환이 폐지돼(2026-08-31) 어느 폭에서나 3열이므로 상시 유지한다. */
   /* 모바일(narrow viewBox 380×300): 차트 월·값 글씨 키움(작은 화면 가독성) */
   @media (max-width:900px){ .g-xlabel { font-size:14px; } .g-vlabel { font-size:14px; } }
   /* 그래프 모달 (좋아요 모달 lr-panel 골격 재사용, 폭·글씨 키움) */
@@ -2693,6 +2693,10 @@
     <button class="nav-item" data-page="disco">
       <span class="nav-icon" id="navDiscoIcon"></span>
       <span>디스코그래피</span>
+    </button>
+    <button class="nav-item" data-page="apply">
+      <span class="nav-icon" id="navApplyIcon"></span>
+      <span>컨텐츠 신청</span>
     </button>
     <button class="nav-item" data-page="links">
       <span class="nav-icon" id="navLinksIcon"></span>
@@ -2829,6 +2833,19 @@
     </div>
   </div>
 
+  <div class="page" id="page-apply">
+    <div class="apply-wrap">
+      <div class="apply-main" id="applyReqBody">
+        <div class="loading"><div class="spinner"></div><div>좋아요 요청 불러오는 중...</div></div>
+      </div>
+      <aside class="apply-side">
+        <div class="filter-title">컨텐츠</div>
+        <div class="apply-btns" id="applyBtns"></div>
+        <div class="apply-rank" id="applyRankBody"><div class="lr-msg">컨텐츠를 고르면 순위가 나옵니다.</div></div>
+      </aside>
+    </div>
+  </div>
+
   <div class="page" id="page-disco">
     <div class="disco-wrap" id="discoBody">
       <div class="loading">
@@ -2849,7 +2866,7 @@
 </main>
 
 <script>
-const BUILD = '2026-08-31g';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
+const BUILD = '2026-08-31k';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
 console.log('[build] front ' + BUILD);
 const WORKER_URL = 'https://chuntaverse.crenop.workers.dev';
 const BASE_TITLE = '천타버스';
@@ -3506,7 +3523,7 @@ document.addEventListener('mouseover', (e) => {
 // 진행 표시만 예외로 '~ 불러오는 중...' 명사형을 쓴다. 대화 회차가 길어 문체가 갈리던 것을 여기서 못박는다.
 // 탭 키 목록. 구 PAGE_TITLES는 이름 문자열까지 들고 있었으나 상단바가 제목 글자를 안 쓰게 되면서
 // 값이 화면 어디에도 안 나가고 키 목록만 쓰였다 — 죽은 값이라 배열로 정리(2026-08-31).
-const VALID_PAGES = ['members', 'live', 'events', 'stats', 'chemistry', 'content', 'links', 'banner', 'hall', 'disco'];
+const VALID_PAGES = ['members', 'live', 'events', 'stats', 'chemistry', 'content', 'links', 'banner', 'hall', 'disco', 'apply'];
 
 let lastLiveUpdate = null;
 // 정전 타이머 상태 — 실물 로직은 아래 applyBlackout 블록. 선언만 여기 올린 이유는 TDZ다:
@@ -3578,17 +3595,9 @@ const saveEventFilters = () => {
 // ── 달력 종류 필터 (2026-08-29 확정): 이벤트 탭 '종류' 셀 원본 이식(채팅 제외 4종 + 모두 알약), PC·모바일 공통 한 줄.
 // 저장은 이벤트 탭과 '별도 키'(같은 키면 이벤트 탭에서 끈 종류가 달력에도 꺼져 두 화면이 엮인다) — 제외 집합
 // 방식은 이벤트 필터와 동일 독트린(새 타입 합류 시 기본 켜짐).
-const CAL_TYPE_KEYS = ['soop', 'post', 'cafe', 'youtube'];   // 순서 = 달력 칩·요약 행과 동일(숲·숲글·카페·유튜브 — Crenop 지정)
-const CAL_TYPE_TITLES = { soop: '숲 방송', post: '숲 게시글', youtube: '유튜브 업로드', cafe: '카페 게시글' };
-const LS_CAL_TYPES_OFF = 'chuntaverse_stats_cal_types_off';
-let calTypeState = new Set(CAL_TYPE_KEYS.filter(t => !lsGetSet(LS_CAL_TYPES_OFF, []).has(t)));
-const calTypeOn = (t) => calTypeState.has(t);
-const saveCalTypes = () => lsSetSet(LS_CAL_TYPES_OFF, new Set(CAL_TYPE_KEYS.filter(t => !calTypeState.has(t))));
-function calTypeFilterHtml() {
-  const iconOf = { soop: 'soop', post: 'board', youtube: 'youtube', cafe: 'coffee' };   // 달력 칩과 동일 아이콘
-  return `<button class="filter-toggle-all" id="calTypeToggleAll">${calTypeState.size === CAL_TYPE_KEYS.length ? '모두 해제' : '모두 선택'}</button>` +
-    CAL_TYPE_KEYS.map(t => `<button class="filter-type ${calTypeOn(t) ? 'on' : ''}" data-type="${t}" title="${CAL_TYPE_TITLES[t]}"><span class="filter-icon">${SVG_ICONS[iconOf[t]]}</span></button>`).join('');
-}
+// 달력 종류 필터 폐지(2026-08-31): 컴팩트 셀은 종류별 자리가 고정 슬롯이라 종류를 꺼도 슬롯이 비기만 하고
+// 칸이 줄지 않는다 — 걸러도 화면이 정리되는 느낌이 없어 값어치가 사라졌다. 썸네일 폼과 함께 도입된 장치였다.
+
 
 let allEvents = [];
 let liveInfoMap = {};   // 최신 폴링의 멤버별 생방송 상태(live·btime) — VOD 연결의 '생방송 중' 판정 진실원(v14)
@@ -4104,22 +4113,10 @@ function updatePageTitle() {
   const el = document.getElementById('pageTitle');
   if (!el) return;
   const scheduleBtn = scheduleBtnHTML();  // 가장 임박한 날짜의 일정 묶음(같은 날 2건+는 열 정렬, 데이터 전엔 셸)
-  const likeReqBtn = `<button class="page-title-link like-req-btn" id="likeReqBtn" type="button" onclick="openLikeRequests()">${SVG_ICONS.thumbsup}<span class="tb-t-pc">천타버스 멤버들의 <br class="tb-br">좋아요 요청</span><span class="tb-t-mb">좋아요</span></button>`;
   const celebrations = getTodayCelebrations();
-  // 아이콘엔 지정색 원본(브랜드 색 정체성), 글자만 lightenForText로 보정(11px 가독성). 둘을 나누는 이유는 헬퍼 주석 참조.
-  // 대회 1건 = 버튼 1개. 진행 중인 대회가 없으면 버튼이 아예 안 뜬다(빈 모달을 열게 하지 않기 위해).
-  // 모바일은 폭이 좁아 대회명을 못 넣는다 → 문구는 통일하고 구분은 색으로 유도(2026-08-04 확정).
-  const rankBtn = likeRankBtns.map(b => {
-    const tx = lightenForText(b.hex);   // 아이콘엔 지정색 원본, 글자만 보정 — 헬퍼 주석 참조
-    return `<button class="page-title-link tb-sheet-btn rank-btn" type="button" onclick="openLikeRanking('${escapeHtml(b.titleNo)}')" style="--tb-rgb:${hexToRgb(b.hex)};color:${b.hex}">${SVG_ICONS.barChart}<span class="tb-t-pc" style="color:${tx}">${escapeHtml(b.label)} <br class="tb-br">좋아요 순위</span><span class="tb-t-mb" style="color:${tx}">좋아요 순위</span></button>`;
-  }).join('');
-  el.innerHTML = scheduleBtn + likeReqBtn + rankBtn + topbarLinksHtml() + celebrations.join('');
-  // 모달 열기 전 숨김목록을 미리 선로딩(느린 시트 왕복을 클릭 전에 벌어둠). hover/터치 시작 시 1회.
-  const btn = document.getElementById('likeReqBtn');
-  if (btn) {
-    btn.addEventListener('mouseenter', preloadLikeHide);
-    btn.addEventListener('touchstart', preloadLikeHide, { passive: true });
-  }
+  // 좋아요 요청·순위 버튼은 2026-08-31 폐지 — 컨텐츠 신청 탭이 그 둘을 다 담는다.
+  // 보조바 버튼과 탭이 같은 것을 두 군데서 열게 두면 어느 쪽이 본체인지 알 수 없다.
+  el.innerHTML = scheduleBtn + topbarLinksHtml() + celebrations.join('');
   const schBtn = document.getElementById('schBtn');
   if (schBtn) {
     schBtn.addEventListener('mouseenter', preloadSchedule);
@@ -4223,8 +4220,12 @@ function likeReqGroupTitle(entries) {
 
 const LRQ_CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"><polyline points="4 12.5 10 18.5 20 6.5"/></svg>';
 
+// 렌더 대상(2026-08-31): 종전엔 공용 모달 본문(#lrBody)에 박혀 있었다. 컨텐츠 신청 탭이 같은 목록을
+// 자기 화면에 그리므로 대상만 갈아끼운다 — 목록을 만드는 규칙은 한 벌로 유지한다.
+let likeReqTarget = 'lrBody';
+let likeRankTarget = 'lrBody';
 function renderLikeReqBody() {
-  const body = document.getElementById('lrBody');
+  const body = document.getElementById(likeReqTarget);
   if (!body || !likeReqShown) return;
   if (likeReqShown.length === 0) {
     body.innerHTML = '<div class="lr-msg">기록된 좋아요 요청이 없습니다.</div>';
@@ -4254,33 +4255,6 @@ function renderLikeReqBody() {
   }).join('');
 }
 
-async function openLikeRequests() {
-  const ov = document.getElementById('lrOverlay');
-  const head = document.getElementById('lrHead');
-  const body = document.getElementById('lrBody');
-  if (!ov || !body) return;
-  modalPanel(null);
-  head.innerHTML = `<span>${SVG_ICONS.thumbsup}멤버들의 좋아요 요청 모아보기</span><button class="lr-close" type="button" onclick="closeModal()">✕</button>`;
-  showModal();
-  likeReqShown = null;
-  body.innerHTML = '<div class="lr-msg">불러오는 중…</div>';
-  try {
-    // hover로 이미 받는 중/받아둔 게 있으면 그걸, 아니면 지금 시작. 숨김목록을 손에 쥔 뒤 렌더하므로 "보였다 사라짐" 없음.
-    const [res, hideSet] = await Promise.all([fetch(WORKER_URL + '/like-requests'), preloadLikeHide()]);
-    const data = await res.json();
-    likeReqCache = dedupeLikeReqs(data.like_requests || []);          // 점 계산용 갱신(같은 글 최신만)
-    lsSet(LS_LIKEREQ_CACHE, JSON.stringify(likeReqCache));
-    lsKeyAdd(LS_LIKE_CHECKED, [...lsKeySet(LS_LIKE_DISMISS)]);        // 구 ✕ 숨김 → 체크로 이관(멱등): '처리함' 의미 승계 + 이제 목록에 보이고 해제 가능
-    likeReqShown = likeReqCache.filter(e => !(hideSet.has(fullLikeUrl(e.url)) || hideSet.has(normLikeUrl(e.url))));
-    const seen = lsKeySet(LS_LIKE_SEEN);
-    likeReqNewSet = new Set(likeReqShown.map(likeReqKey).filter(k => !seen.has(k)));   // 신규 스냅샷 — 이벤트 탭 안읽음과 같은 표시(민트 좌선+배경)를 행에 적용
-    renderLikeReqBody();
-    lsKeyAdd(LS_LIKE_SEEN, likeReqShown.map(likeReqKey));             // 본 것으로 표시 → 버튼 점 끔(기존 동작 유지)
-    refreshLikeDot();
-  } catch (err) {
-    body.innerHTML = '<div class="lr-msg">불러오기에 실패했습니다. 잠시 후 다시 시도해 주십시오.</div>';
-  }
-}
 // ── 사이트 공용 모달 (2026-08-31 단일화) ──────────────────────────────────────
 // 종전엔 오버레이 3개를 여는 함수 8개가 제각각 다뤘고, 패널에 붙인 클래스는 닫기 함수가 '제거 목록'
 // (rk-modal·sch-cal·sch-fixed·tbm-modal·cc-modal)을 들고 지웠다. 모달을 하나 더 만들 때 그 목록에
@@ -4314,7 +4288,6 @@ function closeModal() {
   const fn = modalOnClose; modalOnClose = null;
   if (fn) { try { fn(); } catch (e) {} }
   // 공통 뒷정리 — 어느 모달을 닫든 되돌린다(종전 closeLikeRequests와 같은 범위 유지).
-  stopRankPoll();          // 순위 모달 폴링. 열려 있지 않으면 무해
   rankOpenPost = null;
   likeHidePreload = null;  // 선로딩분은 모달 1회용 — 다음 열기는 그 시점 최신으로
   schedulePreload = null;
@@ -4332,39 +4305,11 @@ function syncBodyScrollLock() {
 // 탭이 숨겨졌을 때도 건너뛴다(모달은 열려 있어도 화면에 없으면 마찬가지).
 // 갱신 주기는 시트 I열에서 온다(대회별). 아래는 워커와 맞춘 기본값·허용 범위 — 양쪽이 어긋나면 캐시와 폴링이 엇박이 난다.
 const RANK_REFRESH_DEFAULT = 30, RANK_REFRESH_MIN = 5, RANK_REFRESH_MAX = 600;
-let rankPollSec = RANK_REFRESH_DEFAULT;   // 현재 열려 있는 대회의 주기(헤더 표시와 실제 폴링이 같은 값을 쓰도록)
 let rankOpenPost = null;                  // 현재 모달이 보고 있는 대회(글번호). 폴링이 같은 대회를 계속 갱신하도록 붙잡아 둔다
-let rankTimer = null;
-function stopRankPoll() { if (rankTimer) { clearInterval(rankTimer); rankTimer = null; } }
 
-async function openLikeRanking(titleNo) {
-  const ov = document.getElementById('lrOverlay');
-  const head = document.getElementById('lrHead');
-  const body = document.getElementById('lrBody');
-  if (!ov || !body) return;
-  rankOpenPost = titleNo || null;
-  const btn = likeRankBtns.find(b => b.titleNo === rankOpenPost) || likeRankBtns[0] || null;
-  rankPollSec = (btn && btn.refresh) || RANK_REFRESH_DEFAULT;
-  // 테두리·헤더가 버튼과 같은 색을 쓰도록. --rk-c는 글자용(밝기 보정본), --rk-rgb는 테두리용(원색을 40%로 깔기 위한 삼원색).
-  modalPanel('rk-modal', btn ? { '--rk-c': lightenForText(btn.hex), '--rk-rgb': hexToRgb(btn.hex) } : null);
-  head.innerHTML = `<span>${SVG_ICONS.barChart}좋아요 순위</span>`
-    + `<span class="rk-head-right"><span class="rk-refresh">${rankPollSec}초마다 갱신</span>`
-    + `<button class="lr-close" type="button" onclick="closeModal()">✕</button></span>`;
-  body.innerHTML = '<div class="lr-msg">불러오는 중…</div>';
-  showModal();
-  await loadLikeRanking();
-  stopRankPoll();
-  rankTimer = setInterval(() => {
-    // lrOverlay는 좋아요 요청·일정·항목 모아보기와 공유한다. '열려 있는지'만 보면 다른 모달이 떠 있을 때
-    // 순위 데이터가 그 내용을 덮어쓴다 → 순위 모달임을 표시하는 rk-modal 클래스로 판정한다.
-    const p = document.querySelector('#lrOverlay .lr-panel');
-    if (document.getElementById('lrOverlay').hidden || !p || !p.classList.contains('rk-modal')) { stopRankPoll(); return; }
-    if (document.visibilityState === 'visible') loadLikeRanking();
-  }, rankPollSec * 1000);
-}
 
 async function loadLikeRanking() {
-  const body = document.getElementById('lrBody');
+  const body = document.getElementById(likeRankTarget);
   if (!body) return;
   try {
     // no-store: 응답에 max-age=10이 붙어 있어 기본 모드면 브라우저 캐시가 10초 더 붙잡는다(엣지 10초 + 브라우저 10초 = 최대 20초 지연).
@@ -4451,9 +4396,10 @@ function computeLikeDot() {
     return !seen.has(k) && !(hide.has(fullLikeUrl(e.url)) || hide.has(normLikeUrl(e.url)));
   });
 }
+// 새 요청 표시가 보조바 버튼에서 탭으로 옮겨졌다(2026-08-31). 생방송 점·이벤트 안읽음과 같은 자리 문법.
 function refreshLikeDot() {
-  const btn = document.getElementById('likeReqBtn');
-  if (btn) btn.classList.toggle('has-new', computeLikeDot());
+  const tab = document.querySelector('.nav-item[data-page="apply"]');
+  if (tab) tab.classList.toggle('has-new', computeLikeDot());
 }
 // 페이지 로드 시 점 계산용 목록 1회 로드(엣지 캐시 max-age=60 → 대부분 히트, 비용 미미). 캐시 우선으로 점 즉시 반영.
 async function loadLikeReqForDot() {
@@ -5159,6 +5105,7 @@ if (notifyBellEl) {
     navLinksIcon: SVG_ICONS.link,
     navBannerIcon: SVG_ICONS.flag,
     navDiscoIcon: SVG_ICONS.music,
+    navApplyIcon: SVG_ICONS.thumbsup,
     navHallIcon: SVG_ICONS.trophy,
     notifyBell: SVG_ICONS.bell,
     guideIcon: SVG_ICONS.help,   // 사용 가이드 물음표 — 마크업에 path 복제본이 박혀 있던 걸 여기로 통합(2026-08-08)
@@ -5226,6 +5173,69 @@ function renderDisco() {
   el.innerHTML = html || '<div class="lr-msg">등록된 곡이 없습니다.</div>';
 }
 
+// ══ 컨텐츠 신청 (2026-08-31) ═══════════════════════════════════════════════
+// 흐름: 신청 → 좋아요가 필요 → 순위로 충분한지 판단. 그래서 한 탭에 요청 목록과 순위를 같이 둔다.
+// 좌: 멤버들의 좋아요 요청 댓글, 우: 컨텐츠별 버튼 → 누르면 그 컨텐츠의 우리 멤버 순위.
+// 좋아요 요청·순위 모달은 2026-08-31 폐지 — 여는 곳이 여기 하나뿐이어야 '어느 쪽이 본체인가'가 안 갈린다.
+let applyRankPost = null;
+let applyTimer = null;
+function stopApplyPoll() { if (applyTimer) { clearInterval(applyTimer); applyTimer = null; } }
+
+function renderApplyBtns() {
+  const el = document.getElementById('applyBtns');
+  if (!el) return;
+  if (!likeRankBtns.length) { el.innerHTML = '<div class="lr-msg">진행 중인 컨텐츠가 없습니다.</div>'; return; }
+  el.innerHTML = likeRankBtns.map(b => {
+    const tx = lightenForText(b.hex);
+    return `<button class="page-title-link rank-btn apply-btn${b.titleNo === applyRankPost ? ' on' : ''}" type="button" data-post="${escapeHtml(b.titleNo)}" style="--tb-rgb:${hexToRgb(b.hex)};color:${b.hex}">${SVG_ICONS.barChart}<span style="color:${tx}">${escapeHtml(b.label || '좋아요 순위')}</span></button>`;
+  }).join('');
+}
+
+function selectApplyRank(titleNo) {
+  applyRankPost = titleNo;
+  rankOpenPost = titleNo;
+  likeRankTarget = 'applyRankBody';
+  renderApplyBtns();
+  const body = document.getElementById('applyRankBody');
+  if (body) body.innerHTML = '<div class="lr-msg">불러오는 중…</div>';
+  loadLikeRanking();
+  stopApplyPoll();
+  const btn = likeRankBtns.find(b => b.titleNo === titleNo);
+  const sec = (btn && btn.refresh) || RANK_REFRESH_DEFAULT;
+  // 탭이 화면에 없으면 멈춘다 — 모달 쪽 폴링이 '순위 모달이 떠 있는가'로 판단하는 것과 같은 역할.
+  applyTimer = setInterval(() => {
+    const p = document.getElementById('page-apply');
+    if (!p || !p.classList.contains('active') || likeRankTarget !== 'applyRankBody') { stopApplyPoll(); return; }
+    if (document.visibilityState === 'visible') loadLikeRanking();
+  }, sec * 1000);
+}
+
+function renderApply() {
+  renderApplyBtns();
+  const body = document.getElementById('applyReqBody');
+  if (!body) return;
+  likeReqTarget = 'applyReqBody';
+  body.innerHTML = '<div class="lr-msg">불러오는 중…</div>';
+  Promise.all([fetch(WORKER_URL + '/like-requests').then(r => r.json()), preloadLikeHide()])
+    .then(([data, hideSet]) => {
+      if (likeReqTarget !== 'applyReqBody') return;   // 그 사이 모달이 열려 대상이 바뀌었으면 덮어쓰지 않는다
+      likeReqCache = dedupeLikeReqs(data.like_requests || []);
+      lsSet(LS_LIKEREQ_CACHE, JSON.stringify(likeReqCache));
+      likeReqShown = likeReqCache.filter(e => !(hideSet.has(fullLikeUrl(e.url)) || hideSet.has(normLikeUrl(e.url))));
+      const seen = lsKeySet(LS_LIKE_SEEN);
+      likeReqNewSet = new Set(likeReqShown.map(likeReqKey).filter(k => !seen.has(k)));
+      renderLikeReqBody();
+      lsKeyAdd(LS_LIKE_SEEN, likeReqShown.map(likeReqKey));
+      refreshLikeDot();
+    })
+    .catch(() => { if (likeReqTarget === 'applyReqBody') body.innerHTML = '<div class="lr-msg">불러오기에 실패했습니다. 잠시 후 다시 시도해 주십시오.</div>'; });
+}
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('.apply-btn');
+  if (b) selectApplyRank(b.dataset.post);
+});
+
 function switchPage(page, opts) {
   if (!VALID_PAGES.includes(page)) page = 'live';
   if (currentPage === 'events' && page !== 'events') {
@@ -5244,6 +5254,7 @@ function switchPage(page, opts) {
     statsState.tabsInited = true;
   }
   if (page === 'disco') renderDisco();   // 시트는 부팅에서 받아 두므로 진입 시 그리기만 하면 된다
+  if (page === 'apply') renderApply(); else stopApplyPoll();
   if (page === 'members' && !membersState.tabsInited) {
     initMembersTabs();
     membersState.tabsInited = true;
@@ -6835,7 +6846,6 @@ function renderStatsMember(body, memberId) {
   body.innerHTML = `
     <div class="stats-member-header">
       ${periodSelectorHtml(false)}
-      <div class="ss-filter-row">
       <div class="stats-detail-summary">
         ${(() => {
           const md = (statsState.medals && statsState.medals[memberId]) || {};
@@ -6878,7 +6888,6 @@ function renderStatsMember(body, memberId) {
         </div>`;
         })()}
       </div>
-      <div class="cal-type-filter" id="calTypeFilter">${calTypeFilterHtml()}</div>
       </div>
     </div>
     <div class="stats-detail-body">
@@ -6892,22 +6901,6 @@ function renderStatsMember(body, memberId) {
   body.querySelectorAll('.stats-summary-item[data-metric]').forEach(item => {
     item.addEventListener('click', () => openStatGraphModal(memberId, item.dataset.metric));
   });
-  // 달력 종류 필터 — 토글 시 저장 후 재렌더(칩·썸네일 즉시 반영). 요약 클릭(그래프)은 불변 — 필터는 별도 표면.
-  const ctf = body.querySelector('#calTypeFilter');
-  if (ctf) {
-    ctf.querySelectorAll('.filter-type[data-type]').forEach(btn => btn.addEventListener('click', () => {
-      const t = btn.dataset.type;
-      if (calTypeState.has(t)) calTypeState.delete(t); else calTypeState.add(t);
-      saveCalTypes();
-      renderStatsMember(body, memberId);
-    }));
-    const allBtn = ctf.querySelector('#calTypeToggleAll');
-    if (allBtn) allBtn.addEventListener('click', () => {
-      calTypeState = calTypeState.size === CAL_TYPE_KEYS.length ? new Set() : new Set(CAL_TYPE_KEYS);
-      saveCalTypes();
-      renderStatsMember(body, memberId);
-    });
-  }
   body.querySelectorAll('.calendar-day').forEach(btn => {
     if (btn.classList.contains('outside')) return;
     btn.addEventListener('click', () => {
@@ -7129,10 +7122,10 @@ function renderCalendar(year, month1, sum, memberId) {
     const youtubes = youtubeByDate[dateKey] || [];
     const cafes = cafeByDate[dateKey] || [];
     // 종류 필터(2026-08-29): 꺼진 종류는 칩·썸네일·활동 표시에서 제외. 셀 클릭·일별 요약은 불변(요약은 상세라 전량 표시).
-    const hasBroadcast = calTypeOn('soop') && (broadcastDateSet ? broadcastDateSet.has(dateKey) : sessions.length > 0);   // 걸친 날도 채움
-    const hasPost = calTypeOn('post') && posts.length > 0;
-    const hasYoutube = calTypeOn('youtube') && youtubes.length > 0;
-    const hasCafe = calTypeOn('cafe') && cafes.length > 0;
+    const hasBroadcast = (broadcastDateSet ? broadcastDateSet.has(dateKey) : sessions.length > 0);   // 걸친 날도 채움
+    const hasPost = posts.length > 0;
+    const hasYoutube = youtubes.length > 0;
+    const hasCafe = cafes.length > 0;
     const hasActivity = hasBroadcast || hasPost || hasYoutube || hasCafe;
     const classes = ['calendar-day'];
     if (hasBroadcast) classes.push('has-broadcast');
@@ -7143,7 +7136,7 @@ function renderCalendar(year, month1, sum, memberId) {
     // 슬롯 클래스(cd-s-*)로 컴팩트 2열 그리드의 자리를 고정: 1행 [숲|VOD] · 2행 [숲글|카페] · 3행 [유튜브].
     // 항목이 0이라 빠져도 남은 칩의 자리가 안 흔들린다. PC는 flex 한 줄(우측 정렬)이라 슬롯 무시.
     let dayVods = null;                            // null=목록 미도착 → VOD 칩·썸네일 보류(도착 시 재렌더로 채움)
-    if (memberId && calTypeOn('soop') && sessions.length > 0) {
+    if (memberId && sessions.length > 0) {
       const seen = new Set(); const acc = [];
       let pending = false;
       for (const s of sessions) {
@@ -7154,31 +7147,16 @@ function renderCalendar(year, month1, sum, memberId) {
       if (!pending || acc.length > 0) dayVods = acc;
     }
     const chips = [];
-    if (calTypeOn('soop') && sessions.length > 0) chips.push(chipHtml('broadcast cd-s-soop', 'soop', sessions.length));
+    if (sessions.length > 0) chips.push(chipHtml('broadcast cd-s-soop', 'soop', sessions.length));
     if (dayVods && dayVods.length > 0) chips.push(chipHtml('vod cd-s-vod', 'film', dayVods.length));   // v9: 합성 배지 — film은 컨텐츠 탭 VOD 아이콘. v13(2026-08-29): 숲 바로 뒤로 이동(Crenop 지정) — PC 폼은 DOM 순서대로 흐르고, 컴팩트는 슬롯(grid-area) 고정이라 무영향
     if (hasPost) chips.push(chipHtml('post cd-s-post', 'board', posts.length));
     if (hasCafe) chips.push(chipHtml('cafe cd-s-cafe', 'coffee', cafes.length));
     if (hasYoutube) chips.push(chipHtml('youtube cd-s-yt', 'youtube', youtubes.length));
     // v4: 썸네일 박스는 방송날이면 상시 예약 — VOD 목록 도착 전후·다시보기 없는 날에도 셀 높이가 안 변한다
     // (로딩 시점 셀 크기 널뛰기 해소). 빈 박스 = "로딩 중/다시보기 없음" 시각 신호 겸용. 개수 배지는 칩(film N)이 담당하므로 제거.
-    let thumbHtml = '';
-    if (memberId) {
-      // v5(2026-08-29): 썸네일 박스를 '모든 셀' 상시 예약으로 확장(구 v4는 방송날만) — 필터로 썸네일이 사라지거나
-      // 종류가 바뀌어도 셀 높이가 최대 규격(칩줄+16:9 박스)으로 고정된다(Crenop 지정). 컴팩트 폼은 CSS가 박스를 숨겨 무영향.
-      let img = '';
-      if (calTypeOn('soop') && sessions.length > 0) {
-        const rep = (dayVods && dayVods.length > 0) ? dayVods[0] : null;   // 대표 = 그날 첫 세션의 첫 파트(파트순 정렬 결과)
-        if (rep && rep.thumb) img = `<img src="${escapeHtml(rep.thumb)}" alt="" loading="lazy">`;
-      } else if (!calTypeOn('soop') && calTypeOn('youtube') && youtubes.length > 0) {
-        // 필터 연동(2026-08-29 확정): 방송을 끄면 유튜브 업로드가 있는 날의 셀이 유튜브 썸네일을 대신 표시.
-        // 유튜브 제공 고정 주소(i.ytimg.com/vi/{ID}/mqdefault = 320×180, 16:9)라 추가 조회 없음.
-        const yid = ytVideoId(youtubes[0].url);
-        if (yid) img = `<img src="https://i.ytimg.com/vi/${yid}/mqdefault.jpg" alt="" loading="lazy">`;
-      }
-      thumbHtml = `<span class="cd-thumb">${img}</span>`;
-    }
+    // 셀 썸네일 폐지(2026-08-31) — 썸네일 모아보기는 달력 탭 몫, 여기는 통계 본분으로 돌아간다
     return { selected: statsState.selectedDate === dateKey,
-      html: `<button class="${classes.join(' ')}" data-date="${dateKey}"><span class="cd-top"><span class="calendar-daynum${dow===0?' sun':dow===6?' sat':''}">${day}</span><span class="cd-chips">${chips.join('')}</span></span>${thumbHtml}</button>` };
+      html: `<button class="${classes.join(' ')}" data-date="${dateKey}"><span class="cd-top"><span class="calendar-daynum${dow===0?' sun':dow===6?' sat':''}">${day}</span><span class="cd-chips">${chips.join('')}</span></span></button>` };
   };
   const cells = [];
   for (let i = 0; i < firstDow; i++) cells.push(null);
@@ -7228,31 +7206,27 @@ function renderDayDetail(year, month1, sum, memberId) {
   // 종류 필터 연동 v2(2026-08-30): 달력만 걸러선 필터 의미가 안 산다(Crenop) — 일별 요약의 칩·행·타일도 함께
   // 거른다. VOD는 방송 소속이라 숲 스위치를 따른다. 전 종류를 끄면 아래 items가 비어 기존 빈 날 문구가 뜬다.
   const headChips = [];
-  if (calTypeOn('soop') && sessions.length > 0) headChips.push(chipHtml('broadcast', 'soop', sessions.length));
-  if (calTypeOn('soop') && ddVodN > 0) headChips.push(chipHtml('vod', 'film', ddVodN));
-  if (calTypeOn('post') && posts.length > 0) headChips.push(chipHtml('post', 'board', posts.length));
-  if (calTypeOn('cafe') && cafes.length > 0) headChips.push(chipHtml('cafe', 'coffee', cafes.length));
-  if (calTypeOn('youtube') && youtubes.length > 0) headChips.push(chipHtml('youtube', 'youtube', youtubes.length));
+  if (sessions.length > 0) headChips.push(chipHtml('broadcast', 'soop', sessions.length));
+  if (ddVodN > 0) headChips.push(chipHtml('vod', 'film', ddVodN));
+  if (posts.length > 0) headChips.push(chipHtml('post', 'board', posts.length));
+  if (cafes.length > 0) headChips.push(chipHtml('cafe', 'coffee', cafes.length));
+  if (youtubes.length > 0) headChips.push(chipHtml('youtube', 'youtube', youtubes.length));
   let html = `<div class="day-detail-title">${ddDateHtml}<span class="ddt-chips">${headChips.join('')}</span></div>`;
   const items = [];
   for (const s of sessions) {
     const t = new Date(s.start).getTime();
-    if (!calTypeOn('soop')) break;   // 종류 필터 v2 — 세션 행(VOD 타일 포함) 통째 제외
     if (!isNaN(t)) items.push({ kind: 'session', time: t, data: s });
   }
   for (const p of posts) {
     const t = new Date(p.time).getTime();
-    if (!calTypeOn('post')) break;
     if (!isNaN(t)) items.push({ kind: 'post', time: t, data: p });
   }
   for (const y of youtubes) {
     const t = new Date(y.time).getTime();
-    if (!calTypeOn('youtube')) break;
     if (!isNaN(t)) items.push({ kind: 'youtube', time: t, data: y });
   }
   for (const c of cafes) {
     const t = new Date(c.time).getTime();
-    if (!calTypeOn('cafe')) break;
     if (!isNaN(t)) items.push({ kind: 'cafe', time: t, data: c });
   }
   items.sort((a, b) => a.time - b.time);
