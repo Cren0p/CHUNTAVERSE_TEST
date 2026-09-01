@@ -59,9 +59,9 @@
     --mode-restricted: #a78bfa;
     --filter-post: #2EF5E1;
     --sidebar-w: 200px;
-    --tab-w: 70px;      /* 탭 한 칸 폭 — 상단바와 보조바가 공유(칸 정렬의 단일 소스).
+    --tab-w: 64px;      /* 탭 한 칸 폭 — 상단바와 보조바가 공유(칸 정렬의 단일 소스).
                            가장 긴 라벨은 '최근 활동·지난 활동·관련 링크' = 글자 4 + 공백 1.
-                           4×12 + 공백 약 4 + 좌우 여백 16 ≈ 68 → 70. 라벨이 길어지면 이 값과 전환점을 함께 다시 잡을 것. */
+                           4×12 + 공백 약 3 + 좌우 여백 12 ≈ 63 → 64. 라벨이 길어지면 이 값과 전환점을 함께 다시 잡을 것. */
     --nav-row-h: 40px;  /* 드로어 한 행 높이 — 탭과 부속이 같은 행에 서려면 두 쪽이 같은 값을 써야 한다 */
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -165,7 +165,7 @@
   .topbar-right { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 0 12px; flex: 1 1 0; min-width: 0; }
   .nav-item {
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
-    padding: 8px 12px; color: var(--muted);
+    padding: 8px 6px; color: var(--muted);
     cursor: pointer; font-size: 12px; font-weight: 600;
     border: none; background: none; text-align: center;
     font-family: inherit; white-space: nowrap;
@@ -320,8 +320,11 @@
      탭을 2행으로 접는 대신 이 길을 택한 이유: 2행이 되면 보조바 부속이 '어느 행 아래'에 서야 하는지가
      사라져 칸 정렬이 무너지고, 아낀 가로만큼 세로(54→108)를 잃어 이득이 상쇄된다. */
   @media (max-width: 1150px) {
-    .topbar-right { display: none; }
+    /* 문구만 비우고 칸은 남긴다 — display:none으로 지우면 로고 칸이 그 몫까지 먹어 탭이 오른쪽으로 밀린다(실사고) */
+    .topbar-right { padding: 0; }
     .subbar-right .header-center { text-align: right; }
+    /* 좁은 폭에선 시각만 — 주기·비공식 문구까지 넣으면 칸(로고와 같은 폭)을 넘겨 말줄임된다 */
+    .header-center .hc-period, .header-center .hc-mid, .header-disclaimer { display: none; }
   }
   .subbar-right { justify-content: flex-end; }
   /* 탭 줄과 같은 칸 규격 — 부속이 자기 탭 아래에 정확히 선다 */
@@ -353,9 +356,13 @@
   .sch-line-txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .sch-line-when { flex: none; color: var(--accent); font-variant-numeric: tabular-nums; }
   .sch-more { flex: none; color: var(--accent); }
-  /* 일정 줄은 칸 하나를 넘겨도 된다 — 좌우 칸이 비어 있고, 제목을 못 읽으면 표시의 뜻이 사라진다 */
-  .tab-aux[data-for="content"] { overflow: visible; }
-  .tab-aux[data-for="content"] .sch-line { max-width: calc(var(--tab-w) * 3); }
+  /* 일정 줄은 좌우 한 칸씩 더 쓴다 — 양옆 탭(통계·현수막)은 보조바를 안 쓰므로 자리가 비어 있고,
+     제목이 잘리면 표시의 뜻이 사라진다. 흐름에서 빼내야(absolute) 칸 폭(64px)에 눌리지 않는다. */
+  .tab-aux[data-for="content"] { overflow: visible; position: relative; }
+  .tab-aux[data-for="content"] .sch-line {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    width: max-content; max-width: calc(var(--tab-w) * 3 + 4px);
+  }
 
   /* 드로어 여닫이 — 상단바가 화면 밖으로 나가는 폭에서만 나타난다 */
   .drawer-btn {
@@ -368,10 +375,11 @@
   .drawer-btn:hover { color: var(--accent); border-color: var(--accent); }
   .drawer-btn svg { width: 18px; height: 18px; display: block; }
   /* 걸린 필터 개수 — 필터가 서랍에 숨으면 "왜 안 나오지"가 되므로 버튼에 남겨 둔다 */
-  /* 필터가 걸려 있음 = 깔때기를 채운다. 아이콘 자체가 뜻을 지니므로 곁에 붙는 표식(점·숫자)이 필요 없고,
-     '이 표시가 뭘 세는 건지'를 해석할 일도 없다(2026-08-31, 점 → 채우기로 교체). */
+  /* 깔때기를 '통과하는 만큼' 채운다(2026-08-31). 전부 켜면 가득, 많이 끌수록 얕게 남는다 —
+     아이콘 자체가 양을 보여주므로 곁에 붙는 숫자·점을 해석할 일이 없다.
+     --funnel-fill = 켜진 비율(0~1)을 JS가 넣는다. clip-path가 위에서부터 잘라내 아래쪽만 남긴다. */
+  .drawer-btn .funnel-fill { clip-path: inset(calc((1 - var(--funnel-fill, 1)) * 100%) 0 0 0); }
   .drawer-btn.filtered { color: var(--accent); border-color: var(--accent); }
-  .drawer-btn.filtered svg { fill: currentColor; }
   /* 드로어 뒤 가림막 — 누르면 닫힌다(우측 드로어의 유일한 닫기 경로이므로 값이 싸야 한다) */
   .drawer-scrim {
     position: fixed; inset: 0; background: rgba(0,0,0,0.55);
@@ -1171,13 +1179,11 @@
 
   /* 기간 선택줄: ‹연도› 스테퍼 + [전체][1월..12월] 13버튼(통합탭) / 12버튼(멤버탭, 전체 없음) */
   /* 통합탭 기간줄: ‹연도› 스테퍼 박스 + [전체][1~12월] 13버튼 */
-  .stats-period-bar { display: flex; align-items: stretch; gap: 8px; margin-bottom: 16px; }
-  .stats-period-wrap { display: grid; grid-template-columns: repeat(13, 1fr); gap: 6px; flex: 1; min-width: 0; }
+  .stats-period-wrap { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; flex: 1; min-width: 0; }   /* 기둥 규격 — 전체1+12칸이 3열로 쌓인다(2026-08-31) */
   /* 멤버 개별탭: 스테퍼 줄(전폭) + 6열 2행 월 버튼 — 블록 외곽만 달력·요약과 정렬(내부 7열 정렬은 폐기) */
   /* 우측 기둥형(2026-08-31): [‹] [12칸 3열 4행] [›] — 좌우 화살표가 연도를 옮긴다.
      구 '한 줄 12칸'은 본문 위 전폭 배치였다. 기둥 280px에서 3열이면 칸이 약 64px. */
   .stats-member-period { display: flex; gap: 6px; min-width: 0; align-items: stretch; margin-top: 12px; }
-  .stats-member-period .stats-period-wrap.no-all { grid-template-columns: repeat(3, 1fr); flex: 1; }
   .stats-member-period .stats-detail-month { display: contents; }
   .stats-member-period .stats-month-btn { order: 0; align-self: stretch; }
   .stats-member-period .stats-month-btn[data-ydir="next"] { order: 2; }
@@ -1185,7 +1191,6 @@
   .stats-member-period .stats-month-text { display: none; }   /* 연도는 아래 줄에 따로 — 화살표 사이 자리가 없다 */
   .stats-period-year { text-align: center; font-size: 12px; font-weight: 700; color: var(--text); margin-top: 6px; }
 
-  .stats-period-wrap.no-all { grid-template-columns: repeat(6, 1fr); }
   .stats-period-btn {
     background: var(--surface2);
     border: 1.5px solid transparent;
@@ -2540,9 +2545,7 @@
   
     /* 크루/통합 버튼 2행 스팬 제거(2026-08-02): 12인 시절엔 스팬+12명이 7×2로 맞아떨어졌으나
        13인부턴 스팬이 마지막 1명을 3행으로 밀어냄 → 일반 크기 14타일 = 정확히 7×2 */
-    .stats-period-wrap:not(.no-all) { grid-template-columns: repeat(7, 1fr); }
-    .stats-period-wrap .stats-period-btn[data-period="all"] { grid-column: 1; grid-row: 1 / span 2; }
-    .stats-period-bar { flex-direction: column; align-items: stretch; }   /* 좁으면 스테퍼가 위, 버튼 그리드가 아래 */
+    /* 연/월 폭 분기 폐지(2026-08-31): 우측 기둥으로 옮겨 폭이 항상 280px이라 갈릴 이유가 없다 */
   }
 
   /* 상단바 우측 갱신정보: 좁은 폭에선 '주기 · 시각'을 2줄로 분리(주기/시각/비공식문구=3줄). 넓으면 스팬 inline이라 1줄 유지.
@@ -2693,10 +2696,10 @@
 </defs></svg>
 
 <header class="topbar">
-  <button class="drawer-btn" id="drawerBtnL" type="button" aria-label="메뉴 열기" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <button class="drawer-btn" id="drawerBtnL" type="button" aria-label="메뉴 열기" aria-expanded="false"></button>
   <div class="topbar-logo"><img id="siteLogoImg" src="Title.webp" alt="CHUNTAVERSE"></div>
 <nav class="sidebar" id="sidebar">
-  <button class="drawer-close" id="drawerClose" type="button" aria-label="메뉴 닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  <button class="drawer-close" id="drawerClose" type="button" aria-label="메뉴 닫기"></button>
   <!-- 탭 순서(2026-08-31): [프로필 · 생방송 · 최근 이벤트] 매일 보는 것 → [기록(통계) · 케미 · 명예의 전당]
        쌓인 것을 보는 것 → [달력(컨텐츠) · 현수막] 모아 보는 것 → [관련 링크] 도구.
        개명(통계→기록 · 컨텐츠→달력)과 신설(디스코그래피 · 컨텐츠 신청)은 각 탭의 내용 개편과 함께 온다. -->
@@ -2753,14 +2756,14 @@
   <div class="topbar-right">
     <div class="header-center" id="headerCenter"></div>
   </div>
-  <button class="drawer-btn" id="drawerBtnR" type="button" aria-label="필터 열기" aria-expanded="false" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg></button>
+  <button class="drawer-btn" id="drawerBtnR" type="button" aria-label="필터 열기" aria-expanded="false" style="display:none"></button>
   <!-- 가림막이 상단바 '안'에 있어야 한다: .topbar가 z-index를 가진 순간 그 안쪽 z-index는 바깥과 겨루지 못하고
        상단바 값(5)으로 묶인다. body 직속에 두면 가림막(30)이 상단바 전체(5) 위로 올라와 드로어까지 덮었다(실제 사고). -->
   <div class="drawer-scrim" id="drawerScrim"></div>
 </header>
 <!-- 우측 서랍 닫기: 상단바 '밖'에 둔다. 안에 두면 상단바 z-index(5)에 값이 묶여, 본문 쪽에서 뜨는
      우측 서랍(전역 40)에 가려 안 보인다 — 좌측 가림막에서 겪은 것과 같은 쌓임 맥락 문제(실사고). -->
-  <button class="drawer-close drawer-close-r" id="drawerCloseR" type="button" aria-label="필터 닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  <button class="drawer-close drawer-close-r" id="drawerCloseR" type="button" aria-label="필터 닫기"></button>
 
 <main class="main">
   <!-- 보조바: 탭별 버튼만 남는다(문구·가이드는 상단바 우측으로 올라갔다). 모바일에서는 통째로 사라지고
@@ -2945,7 +2948,7 @@
 </main>
 
 <script>
-const BUILD = '2026-08-31r';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
+const BUILD = '2026-08-31t';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
 console.log('[build] front ' + BUILD);
 const WORKER_URL = 'https://chuntaverse.crenop.workers.dev';
 const BASE_TITLE = '천타버스';
@@ -3025,10 +3028,13 @@ const MEMBER_BIRTHDAYS = {
     if (!panel) { if (body.classList.contains('drawer-r')) setDrawer('r', false); return; }
     // [data-type]으로 좁히는 이유: 3열을 채우는 빈칸(evt-type-spacer·chem-type-spacer)도 .filter-type이라
     // 그냥 세면 '꺼진 필터'로 잡힌다 — 다 켜둔 상태에서 이벤트 1·케미 2가 뜨던 것이 정확히 그 빈칸 수였다.
-    // 숫자를 쓰지 않는 이유(2026-08-31): 사람이 알고 싶은 건 '필터가 걸려 있나' 하나뿐인데, 숫자를 보이면
-    // 그 값이 켜진 수인지 꺼진 수인지를 다시 해석해야 한다. 생방송 점·새 요청 점과 같은 문법으로 통일한다.
-    const filtered = panel.querySelector('.filter-member:not(.on), .filter-type[data-type]:not(.on)') !== null;   // 고르는 기둥(.side-pick)에는 필터가 없어 점이 안 켜진다 — 정상
-    btnR.classList.toggle('filtered', filtered);
+    // 깔때기를 켜진 비율만큼 채운다. 숫자를 쓰지 않는 이유: 그 값이 켠 수인지 끈 수인지를 다시 해석해야 한다.
+    // 고르는 기둥(.side-pick)에는 필터가 없어 비율이 1(가득) — 걸린 게 없다는 뜻으로 자연스럽다.
+    const all = panel.querySelectorAll('.filter-member, .filter-type[data-type]');
+    const on = panel.querySelectorAll('.filter-member.on, .filter-type[data-type].on');
+    const ratio = all.length ? on.length / all.length : 1;
+    btnR.style.setProperty('--funnel-fill', String(ratio));
+    btnR.classList.toggle('filtered', ratio < 1);
   };
   // 폭에 따라 실제로 요소를 옮긴다(CSS로는 부모를 못 바꾼다).
   //  PC   : [기념일·링크] [탭별 부속 11칸] [가이드]  — 보조바 한 줄
@@ -3416,6 +3422,12 @@ function modePlaceholder(mode) {
 function findMember(id) { return MEMBERS.find(m => m.id === id); }
 
 const SVG_ICONS = {
+  // 서랍 조작용(2026-08-31). 기존 아이콘과 같은 규격: viewBox 24, width/height 16, stroke 2·round.
+  // 종전엔 마크업에 직접 박아 넣었는데, 그러면 새 아이콘이 이 표에 없어 다음 사람이 못 찾는다.
+  menu: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>`,
+  close: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>`,
+  // 깔때기는 '얼마나 통과하는가'를 채움 높이로 보인다 — 아래 filter-fill의 clip-path가 그 비율을 받는다
+  funnel: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path class="funnel-fill" d="M3 5h18l-7 8v6l-4 2v-8z" fill="currentColor" stroke="none"/><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg>`,
   soop: `<svg viewBox="0 0 24 24"><path d="M17.43 18.27 16.03 18.27 14.41 17.86 13.13 17.17 12.09 16.18 10.52 17.40 9.30 17.98 7.97 18.27 6.11 18.21 3.96 17.40 2.92 16.59 1.90 15.34 1.09 13.36 1.03 10.81 1.49 9.42 2.13 8.31 3.79 6.72 5.06 6.08 6.63 5.73 8.31 5.79 9.59 6.14 10.98 6.89 11.97 7.82 13.60 6.54 15.63 5.79 17.83 5.79 18.82 6.02 20.04 6.60 20.74 7.07 21.81 8.20 22.62 9.65 23.03 11.33 22.97 13.13 22.16 15.28 21.03 16.64 19.23 17.80 17.43 18.27z M16.99 15.22 17.95 15.02 18.76 14.55 19.60 13.60 20.01 12.26 19.89 11.16 19.49 10.23 18.76 9.45 17.78 8.92 16.15 8.81 15.57 8.98 14.64 9.56 13.31 10.84 11.97 11.19 11.22 11.07 10.52 10.72 9.01 9.27 8.43 8.98 6.63 8.81 5.12 9.56 4.40 10.46 4.11 11.16 4.05 12.49 4.45 13.65 5.47 14.73 6.40 15.13 7.91 15.19 8.60 14.96 9.24 14.55 10.52 13.28 11.22 12.93 12.09 12.81 13.48 13.28 14.64 14.44 15.51 15.02 16.99 15.22z M4.31 13.22 4.31 13.22z M2.16 15.89 2.16 15.89z" fill="currentColor" fill-rule="evenodd"/></svg>`,   // SOOP 공식 마크(허리 잘록한 ∞) 픽셀 추적(2026-08-22) — 종전 원 두 개 근사를 실로고로 교체
   board: `<svg viewBox="0 0 24 24" width="14" height="14"><rect x="4" y="4" width="16" height="16" rx="2" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" mask="url(#micb)"/></svg>`,
   thumbsup: `<svg viewBox="0.18 0.60 24 24" width="14" height="14"><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H7V10h-.24a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><path d="M7 10H4a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
@@ -5211,6 +5223,8 @@ if (notifyBellEl) {
     navBannerIcon: SVG_ICONS.flag,
     navDiscoIcon: SVG_ICONS.music,
     navApplyIcon: SVG_ICONS.thumbsup,
+    drawerBtnL: SVG_ICONS.menu, drawerBtnR: SVG_ICONS.funnel,
+    drawerClose: SVG_ICONS.close, drawerCloseR: SVG_ICONS.close,
     navHallIcon: SVG_ICONS.trophy,
     notifyBell: SVG_ICONS.bell,
     guideIcon: SVG_ICONS.help,   // 사용 가이드 물음표 — 마크업에 path 복제본이 박혀 있던 걸 여기로 통합(2026-08-08)
@@ -6487,15 +6501,13 @@ function periodSelectorHtml(includeAll) {
     </div>
     <div class="stats-period-year">${year}년</div>`;
   }
+  // 전체탭도 멤버탭과 같은 기둥 형태(2026-08-31): [‹] [전체+12칸 3열] [›], 연도는 아래 줄
   return `
-    <div class="stats-period-bar">
-      <div class="stats-detail-month">
-        ${chevPrev}
-        <span class="stats-month-text">${year}년</span>
-        ${chevNext}
-      </div>
+    <div class="stats-member-period">
+      <div class="stats-detail-month">${chevPrev}<span class="stats-month-text">${year}년</span>${chevNext}</div>
       <div class="stats-period-wrap">${btns.join('')}</div>
-    </div>`;
+    </div>
+    <div class="stats-period-year">${year}년</div>`;
 }
 function bindPeriodSelector(body, includeAll) {
   const afterChange = () => {
@@ -6837,10 +6849,11 @@ function renderStatsAnnual(body) {
   }).join('');
 
   body.innerHTML = `
-    ${periodSelectorHtml(true)}
     <div class="stats-grid">${cards}</div>
   `;
-  bindPeriodSelector(body, true);
+  // 연/월은 본문이 아니라 우측 기둥에 그린다(2026-08-31) — 멤버탭과 같은 자리·같은 배선
+  const periodSideAll = document.getElementById('statsPeriodSide');
+  if (periodSideAll) { periodSideAll.innerHTML = periodSelectorHtml(true); bindPeriodSelector(periodSideAll, true); }
   // 지표 행 클릭 → 그 멤버 × 그 지표의 월별 추이 그래프 모달 (헤더 클릭→멤버 이동은 폐지)
   body.querySelectorAll('.stats-card-row-link[data-metric]').forEach(row => {
     row.addEventListener('click', () => {
@@ -6916,10 +6929,11 @@ function renderStatsAll(body) {
     `;
   }).join('');
   body.innerHTML = `
-    ${periodSelectorHtml(true)}
     <div class="stats-grid">${cards}</div>
   `;
-  bindPeriodSelector(body, true);
+  // 연/월은 본문이 아니라 우측 기둥에 그린다(2026-08-31) — 멤버탭과 같은 자리·같은 배선
+  const periodSideAll = document.getElementById('statsPeriodSide');
+  if (periodSideAll) { periodSideAll.innerHTML = periodSelectorHtml(true); bindPeriodSelector(periodSideAll, true); }
   body.querySelectorAll('.stats-card-row-link[data-metric]').forEach(row => {
     row.addEventListener('click', () => {
       const card = row.closest('.stats-card');
