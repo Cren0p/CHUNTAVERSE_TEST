@@ -345,7 +345,7 @@
      상단바 '밖'에 있어야 한다: 안에 두면 z-index가 상단바(5)로 묶여 서랍(40)에 가린다. */
   .drawer-close-r { position: fixed; top: 6px; right: 10px; z-index: 45; margin: 0; }
   body.drawer-r .drawer-close-r { display: flex; }
-  .drawer-close:hover { color: var(--accent); border-color: var(--accent); }
+  .drawer-close:hover { border-color: var(--accent); }   /* 테두리가 있는 요소 → 테두리색만 (신호 규칙 ①) */
   .main-header {
     padding: 3px 12px;
     border-bottom: 1px solid var(--border);
@@ -364,11 +364,11 @@
   /* 일정 줄(2026-08-31): 버튼이 아니라 표시다. 누를 일이 없고(동선은 달력 탭이 가진다) 테두리도 없다.
      제목 · 남은 시간 한 줄, 같은 날 일정이 더 있으면 +N. 칸을 넘치면 제목만 말줄임된다. */
   /* 한 색으로 통일하고 남은 시간만 굵게(2026-09-01). 종전엔 아이콘 파랑·제목 무채색·D-day 민트라 색이 셋이었다.
-     색은 --text3: 무채색 4계층 표에서 '읽는 보조 텍스트(방송 제목·채팅 메시지)' 층이고, 일정 제목이 그 성격이다.
-     --muted는 4차 '스캔용 메타(시각·개수·라벨)'라 제목에는 맞지 않는다. 아이콘은 달력 탭 아이콘과 중복이라 뺐다. */
-  .sch-line { display: inline-flex; align-items: center; gap: 6px; min-width: 0; font-size: 11px; font-weight: 600; color: var(--text3); }
+     제목은 --text2(본문에 딸린 강조 보조), 남은 시간은 --accent. 보조바에서 유일하게 '사람이 궁금해하는 값'이라
+     4차 스캔용 메타(--muted)로 깔면 눈에 안 들어온다. 아이콘은 달력 탭 아이콘과 중복이라 뺐다. */
+  .sch-line { display: inline-flex; align-items: center; gap: 6px; min-width: 0; font-size: 11px; font-weight: 600; color: var(--text2); }
   .sch-line-txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .sch-line-when { flex: none; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .sch-line-when { flex: none; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
   /* 일정 줄은 좌우 한 칸씩 더 쓴다 — 양옆 탭(통계·현수막)은 보조바를 안 쓰므로 자리가 비어 있고,
      제목이 잘리면 표시의 뜻이 사라진다. 흐름에서 빼내야(absolute) 칸 폭(64px)에 눌리지 않는다. */
   .tab-aux[data-for="content"] { overflow: visible; position: relative; }
@@ -385,7 +385,7 @@
     color: var(--muted); cursor: pointer; position: relative;
     transition: color 0.15s, border-color 0.15s;
   }
-  .drawer-btn:hover { color: var(--accent); border-color: var(--accent); }
+  .drawer-btn:hover { border-color: var(--accent); }
   .drawer-btn svg { width: 18px; height: 18px; display: block; }
   /* 걸린 필터 개수 — 필터가 서랍에 숨으면 "왜 안 나오지"가 되므로 버튼에 남겨 둔다 */
   /* 깔때기를 '통과하는 만큼' 채운다(2026-08-31). 전부 켜면 가득, 많이 끌수록 얕게 남는다 —
@@ -918,15 +918,9 @@
   .timeline { background: var(--surface); border: 1px solid var(--border); border-top: none; min-width: 0; }   /* 윗변은 sticky 헤더가 가짐(2026-08-09) — 헤더가 20px 떠 있어도 rest 상태 박스 윗변이 그대로 */
   .timeline-empty { text-align: center; padding: 60px 20px; color: var(--muted); font-size: 13px; }
 
-  .filter-panel, .chem-filter-panel {
-    background: none; border: none; padding: 0;   /* 기둥은 테두리를 두지 않는다(2026-09-01) — .side-pick과 같은 규칙 */
-  }
-  .filter-panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    padding: 16px;
-    position: sticky; top: 20px;
-  }
+  /* 기둥은 테두리를 두지 않는다(2026-09-01) — .side-pick과 같은 규칙.
+     종전엔 여기 background·border·padding이 그대로 남아 최근 활동·케미만 박스가 보였다(실사고). */
+  .filter-panel { position: sticky; top: 20px; }
   .filter-section + .filter-section {
     margin-top: 20px; padding-top: 20px;
     border-top: 1px solid var(--border);
@@ -1694,10 +1688,11 @@
   .link-label {
     display: inline-block;
   }
+  /* 테두리가 있는 요소 → 테두리색만(신호 규칙 ①). 글씨까지 바꾸던 것 폐지(2026-09-01) —
+     아이콘은 브랜드색이 인라인으로 박혀 있어 hover에서 민트로 맞추는 아래 규칙을 그대로 둔다. */
   .link-btn:hover {
     background: rgba(97,255,236,0.10);
     border-color: var(--accent);
-    color: var(--accent);
   }
   .link-btn:hover .link-icon { color: var(--accent) !important; }
   .link-btn.ogq-btn {
@@ -1778,12 +1773,7 @@
   }
   .chem-content { container-type: inline-size; min-width: 0; }   /* 카드 열 수를 뷰포트가 아닌 이 콘텐츠 칸 폭 기준으로 판단(컨테이너 쿼리) */
   /* 케미 필터: 이벤트 .filter-panel과 동일 — 우측 사이드 sticky. 스크롤이 길어(2인+그룹) 필터 상시 노출이 이득 */
-  .chem-filter-panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    padding: 16px;
-    position: sticky; top: 20px;
-  }
+  .chem-filter-panel { position: sticky; top: 20px; }
   .chem-filter-members {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -2001,16 +1991,20 @@
      칸에 썸네일을 넣지 않는 이유: 그러면 달력만 1450px를 요구해 그 폭을 못 만드는 화면에서 통째로 못 본다
      (기록 탭에서 그 이유로 걷어낸 형태다). 그림은 눌렀을 때 옆 칸에 나온다. */
   .cal-wrap {
-    padding: 20px 24px; max-width: 1600px; width: 100%; margin: 0 auto; flex: 1;
+    padding: 20px 24px; width: 100%; flex: 1;
     display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 20px; align-items: start;
   }
-  .cal-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 360px); gap: 16px; align-items: start; }
-  .cal-detail { background: var(--surface); border: 1px solid var(--border); padding: 12px; min-width: 0; }
+  .calendar-grid + .calendar-grid { margin-top: 4px; }
+  .cal-detail { background: var(--surface2); border: 1px solid var(--border); padding: 12px; margin: 4px 0; min-width: 0; }
   /* min-width: 0 — 없으면 칸이 제 안의 가장 긴 제목만큼 벌어져 7열 폭이 제각각이 된다(실사고).
      칸 폭을 격자가 정하고 제목은 말줄임으로 맞춘다. */
   .cal-cell { align-items: stretch; justify-content: flex-start; gap: 2px; padding: 4px; min-height: 78px; text-align: left; min-width: 0; overflow: hidden; }
   .cal-titles { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-  .cal-t { font-size: 10px; line-height: 1.3; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* 두 줄까지 보인다(2026-09-01) — 컨텐츠 제목이 길어 한 줄이면 말줄임 투성이가 된다 */
+  .cal-t {
+    font-size: 10px; line-height: 1.3; color: var(--text);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
   /* 미래 = 칸 테두리 점선. 제목 앞 표시는 폐지(2026-08-31) — 짧은 수직선이 뭘 뜻하는지 안 읽혔다 */
   .cal-cell.future.has { border-style: dashed; }   /* 색은 그대로 — 민트는 '누를 수 있음/선택됨'의 색이라 '아직 안 왔음'에 쓰면 뜻이 겹친다(2026-09-01) */
   .cal-cell.has:hover { border-color: var(--accent); }
@@ -2027,7 +2021,9 @@
   .cal-di-who { display: inline-flex; gap: 2px; }
   .cal-di-who img { width: 18px; height: 18px; }
   @media (max-width: 1150px) { .cal-wrap { grid-template-columns: 1fr; } }
-  @media (max-width: 900px) { .cal-body { grid-template-columns: 1fr; } }
+  /* 좁은 폭(스마트폰)에서만: 요청 목록과 순위를 같이 쌓으면 화면이 길어져 '요청 ↔ 순위' 토글로 쓴다.
+     태블릿까지 걸면 폭이 남는데도 목록이 사라진다(실사고 — 순위만 보이던 화면). */
+  @media (max-width: 700px) { body.apply-rank-on .apply-main { display: none; } }
 
   .content-grid {
     display: grid;
@@ -2115,7 +2111,7 @@
   /* 통계 탭 상단 — 크루 숫자 격자(통계 카드 재사용) + 멤버별 시간대 분포 */
   .hall-stats { margin-bottom: 24px; }
   .hall-heat { margin-bottom: 28px; }
-  .hall-heat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+  .hall-heat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }   /* 셀이 정사각에 가깝게 서려면 24칸 × 15px + 축·여백 ≈ 340px 필요(2026-09-01) */
   .hall-heat-cell { background: var(--surface); border: 1px solid var(--border); padding: 12px; min-width: 0; }
   .hall-heat-name { font-size: 12px; font-weight: 700; margin-bottom: 6px; }
   .hall-heat-cell .toh-wrap { margin: 0; }
@@ -2135,7 +2131,7 @@
 
   .hall-wrap {
     padding: 20px 24px;
-    max-width: 1400px; width: 100%; margin: 0 auto;
+    width: 100%;
     flex: 1;
     /* 좌 = 본문 / 우 = 고르는 기둥. 종전 세로 flex 선언이 뒤에 남아 이 grid를 덮고 있었다(2026-09-01 실사고 —
        같은 규칙 안에서 뒤 선언이 이긴다. 한 속성을 두 번 쓰지 말 것) */
@@ -2221,9 +2217,11 @@
   /* === 구성원 탭 === */
   /* 좌=본문 / 우=고르는 기둥(2026-08-31). 이벤트·케미 필터와 같은 280px 규격을 쓴다 —
      사이트에서 '고르는 것'의 자리가 탭마다 다를 이유가 없다. */
+  /* 기둥은 화면 오른쪽에 붙이고, 본문은 남은 폭 안에서 가운데 정렬한다(2026-09-01).
+     묶음 전체를 가운데 정렬하면 기둥이 안쪽으로 들어와 본문이 왼쪽으로 밀려 보인다(실사고). */
   .members-wrap, .stats-wrap {
     padding: 20px 24px;
-    max-width: 1600px; width: 100%; margin: 0 auto;
+    width: 100%;
     flex: 1;
     display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 20px; align-items: start;
   }
@@ -2235,9 +2233,15 @@
        · 스트립 : 양쪽 빈칸
        · 연·월  : 왼쪽·오른쪽 = 연도 화살표 */
   .side-pick { position: sticky; top: 20px; min-width: 0; }
+  /* 본문은 남은 폭 안에서 가운데 — 기둥이 오른쪽에 붙어도 본문이 치우쳐 보이지 않게 */
+  .members-wrap > #membersBody, .stats-wrap > #statsBody, .hall-main, .cal-main { max-width: 1300px; margin: 0 auto; width: 100%; min-width: 0; }
   .side-pick > * + * { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .side-pick .hall-bar { justify-content: flex-start; gap: 10px; margin-left: 44px; }   /* 위아래 버튼 묶음과 같은 왼쪽 기준 */
+  .side-pick .filter-title { margin-left: 44px; }
   .members-tabs-wrap, .stats-tabs-wrap, .hall-kind, #hallPeriodSide .hall-period { margin: 0 44px; }
   .hall-kind, #hallPeriodSide .hall-period { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .hall-period-btn .pb-y { font-size: 9px; opacity: 0.75; }
+  .hall-period-btn .pb-m { font-size: 11px; font-weight: 700; }
   .hall-kind-btn, #hallPeriodSide .hall-period-btn {
     aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
     padding: 2px; white-space: normal; line-height: 1.2; text-align: center; font-size: 10px;
@@ -2358,13 +2362,13 @@
   /* 묶음 머리 우측의 순위 버튼 — 그 글의 집계가 시트에 있을 때만 나온다 */
   .lrg-rank-btn {
     display: inline-flex; align-items: center; gap: 4px; flex: none; margin-left: auto;
-    padding: 2px 8px; font-family: inherit; font-size: 11px; font-weight: 600;
+    padding: 5px 12px; font-family: inherit; font-size: 12px; font-weight: 600;
     background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
     cursor: pointer; transition: color 0.15s, border-color 0.15s;
   }
   .lrg-rank-btn:hover { border-color: var(--accent); }   /* 테두리가 있는 요소 → 테두리색 (상호작용 신호 규칙 ①) */
   .lrg-rank-btn.on { border-color: var(--accent); color: var(--accent); }
-  .lrg-rank-btn svg { width: 12px; height: 12px; display: block; }
+  .lrg-rank-btn svg { width: 14px; height: 14px; display: block; }
   .lrg-head { display: flex; align-items: center; gap: 8px; }
   .apply-rank { background: var(--surface); border: 1px solid var(--border); padding: 12px; min-width: 0; }
   @media (max-width: 1100px) {
@@ -2372,9 +2376,7 @@
        필터가 아니므로 우측 서랍으로 보내지 않는다(서랍은 걸러내기 전용). */
     .apply-wrap { grid-template-columns: 1fr; }
     .apply-side { position: static; order: -1; }
-    /* 좁은 폭: 요청 목록과 순위를 같이 쌓으면 화면이 길어진다 → 순위를 고르면 요청 목록을 접어
-       '좋아요 요청 ↔ 좋아요 순위' 토글처럼 쓴다. 같은 버튼을 다시 누르면 목록으로 돌아온다. */
-    body.apply-rank-on .apply-main { display: none; }
+
   }
 
   /* 디스코그래피 — 멤버별 묶음. 스트립 자체는 프로필에서 쓰던 것을 그대로 쓴다(문법 통일) */
@@ -2646,6 +2648,10 @@
     .subbar-lead, .tab-aux { flex: none; justify-content: flex-start; }
     .tab-aux { height: var(--nav-row-h); }
     .subbar-lead { gap: 6px; overflow-x: auto; scrollbar-width: none; }
+    .page-title-link, .celebration-box { padding: 4px 10px; }
+    /* 기념일만 짧은 요약('이름 종류')으로 — PC 문구는 길어 세로형 행 폭을 넘긴다(2026-09-01) */
+    .celebration-box .tb-t-pc { display: none; }
+    .celebration-box .tb-t-mb { display: inline; }
     .nav-item {
       flex-direction: row; align-items: center; justify-content: flex-start; gap: 12px;
       padding: 0 16px; height: var(--nav-row-h); font-size: 14px; text-align: left; width: 100%;
@@ -2680,7 +2686,9 @@
 
   /* 모바일: 같은 기둥이 화면 밖으로 나가 ☰로 여는 서랍이 된다 */
   @media (max-width: 700px) {
-    .sidebar { transform: translateX(-100%); transition: transform 0.22s ease; max-width: 90vw; }
+    /* top: 0 — 서랍이 띠를 덮어야 안의 ✕가 ☰와 같은 자리에 온다. 띠 아래에서 시작하면 두 버튼이 어긋난다(실사고) */
+    .sidebar { top: 0; transform: translateX(-100%); transition: transform 0.22s ease; max-width: 90vw; }
+    .side-pick, .filter-panel, .chem-filter-panel { top: 0; }
     body.drawer-l .sidebar { transform: none; }
     .drawer-btn#drawerBtnL { display: inline-flex; }
     .drawer-close { display: flex; }
@@ -2843,7 +2851,7 @@
       <!-- 멤버 선택 스트립을 우측 기둥으로(2026-08-31). 좁은 폭에서는 우측 서랍으로 들어간다 —
            '스트립 = 화면을 갈아끼우는 선택'이라 필터와 같은 자리 규칙을 쓴다. -->
       <aside class="side-pick">
-        <div class="members-tabs-wrap" id="membersTabsWrap"></div>
+        <div><div class="filter-title">멤버</div><div class="members-tabs-wrap" id="membersTabsWrap"></div></div>
       </aside>
     </div>
   </div>
@@ -2908,12 +2916,14 @@
         </div>
       </div>
       <aside class="side-pick">
-        <div class="stats-tabs-wrap">
-          <div class="stats-tabs-side" id="statsTabsSide"></div>
-          <div class="stats-tabs-members" id="statsTabsMembers"></div>
+        <div><div class="filter-title">멤버</div>
+          <div class="stats-tabs-wrap">
+            <div class="stats-tabs-side" id="statsTabsSide"></div>
+            <div class="stats-tabs-members" id="statsTabsMembers"></div>
+          </div>
         </div>
-        <!-- 연/월 선택기 자리(2026-08-31). 멤버 스트립과 같은 기둥에 두 번째 '고르는 줄'로 선다 -->
-        <div id="statsPeriodSide"></div>
+        <!-- 연/월 선택기 자리. 멤버 스트립과 같은 기둥에 두 번째 '고르는 줄'로 선다 -->
+        <div><div class="filter-title">기간</div><div id="statsPeriodSide"></div></div>
       </aside>
     </div>
   </div>
@@ -2933,7 +2943,7 @@
         <div class="loading"><div class="spinner"></div><div>달력 불러오는 중...</div></div>
       </div>
       <aside class="side-pick">
-        <div id="calPeriodSide"></div>
+        <div><div class="filter-title">기간</div><div id="calPeriodSide"></div></div>
       </aside>
     </div>
   </div>
@@ -2992,7 +3002,7 @@
       <!-- 종류(명예의 전당 / 통계 / 시간대) + 그 종류에 딸린 기간 버튼. 기간은 종류마다 다르다 —
            명전은 통산·상/하반기, 나머지 둘은 연/월. 그래서 한 자리에서 갈아끼운다. -->
       <aside class="side-pick">
-        <div class="hall-kind" id="hallKindBox"></div>
+        <div><div class="filter-title">종류</div><div class="hall-kind" id="hallKindBox"></div></div>
         <div id="hallPeriodSide"></div>
       </aside>
     </div>
@@ -3000,7 +3010,7 @@
 </main>
 
 <script>
-const BUILD = '2026-09-01j';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
+const BUILD = '2026-09-01p';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
 console.log('[build] front ' + BUILD);
 const WORKER_URL = 'https://chuntaverse.crenop.workers.dev';
 const BASE_TITLE = '천타버스';
@@ -3067,7 +3077,7 @@ const MEMBER_BIRTHDAYS = {
 
   // 탭을 고르면 좌측 서랍은 닫힌다. 벨은 탭 안에 있지만 탭 전환이 아니므로 제외.
   document.querySelectorAll('.nav-item').forEach(btn => {
-    btn.addEventListener('click', e => { if (!e.target.closest('.nav-notify-bell')) setDrawer('l', false); });
+    btn.addEventListener('click', e => { if (!e.target.closest('.nav-notify-bell')) closeAll(); });   // 탭을 옮기면 양쪽 서랍 다 닫는다
   });
 
   // 우측 버튼은 필터가 있는 탭에서만. 걸린 개수는 '꺼둔 칸 수' — 서랍에 숨은 필터를 잊는 것을 막는다.
@@ -3077,7 +3087,8 @@ const MEMBER_BIRTHDAYS = {
     if (!btnR) return;
     const panel = document.querySelector('.page.active .filter-panel, .page.active .chem-filter-panel, .page.active .side-pick');
     btnR.style.display = panel ? '' : 'none';
-    if (!panel) { if (body.classList.contains('drawer-r')) setDrawer('r', false); return; }
+    // 여는 버튼이 없으면 서랍 상태도 반드시 내린다 — 안 그러면 겹쳐 뜨는 ✕만 화면에 남는다(실사고)
+    if (!panel) { setDrawer('r', false); return; }
     // [data-type]으로 좁히는 이유: 3열을 채우는 빈칸(evt-type-spacer·chem-type-spacer)도 .filter-type이라
     // 그냥 세면 '꺼진 필터'로 잡힌다 — 다 켜둔 상태에서 이벤트 1·케미 2가 뜨던 것이 정확히 그 빈칸 수였다.
     // 깔때기를 켜진 비율만큼 채운다. 숫자를 쓰지 않는 이유: 그 값이 켠 수인지 끈 수인지를 다시 해석해야 한다.
@@ -3488,6 +3499,13 @@ const SVG_ICONS = {
   close: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>`,
   // 깔때기는 '얼마나 통과하는가'를 채움 높이로 보인다 — 아래 filter-fill의 clip-path가 그 비율을 받는다
   funnel: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path class="funnel-fill" d="M3 5h18l-7 8v6l-4 2v-8z" fill="currentColor" stroke="none"/><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg>`,
+  // 달력 항목 종류(2026-09-01). 같은 규격: viewBox 24 · 16×16 · stroke 2 · round.
+  soccer: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5l4.2 3-1.6 5h-5.2l-1.6-5z" fill="currentColor" stroke="none"/><path d="M12 3v4.5M3.6 9.3l4.6 1.2M20.4 9.3l-4.6 1.2M7 20l2.4-4.5M17 20l-2.4-4.5"/></svg>`,
+  steam: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="15.5" cy="9" r="2.6"/><circle cx="8.5" cy="15" r="2.1" fill="currentColor" stroke="none"/><path d="M3.3 15.2l3.4 1.4M10.4 13.9l3.1-2.6"/></svg>`,
+  minecraft: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17"/><rect x="7" y="8" width="3.5" height="3.5" fill="currentColor" stroke="none"/><rect x="13.5" y="8" width="3.5" height="3.5" fill="currentColor" stroke="none"/><path d="M7 15.5h10"/></svg>`,
+  vrchat: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M2.5 8.5h19a1.5 1.5 0 0 1 1.5 1.5v4a1.5 1.5 0 0 1-1.5 1.5h-5.2l-2.1 2.4a2 2 0 0 1-3.4 0L8.7 15.5H2.5A1.5 1.5 0 0 1 1 14v-4a1.5 1.5 0 0 1 1.5-1.5z"/><circle cx="7.5" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="16.5" cy="12" r="1.6" fill="currentColor" stroke="none"/></svg>`,
+  // 행성: 1시→7시 방향 보석이 가운데 박히고, 11시→5시 방향으로 고리가 두르는 모양
+  planet: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><path d="M15.2 8.8L12 15.2 8.8 8.8 12 6.6z" fill="currentColor" stroke="none"/><path d="M4.6 16.4c-1.9 1.1-2.9 2.3-2.4 3.1.7 1.2 4.3.4 8.1-1.8s6.3-5 5.6-6.2c-.4-.8-1.9-.8-3.9-.1" transform="rotate(-25 12 12)"/></svg>`,
   soop: `<svg viewBox="0 0 24 24"><path d="M17.43 18.27 16.03 18.27 14.41 17.86 13.13 17.17 12.09 16.18 10.52 17.40 9.30 17.98 7.97 18.27 6.11 18.21 3.96 17.40 2.92 16.59 1.90 15.34 1.09 13.36 1.03 10.81 1.49 9.42 2.13 8.31 3.79 6.72 5.06 6.08 6.63 5.73 8.31 5.79 9.59 6.14 10.98 6.89 11.97 7.82 13.60 6.54 15.63 5.79 17.83 5.79 18.82 6.02 20.04 6.60 20.74 7.07 21.81 8.20 22.62 9.65 23.03 11.33 22.97 13.13 22.16 15.28 21.03 16.64 19.23 17.80 17.43 18.27z M16.99 15.22 17.95 15.02 18.76 14.55 19.60 13.60 20.01 12.26 19.89 11.16 19.49 10.23 18.76 9.45 17.78 8.92 16.15 8.81 15.57 8.98 14.64 9.56 13.31 10.84 11.97 11.19 11.22 11.07 10.52 10.72 9.01 9.27 8.43 8.98 6.63 8.81 5.12 9.56 4.40 10.46 4.11 11.16 4.05 12.49 4.45 13.65 5.47 14.73 6.40 15.13 7.91 15.19 8.60 14.96 9.24 14.55 10.52 13.28 11.22 12.93 12.09 12.81 13.48 13.28 14.64 14.44 15.51 15.02 16.99 15.22z M4.31 13.22 4.31 13.22z M2.16 15.89 2.16 15.89z" fill="currentColor" fill-rule="evenodd"/></svg>`,   // SOOP 공식 마크(허리 잘록한 ∞) 픽셀 추적(2026-08-22) — 종전 원 두 개 근사를 실로고로 교체
   board: `<svg viewBox="0 0 24 24" width="14" height="14"><rect x="4" y="4" width="16" height="16" rx="2" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" mask="url(#micb)"/></svg>`,
   thumbsup: `<svg viewBox="0.18 0.60 24 24" width="14" height="14"><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H7V10h-.24a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><path d="M7 10H4a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
@@ -5204,7 +5222,7 @@ function calPeriodHtml() {
   const btns = [];
   for (let mo = 1; mo <= 12; mo++) {
     // 일정은 미래도 있으므로 현재 월까지로 막지 않는다 — 통계(지난 것만)와 다른 점
-    btns.push(`<button class="stats-period-btn${mo === calState.month ? ' active' : ''}" data-calmonth="${mo}"><span class="pb-y">${calState.year}년</span><span class="pb-m">${mo}월</span></button>`);
+    btns.push(`<button class="stats-period-btn${mo === calState.month ? ' active' : ''}" data-calmonth="${mo}"><span class="pb-y">${String(calState.year).slice(2)}년</span><span class="pb-m">${mo}월</span></button>`);
   }
   return `
     <div class="stats-period-row"><button class="stats-month-btn" data-calydir="prev" ${prevDis}>${SVG_ICONS.chevronLeft}</button><div class="stats-period-wrap no-all">${btns.join('')}</div><button class="stats-month-btn" data-calydir="next" ${nextDis}>${SVG_ICONS.chevronRight}</button></div>`;
@@ -5254,13 +5272,19 @@ function renderCalendarTab() {
     const titles = list.map(it => `<span class="cal-t ${it.kind}">${escapeHtml(it.title)}</span>`).join('');
     cells.push(`<button class="${cls.join(' ')}" data-caldate="${key}"><span class="calendar-daynum${dow === 0 ? ' sun' : dow === 6 ? ' sat' : ''}">${d}</span><span class="cal-titles">${titles}</span></button>`);
   }
+  // 상세는 '고른 날이 속한 주' 바로 아래에 끼운다(2026-09-01) — 지난 활동 탭 달력과 같은 문법.
+  // 우측 열로 두면 폭이 모자랄 때 화면 맨 아래로 밀려 달력에서 멀어진다.
+  const weeks = [];
+  for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
+  const selIdx = calState.selected ? Math.floor((lead + Number(calState.selected.slice(8)) - 1) / 7) : -1;
+  const rows = weeks.map((w, i) => {
+    const grid = `<div class="calendar-grid">${w.join('')}</div>`;
+    return i === selIdx ? grid + `<div class="cal-detail">${calDetailHtml(items)}</div>` : grid;
+  }).join('');
   body.innerHTML = `
-    <div class="cal-body">
-      <div class="calendar">
-        <div class="calendar-grid">${['일','월','화','수','목','금','토'].map((w, i) => `<div class="calendar-weekday${i === 0 ? ' sun' : i === 6 ? ' sat' : ''}">${w}</div>`).join('')}</div>
-        <div class="calendar-grid">${cells.join('')}</div>
-      </div>
-      <div class="cal-detail">${calDetailHtml(items)}</div>
+    <div class="calendar">
+      <div class="calendar-grid cal-head">${['일','월','화','수','목','금','토'].map((w, i) => `<div class="calendar-weekday${i === 0 ? ' sun' : i === 6 ? ' sat' : ''}">${w}</div>`).join('')}</div>
+      ${rows}
     </div>`;
   body.querySelectorAll('.cal-cell').forEach(btn => btn.addEventListener('click', () => {
     const d = btn.dataset.caldate;
@@ -6477,11 +6501,11 @@ function periodSelectorHtml(includeAll) {
   const chevNext = `<button class="stats-month-btn" data-ydir="next" ${year >= curY ? 'disabled' : ''}>${SVG_ICONS.chevronRight}</button>`;
   const btns = [];
   // 연도를 버튼 안에 두 줄로(2026-09-01): 칸이 작아 한 줄로는 '2026년 전체'가 안 들어가고, 따로 연도 줄을 두면 기둥 세로를 더 먹는다
-  if (includeAll) btns.push(`<button class="stats-period-btn${isAll ? ' active' : ''}" data-period="all"><span class="pb-y">${year}년</span><span class="pb-m">전체</span></button>`);
+  if (includeAll) btns.push(`<button class="stats-period-btn${isAll ? ' active' : ''}" data-period="all"><span class="pb-y">${String(year).slice(2)}년</span><span class="pb-m">전체</span></button>`);
   for (let mo = 1; mo <= 12; mo++) {
     const dis = mo < minM || mo > maxM;
     // 연도를 버튼 안에 넣는다(26'1) — 따로 연도 줄을 두면 기둥 세로를 한 줄 더 먹고, 어느 해인지도 칸마다 안 보인다
-    btns.push(`<button class="stats-period-btn${!isAll && mo === month ? ' active' : ''}" data-period="${mo}" ${dis ? 'disabled' : ''}><span class="pb-y">${year}년</span><span class="pb-m">${mo}월</span></button>`);
+    btns.push(`<button class="stats-period-btn${!isAll && mo === month ? ' active' : ''}" data-period="${mo}" ${dis ? 'disabled' : ''}><span class="pb-y">${String(year).slice(2)}년</span><span class="pb-m">${mo}월</span></button>`);
   }
   if (!includeAll) {
     // 멤버 개별탭: 전폭 스테퍼 줄 + 6열 2행 월 버튼 — 블록 외곽만 달력·요약과 정렬
@@ -6491,11 +6515,14 @@ function periodSelectorHtml(includeAll) {
   // 전체탭도 멤버탭과 같은 기둥 형태(2026-08-31): [‹] [전체+12칸 3열] [›], 연도는 아래 줄
   return `<div class="stats-period-row">${chevPrev}<div class="stats-period-wrap">${btns.join('')}</div>${chevNext}</div>`;
 }
-function bindPeriodSelector(body, includeAll) {
+// onChange: 이 선택기가 어느 화면에 붙었는지에 따라 다시 그릴 대상이 다르다(2026-09-01).
+// 종전엔 항상 renderStatsBody()라, 통계 탭에 붙은 선택기를 눌러도 지난 활동 탭만 다시 그려져
+// 화면이 그대로였다 — 종류를 바꿔 renderHallStats가 돌 때서야 반영됐다(실사고).
+function bindPeriodSelector(body, includeAll, onChange) {
   const afterChange = () => {
     statsState.medals = null;   // 기준 기간이 바뀌었으니 메달 재계산(멤버탭 medalsYm 가드와 동일 취지)
     if (statsState.selectedTab !== 'all') statsState.selectedDate = null;
-    renderStatsBody();
+    (onChange || renderStatsBody)();
   };
   body.querySelectorAll('.stats-month-btn[data-ydir]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -7486,9 +7513,8 @@ function computeBroadcastTendency(sessionsByDate, year, month1, isCurrentMonth) 
 // 주말만 날짜를 색으로 표기(토 파랑·일 빨강), 간격 없이 연속. 세션이 전혀 없는 달은 '' 반환(숨김).
 function renderTimeOfDayHeatmap(year, month1, sum, isCurrentMonth) {
   const grid = computeTimeOfDayMinutes(sum.sessionsByDate, year, month1, isCurrentMonth);
-  let hasAny = false;
-  for (const day of grid) { for (const v of day) { if (v > 0) { hasAny = true; break; } } if (hasAny) break; }
-  if (!hasAny) return '';
+  // 방송이 없어도 빈 격자를 그린다(2026-09-01): 카드가 통째로 사라지면 '그 달에 없었다'와
+  // '이 멤버가 없다'가 구별되지 않고, 멤버별로 카드 수가 달라져 줄이 어긋난다.
   const dim = grid.length;
   const R = 15, H = R * 8;
   const ylab = ['00', '03', '06', '09', '12', '15', '18', '21', '24'];
@@ -8609,9 +8635,10 @@ function hallTopRanks(getVal) {
 // 명전 기간 분할 — 통산 / 2026 상반기 / 2026 하반기. 기본 통산(7월 초 하반기가 빌 동안 통산 노출).
 let hallPeriod = 'total';
 const HALL_PERIODS = [
+  // 정사각 칸에 맞춘 두 줄 표기(2026-09-01) — 연/월 버튼과 같은 문법
   { key: 'total', label: '통산' },
-  { key: 'h1',    label: '2026 상반기' },
-  { key: 'h2',    label: '2026 하반기' },
+  { key: 'h1',    label: '<span class="pb-y">26년</span><span class="pb-m">상반기</span>' },
+  { key: 'h2',    label: '<span class="pb-y">26년</span><span class="pb-m">하반기</span>' },
 ];
 // 상반기는 시작·종료월 둘 다 필요하고 하반기는 시작월만 필요하다 — 워커 /chat-counts의 to는 '거기까지'라
 // 진행 중인 하반기에 상한을 걸면 새 달이 열릴 때마다 상수를 고쳐야 한다(미지정 = 현재 KST월까지가 맞다).
@@ -8733,10 +8760,12 @@ function renderHallStats() {
   if (side) {
     if (hallKind === 'hall') {
       // 명전 기간(통산·상/하반기)과 2·3위 토글은 본문 바에서 이 기둥으로 옮겨왔다. 순서: 종류 → 토글 → 기간.
+      // 순서: 종류 → 2·3위 토글 → 기간. 각 묶음은 .side-pick 규칙이 구분선으로 나눈다.
       side.innerHTML = `
         <div class="hall-bar"><span class="hall-bar-label">2 · 3위 보기</span>
           <button class="notify-switch ${hallShowRanks ? 'on' : ''}" id="hallRankToggle" type="button" aria-label="2 · 3위 보기"></button></div>
-        <div class="hall-period">${HALL_PERIODS.map(p => `<button class="hall-period-btn ${p.key === hallPeriod ? 'active' : ''}" data-period="${p.key}" type="button">${p.label}</button>`).join('')}</div>`;
+        <div><div class="filter-title">기간</div>
+          <div class="hall-period">${HALL_PERIODS.map(p => `<button class="hall-period-btn ${p.key === hallPeriod ? 'active' : ''}" data-period="${p.key}" type="button">${p.label}</button>`).join('')}</div></div>`;
       const rt = document.getElementById('hallRankToggle');
       if (rt) rt.addEventListener('click', () => {
         hallShowRanks = !hallShowRanks;
@@ -8751,8 +8780,8 @@ function renderHallStats() {
         renderHallStats();
       }));
     } else {
-      side.innerHTML = periodSelectorHtml(true);
-      bindPeriodSelector(side, true);
+      side.innerHTML = `<div class="filter-title">기간</div>` + periodSelectorHtml(true);
+      bindPeriodSelector(side, true, renderHallStats);
     }
   }
   if (!statsState.viewMonth) { const n = kstNow(); statsState.viewMonth = { year: n.getUTCFullYear(), month: n.getUTCMonth() + 1 }; }
