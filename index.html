@@ -1200,15 +1200,12 @@
 
   /* 기간 선택줄: ‹연도› 스테퍼 + [전체][1월..12월] 13버튼(통합탭) / 12버튼(멤버탭, 전체 없음) */
   /* 통합탭 기간줄: ‹연도› 스테퍼 박스 + [전체][1~12월] 13버튼 */
-  .stats-period-wrap { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; flex: 1; min-width: 0; }   /* 기둥 규격. 2026-09-02 아래에서 2열로 바꿈 — 한 줄 버튼('26년 9월')이 들어가야 한다 */
+  .stats-period-wrap { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; flex: 1; min-width: 0; }   /* 기둥 규격 — 전체1+12칸이 3열로 쌓인다(2026-08-31) */
   /* 정사각형 — 같은 기둥의 멤버 타일·종류 필터와 같은 칸 모양(Crenop 지정). 격자가 전폭이라 78px로 일치한다 */
   .stats-period-wrap { flex: 1; min-width: 0; }
-  /* 한 줄 버튼(2026-09-02): 두 줄짜리 버튼은 사이트 어디에도 없다. '26년 9월'이 한 줄에 들어가도록
-     정사각을 풀고 3열 → 2열로 넓힌다(13칸이라 2열이면 7행, 기둥 세로도 감당된다). */
-  .stats-period-wrap { grid-template-columns: repeat(2, 1fr); }
   .stats-period-wrap .stats-period-btn {
-    display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 4px;
-    white-space: nowrap; line-height: 1.15; padding: 7px 4px;
+    aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+    white-space: normal; line-height: 1.15; padding: 2px;
   }
   .stats-period-btn .pb-y { font-size: 12px; opacity: 0.85; }   /* 월과 같은 크기 — 굵기·농도 차이만으로 위계를 준다 */
   .stats-period-btn .pb-m { font-size: 12px; font-weight: 700; }
@@ -2296,12 +2293,7 @@
   .side-pick .hall-bar { justify-content: flex-start; gap: 10px; margin-left: 44px; }   /* 위아래 버튼 묶음과 같은 왼쪽 기준 */
   .side-pick .filter-title { margin-left: 44px; }
   .members-tabs-wrap, .stats-tabs-wrap, .hall-kind, #hallPeriodSide .hall-period { margin: 0 44px; }
-  .hall-kind { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-  /* 명전 기간은 '26년 상반기'가 한 줄에 들어가야 하므로 한 열(세 칸뿐이라 세로로 길어지지 않는다) */
-  #hallPeriodSide .hall-period { display: grid; grid-template-columns: 1fr; gap: 6px; }
-  #hallPeriodSide .hall-period-btn {
-    aspect-ratio: auto; flex-direction: row; gap: 4px; white-space: nowrap; padding: 7px 8px;
-  }
+  .hall-kind, #hallPeriodSide .hall-period { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
   .hall-period-btn .pb-y { font-size: 11px; opacity: 0.85; }   /* 상동 — 이 격자는 월 글자가 11px */
   .hall-period-btn .pb-m { font-size: 11px; font-weight: 700; }
   .hall-kind-btn, #hallPeriodSide .hall-period-btn {
@@ -2702,7 +2694,7 @@
 
     .sidebar {
       position: fixed; top: var(--strip-h, 44px); left: 0; bottom: 0;
-      width: 300px; max-width: 90vw;   /* 조작부와 같은 폭으로 고정(2026-09-02) — 폭이 다르면 어느 쪽이 열렸느냐에 따라 본문 폭이 달라져 케미·명전 격자의 열 수가 3↔2로 널뛴다 */
+      width: max-content; min-width: 244px; max-width: 300px;   /* 필요한 만큼만 — 본문 폭 고정은 아래 .main이 맡는다 */
       display: grid; grid-template-columns: 1fr; align-content: start; row-gap: 2px;
       padding: 2px 0;
       background: var(--surface); border-right: 1px solid var(--border); border-bottom: none;
@@ -2729,7 +2721,10 @@
     .nav-item[data-page="apply"],      .tab-aux[data-for="apply"]      { grid-row: 11; }
     .nav-item[data-page="links"],      .tab-aux[data-for="links"]      { grid-row: 12; }
     .nav-item, .tab-aux, #drawerClose, .subbar-lead { grid-column: 1; }
-    .tab-aux { justify-self: end; padding-right: 12px; position: relative; z-index: 1; }
+    /* 부속은 라벨 바로 뒤에 선다(2026-09-02). 행 오른쪽 끝(justify-self: end)에 붙였더니 라벨과 사이가
+       과하게 벌어졌다. 왼쪽 여백 112px = 탭 왼쪽 패딩 16 + 아이콘 20 + 간격 12 + 최장 라벨('최근 활동') 약 56 + 여유 8.
+       탭 라벨이 길어지면 이 값도 같이 올려야 한다(고정값 — 실측 아님). */
+    .tab-aux { justify-self: start; padding-left: 112px; position: relative; z-index: 1; }
     .subbar-lead, .tab-aux { flex: none; justify-content: flex-start; }
     .tab-aux { height: var(--nav-row-h); }
     /* 일정 줄은 흐름 안으로 되돌린다 — 가로 보조바에서 '양옆 빈 탭 자리를 빌리는' 절대배치가
@@ -2777,12 +2772,17 @@
   /* 태블릿: 기둥이 상시 보이고 본문을 밀어낸다(덮지 않는다) */
   @media (min-width: 701px) and (max-width: 1150px) {
     .sidebar { transform: none; transition: transform 0.22s ease; }
-    .main { margin-left: var(--drawer-w); min-width: 0; transition: margin-left 0.22s ease; }
+    /* 본문이 쓰는 폭을 '더 넓은 서랍' 기준으로 고정한다(2026-09-02) — 좌우 서랍 폭이 다르면 어느 쪽이
+       열렸느냐에 따라 본문 폭이 달라져 케미·명전 격자의 열 수가 3↔2로 널뛰었다. 서랍 폭은 각자 두고,
+       좁은 쪽이 열렸을 때 그 차액만큼 반대편을 비워 본문 폭을 같게 만든다. */
+    .main { margin-left: var(--drawer-w); min-width: 0; transition: margin-left 0.22s ease;
+      padding-right: calc(max(var(--drawer-w, 300px), 300px) - var(--drawer-w, 300px)); }
     /* 좌우 중 하나만 자리를 차지한다(2026-09-01, Crenop 제안). 탭을 고르고 나면 조작부가 더 자주 쓰이므로
        조작부를 열 때 탭 기둥이 물러나 본문 폭을 지킨다. 다시 부르는 길은 좌상단 ☰. */
     .drawer-btn#drawerBtnL { display: inline-flex; }
     body.drawer-r .sidebar { transform: translateX(-100%); }
-    body.drawer-r .main { margin-left: 0; margin-right: 300px; }   /* 우측도 덮지 않고 밀어낸다 — 좌우 어느 쪽이 열려도 본문 폭이 같다 */
+    body.drawer-r .main { margin-left: 0; margin-right: 300px;
+      padding-right: 0; padding-left: calc(max(var(--drawer-w, 300px), 300px) - 300px); }   /* 우측도 덮지 않고 밀어낸다 */
     /* 이 폭에서는 좌우가 '자리를 주고받는' 관계다(하나만 상시). 덮는 게 아니라 밀어내므로 가림막을 쓰지 않는다. */
     .drawer-scrim { display: none; }
   }
@@ -3116,7 +3116,7 @@
 </main>
 
 <script>
-const BUILD = '2026-09-02e';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
+const BUILD = '2026-09-02f';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
 console.log('[build] front ' + BUILD);
 const WORKER_URL = 'https://chuntaverse.crenop.workers.dev';
 const BASE_TITLE = '천타버스';
@@ -4294,7 +4294,8 @@ function parseTopbarRows(rows) {
 
 function topbarLinksHtml(side) {
   return topbarLinks.filter(b => (b.side || 'left') === side).map(b => {
-    const pc = escapeHtml(b.l1) + (b.l2 ? '<br>' + escapeHtml(b.l2) : '');
+    // 1행·2행을 한 줄로 잇는다(2026-09-02) — 두 줄짜리 버튼은 사이트 어디에도 없다.
+    const pc = escapeHtml(b.l1) + (b.l2 ? ' ' + escapeHtml(b.l2) : '');
     const tx = lightenForText(b.hex);   // 아이콘은 지정색 원본, 글자만 보정 — 순위 버튼과 동일 규칙(2026-08-04 일괄 적용)
     const inner = `${SVG_ICONS[b.icon] || SVG_ICONS.link}<span class="tb-t-pc" style="color:${tx}">${pc}</span><span class="tb-t-mb" style="color:${tx}">${escapeHtml(b.mb)}</span>`;
     const style = `--tb-rgb:${hexToRgb(b.hex)};color:${b.hex}`;
