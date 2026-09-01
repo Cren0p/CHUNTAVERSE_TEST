@@ -59,6 +59,8 @@
     --mode-restricted: #a78bfa;
     --filter-post: #2EF5E1;
     --sidebar-w: 200px;
+    --tab-w: 92px;      /* 탭 한 칸 폭 — 상단바와 보조바가 공유(칸 정렬의 단일 소스) */
+    --nav-row-h: 40px;  /* 드로어 한 행 높이 — 탭과 부속이 같은 행에 서려면 두 쪽이 같은 값을 써야 한다 */
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   /* 전역 미니멀 스크롤바 (초미니 6px·거의 안 보이다 hover 시 진해짐). webkit=Edge/Chrome/Safari, scrollbar-*=Firefox */
@@ -153,7 +155,10 @@
      서로 달라 화면 정중앙은 아니지만, 양쪽 끝에 내용이 붙어 있어 가운데로 읽힌다.
      엄밀한 정중앙을 쓰려면 양옆에 같은 폭의 빈 칸을 둬야 하는데, 좁은 폭에서 그 빈 칸이 탭을 먼저 밀어낸다. */
   .sidebar { flex: 0 0 auto; display: flex; align-items: stretch; }
-  .nav-list { padding: 0 6px; display: flex; flex-direction: row; gap: 2px; flex: 1; align-items: stretch; justify-content: center; min-width: 0; }
+  /* 탭 균등 폭(2026-08-31): 글자 길이와 무관하게 전부 --tab-w. 보조바가 같은 칸 규격을 써서
+     각 부속(방송 숫자·알림 벨·일정)이 자기 탭 바로 아래에 서려면 두 줄의 칸이 같아야 한다.
+     --tab-w는 가장 긴 라벨(6글자 × 12px = 72) + 좌우 여백. 라벨을 더 길게 만들면 이 값을 다시 잡을 것. */
+  .nav-list { padding: 0 6px; display: grid; grid-auto-flow: column; grid-auto-columns: var(--tab-w); gap: 2px; align-items: stretch; }
   .drawer-extra { display: none; }   /* PC에서는 보조바가 이 몫을 한다 */
   .topbar-right { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 0 12px; flex: 1 1 0; min-width: 0; }
   .nav-item {
@@ -307,6 +312,12 @@
      문구·가이드는 상단바 우측(노는 자리)으로 올라갔고 여기엔 탭별 버튼만 남는다.
      반드시 '한 줄'이다: 버튼이 늘거나(좋아요 순위는 대회 수만큼 생긴다) 줄어도 본문 시작 높이가
      안 움직여야 한다(위치 일관성). 그래서 줄바꿈 대신 가로 스크롤로 흘린다. */
+  .subbar-lead, .subbar-right { display: flex; align-items: center; gap: 8px; flex: 1 1 0; min-width: 0; }
+  .subbar-right { justify-content: flex-end; }
+  /* 탭 줄과 같은 칸 규격 — 부속이 자기 탭 아래에 정확히 선다 */
+  .subbar-mid { display: grid; grid-auto-flow: column; grid-auto-columns: var(--tab-w); gap: 2px; padding: 0 6px; }
+  .tab-aux { display: flex; align-items: center; justify-content: center; min-width: 0; }
+  .drawer-close { display: none; }
   .main-header {
     padding: 6px 12px;
     border-bottom: 1px solid var(--border);
@@ -2265,18 +2276,37 @@
   .apply-btns { display: flex; flex-direction: column; gap: 8px; }
   .apply-btn { width: 100%; justify-content: flex-start; }
   .apply-btn.on { background: rgba(var(--tb-rgb), 0.28); border-color: rgb(var(--tb-rgb)); }
+  /* 묶음 머리 우측의 순위 버튼 — 그 글의 집계가 시트에 있을 때만 나온다 */
+  .lrg-rank-btn {
+    display: inline-flex; align-items: center; gap: 4px; flex: none; margin-left: auto;
+    padding: 2px 8px; font-family: inherit; font-size: 11px; font-weight: 600;
+    background: rgba(var(--tb-rgb), 0.12); border: 1px solid rgba(var(--tb-rgb), 0.5);
+    cursor: pointer; transition: background 0.15s, border-color 0.15s;
+  }
+  .lrg-rank-btn:hover { background: rgba(var(--tb-rgb), 0.24); border-color: rgb(var(--tb-rgb)); }
+  .lrg-rank-btn.on { background: rgba(var(--tb-rgb), 0.28); border-color: rgb(var(--tb-rgb)); }
+  .lrg-rank-btn svg { width: 12px; height: 12px; display: block; }
+  .lrg-head { display: flex; align-items: center; gap: 8px; }
   .apply-rank { background: var(--surface); border: 1px solid var(--border); padding: 12px; min-width: 0; }
   @media (max-width: 1100px) {
     /* 순위·버튼은 조작부라 위로 — 요청 목록이 길어 아래에 두면 스크롤로 내려가야 닿는다.
        필터가 아니므로 우측 서랍으로 보내지 않는다(서랍은 걸러내기 전용). */
     .apply-wrap { grid-template-columns: 1fr; }
     .apply-side { position: static; order: -1; }
+    /* 좁은 폭: 요청 목록과 순위를 같이 쌓으면 화면이 길어진다 → 순위를 고르면 요청 목록을 접어
+       '좋아요 요청 ↔ 좋아요 순위' 토글처럼 쓴다. 같은 버튼을 다시 누르면 목록으로 돌아온다. */
+    body.apply-rank-on .apply-main { display: none; }
   }
 
   /* 디스코그래피 — 멤버별 묶음. 스트립 자체는 프로필에서 쓰던 것을 그대로 쓴다(문법 통일) */
   .disco-wrap { padding: 20px 24px; max-width: 1400px; width: 100%; margin: 0 auto; flex: 1; }
   .disco-member + .disco-member { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--border); }
-  .disco-member-name { font-size: 16px; font-weight: 700; color: var(--text); margin: 0 auto; max-width: 1200px; }
+  .disco-member-name {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 16px; font-weight: 700; color: var(--text);
+    margin: 0 auto; max-width: 1200px;
+  }
+  .disco-member-name img { width: 32px; height: 32px; object-fit: cover; flex: none; }
   .disco-member .video-strip-section { margin-top: 12px; }
   /* 화살표를 absolute로 띄워 스트립 폭 바깥에 세운다 — flex 형제로 두면 등장/퇴장할 때마다
      스크롤 영역 폭이 변해 타일이 흔들린다. 이제 .vs-scroll은 항상 온전한 폭을 쓴다. */
@@ -2507,7 +2537,7 @@
     .header-center-line .hc-mid { display: none; }
   }
 
-  @media (max-width: 1100px) {
+  @media (max-width: 1400px) {
     /* 상단바 모달(모바일): PC처럼 중앙 + 내부 스크롤 유지(패널 max-height:80vh, lr-body 스크롤). 헤더(X)가 고정돼야 내용 스크롤 중에도 닫기 가능 → 페이지 스크롤 대신 내부 스크롤. 짧으면 중앙 정렬 */
     .lr-overlay { align-items: center; }
 
@@ -2537,26 +2567,26 @@
     .topbar-right { order: 3; width: 100%; flex: 0 0 auto; justify-content: center; padding: 0; }
     /* 로고 아래 한 줄: 갱신 정보와 '비공식 팬사이트' 두 줄을 가로로 눕힌다(세로 두 줄이 아니라) */
     .topbar-right .header-center { flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px 10px; text-align: center; }
-    .main-header { display: none; }
-    /* 드로어는 2열: 좌=탭 목록, 우=보조바에서 내려온 버튼들 */
-    .sidebar { flex-direction: row; width: 330px; max-width: 90vw; }
-    /* 열 폭을 고정한다 — 자동 폭이면 탭 이름 길이에 따라 두 칸의 경계가 매번 달라진다(관련 링크 vs 케미) */
-    .nav-list { padding: 8px 0; flex-direction: column; gap: 2px; flex: 0 0 176px; justify-content: flex-start; }
-    .drawer-extra {
-      display: flex; flex-direction: column; align-items: stretch; gap: 8px;
-      padding: 12px 10px; flex: 1; min-width: 0;
-      border-left: 1px solid var(--border);
+    /* 드로어 2열: 좌 = [닫기] + 탭 목록 / 우 = 부속(보조바 가운데 묶음이 통째로 내려온 것).
+       두 열이 같은 행 높이(--nav-row-h)를 써야 부속이 자기 탭과 같은 줄에 선다. */
+    .sidebar { display: grid; grid-template-columns: 176px 1fr; align-content: start; width: 330px; max-width: 90vw; padding: 8px 0; }
+    .drawer-close {
+      display: flex; align-items: center; justify-content: center;
+      height: var(--nav-row-h); width: 100%;
+      background: none; border: none; color: var(--muted); cursor: pointer;
     }
-    .drawer-extra .page-title { flex-direction: column; align-items: stretch; gap: 8px; }
-    .drawer-extra .page-title-link, .drawer-extra .celebration-box { flex-direction: row; justify-content: flex-start; text-align: left; min-width: 0; }
+    .drawer-close:hover { color: var(--accent); }
+    .drawer-close svg { width: 20px; height: 20px; }
+    .nav-list { padding: 0; display: flex; flex-direction: column; gap: 2px; }
+    .subbar-mid { display: flex; flex-direction: column; gap: 2px; padding: 0 8px 0 0; grid-column: 2; grid-row: 1 / span 2; }
+    .subbar-lead, .tab-aux { height: var(--nav-row-h); flex: none; justify-content: flex-start; }
+    .subbar-lead { gap: 6px; overflow-x: auto; scrollbar-width: none; }
     .nav-item {
       flex-direction: row; align-items: center; justify-content: flex-start; gap: 12px;
-      padding: 11px 16px; font-size: 14px; text-align: left; width: 100%;
+      padding: 0 16px; height: var(--nav-row-h); font-size: 14px; text-align: left; width: 100%;
       border-bottom: none; border-left: 3px solid transparent;
-    }   /* justify-content 되돌림: 상단바(세로 배치)에선 center가 맞지만 세로 목록에선 글자가 들쭉날쭉해진다 */
+    }   /* 높이를 --nav-row-h로 고정: 우측 부속 칸과 행이 맞아야 '같은 줄'이 성립한다 */
     .nav-item.active { border-bottom-color: transparent; border-left-color: var(--accent); }
-    .nav-lbl { flex: 1; }                       /* 세로 목록에선 뱃지·벨을 행 우측 끝으로 밀어야 한다 */
-    .nav-live-badge, .nav-notify-bell { margin-left: auto; }
 
     /* ── 우측 드로어: 탭 내부 조작(필터) ────────────────────────────────────────
        PC의 우측 기둥이 그대로 서랍이 된 것. 좌=탭 전환 / 우=탭 내부 조작이라는 대응이
@@ -2572,7 +2602,7 @@
     body.drawer-r .filter-panel, body.drawer-r .chem-filter-panel { transform: none; }
 
     .drawer-btn { display: inline-flex; }
-    .main-header { padding: 8px 12px; gap: 10px; }
+    .main-header { display: none; }   /* 보조바 폐지 — 내용물은 드로어 우측 칸으로 내려간다 */
     /* 갱신 문구도 버튼들과 같은 가로 스크롤 흐름 안에 둔다 — 보조바가 한 줄이라 3줄 분리를 되돌린다 */
     .header-center-line { white-space: nowrap; }
     .header-center-line .hc-period, .header-center-line .hc-stamp { display: inline; }
@@ -2644,6 +2674,7 @@
   <button class="drawer-btn" id="drawerBtnL" type="button" aria-label="메뉴 열기" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
   <div class="topbar-logo"><img id="siteLogoImg" src="Title.webp" alt="CHUNTAVERSE"></div>
 <nav class="sidebar" id="sidebar">
+  <button class="drawer-close" id="drawerClose" type="button" aria-label="메뉴 닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   <!-- 탭 순서(2026-08-31): [프로필 · 생방송 · 최근 이벤트] 매일 보는 것 → [기록(통계) · 케미 · 명예의 전당]
        쌓인 것을 보는 것 → [달력(컨텐츠) · 현수막] 모아 보는 것 → [관련 링크] 도구.
        개명(통계→기록 · 컨텐츠→달력)과 신설(디스코그래피 · 컨텐츠 신청)은 각 탭의 내용 개편과 함께 온다. -->
@@ -2654,20 +2685,13 @@
     </button>
     <button class="nav-item" data-page="live">
       <span class="nav-icon" id="navLiveIcon"></span>
-      <span class="nav-lbl">
-        <span>생방송</span>
-        <span class="nav-live-badge off" id="navLiveBadge">
-          <span class="nav-live-dot"></span>
-          <span class="nav-live-count" id="navLiveCount" role="img" aria-label="방송 중 0명"></span>
-        </span>
-      </span>
+      <span>생방송</span>
     </button>
     <button class="nav-item" data-page="events">
       <span class="nav-icon" id="navEventsIcon"></span>
       <span class="nav-lbl">
         <span>최근 이벤트</span>
         <span class="nav-badge" id="navBadge" role="img" style="display:none"></span>
-        <span class="nav-notify-bell" id="notifyBell" role="button" tabindex="0" aria-label="새 이벤트 알림 토글" title="새 이벤트 알림 — 필터에서 선택한 멤버·종류만 알림됩니다"></span>
       </span>
     </button>
     <button class="nav-item" data-page="stats">
@@ -2703,8 +2727,6 @@
       <span>관련 링크</span>
     </button>
   </div>
-  <!-- 모바일 전용: 보조바가 사라지는 폭에서 탭별 버튼·가이드가 JS로 여기 옮겨온다(드로어 우측 칸) -->
-  <div class="drawer-extra" id="drawerExtra"></div>
 </nav>
   <div class="topbar-right">
     <div class="header-center" id="headerCenter"></div>
@@ -2718,10 +2740,34 @@
 <main class="main">
   <!-- 보조바: 탭별 버튼만 남는다(문구·가이드는 상단바 우측으로 올라갔다). 모바일에서는 통째로 사라지고
        내용물이 좌측 드로어의 여분 칸으로 옮겨간다 — 좁은 화면에서 줄 하나를 통째로 아낀다. -->
+  <!-- 보조바(2026-08-31 재배치): 탭 줄과 같은 칸 규격을 써서, 각 부속이 자기 탭 '바로 아래'에 선다.
+       왼쪽 = 기념일 + 상단바 링크(로고 아래) · 가운데 = 탭별 부속 · 오른쪽 = 사용 가이드(문구 아래).
+       모바일에서는 이 줄이 사라지고 같은 요소들이 드로어의 우측 칸으로 내려가 각 탭과 같은 '행'에 선다. -->
   <div class="main-header">
-    <div class="page-title" id="pageTitle"></div>
-    <!-- 사용 가이드(팬카페 글) — 탭별 버튼과 같은 .page-title-link 골격. 모바일에서는 드로어로 내려간다 -->
-    <a class="page-title-link" id="guideLink" href="https://cafe.naver.com/cyhistory/185386" target="_blank" rel="noopener"><span id="guideIcon"></span><span class="tb-t-pc">사용 <br class="tb-br">가이드</span><span class="tb-t-mb">가이드</span></a>
+    <div class="subbar-lead" id="subbarLead"></div>
+    <div class="subbar-mid" id="subbarMid">
+      <div class="tab-aux" data-for="members"></div>
+      <div class="tab-aux" data-for="live" id="auxLive">
+        <span class="nav-live-badge off" id="navLiveBadge">
+          <span class="nav-live-dot"></span>
+          <span class="nav-live-count" id="navLiveCount" role="img" aria-label="방송 중 0명"></span>
+        </span>
+      </div>
+      <div class="tab-aux" data-for="events" id="auxEvents">
+        <span class="nav-notify-bell" id="notifyBell" role="button" tabindex="0" aria-label="새 이벤트 알림 토글" title="새 이벤트 알림 — 필터에서 선택한 멤버·종류만 알림됩니다"></span>
+      </div>
+      <div class="tab-aux" data-for="stats"></div>
+      <div class="tab-aux" data-for="chemistry"></div>
+      <div class="tab-aux" data-for="hall"></div>
+      <div class="tab-aux" data-for="content" id="auxContent"></div>
+      <div class="tab-aux" data-for="banner"></div>
+      <div class="tab-aux" data-for="disco"></div>
+      <div class="tab-aux" data-for="apply"></div>
+      <div class="tab-aux" data-for="links" id="auxLinks"></div>
+    </div>
+    <div class="subbar-right" id="subbarRight">
+      <a class="page-title-link" id="guideLink" href="https://cafe.naver.com/cyhistory/185386" target="_blank" rel="noopener"><span id="guideIcon"></span><span class="tb-t-mb">가이드</span></a>
+    </div>
   </div>
 
   <div class="page" id="page-members">
@@ -2866,7 +2912,7 @@
 </main>
 
 <script>
-const BUILD = '2026-08-31k';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
+const BUILD = '2026-08-31m';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
 console.log('[build] front ' + BUILD);
 const WORKER_URL = 'https://chuntaverse.crenop.workers.dev';
 const BASE_TITLE = '천타버스';
@@ -2944,27 +2990,43 @@ const MEMBER_BIRTHDAYS = {
     const panel = document.querySelector('.page.active .filter-panel, .page.active .chem-filter-panel');
     btnR.style.display = panel ? '' : 'none';
     if (!panel) { if (body.classList.contains('drawer-r')) setDrawer('r', false); return; }
-    const off = panel.querySelectorAll('.filter-member:not(.on), .filter-type:not(.on)').length;
+    // [data-type]으로 좁히는 이유: 3열을 채우는 빈칸(evt-type-spacer·chem-type-spacer)도 .filter-type이라
+    // 그냥 세면 '꺼진 필터'로 잡힌다 — 다 켜둔 상태에서 이벤트 1·케미 2가 뜨던 것이 정확히 그 빈칸 수였다.
+    const off = panel.querySelectorAll('.filter-member:not(.on), .filter-type[data-type]:not(.on)').length;
     const cnt = btnR.querySelector('.drawer-cnt');
     if (cnt) { cnt.textContent = off > 99 ? '99+' : String(off); cnt.style.display = off ? '' : 'none'; }
   };
-  // 보조바(PC)와 드로어 우측 칸(모바일)은 부모가 달라 CSS만으로는 못 옮긴다 — 요소를 실제로 옮긴다.
-  // 요소 자체를 옮기므로 id가 유지되고, updatePageTitle()이 innerHTML을 다시 채워도 자리가 안 흔들린다.
+  // 폭에 따라 실제로 요소를 옮긴다(CSS로는 부모를 못 바꾼다).
+  //  PC   : [기념일·링크] [탭별 부속 11칸] [가이드]  — 보조바 한 줄
+  //  모바일: 드로어 우측 칸에 같은 순서로 세로 배치 — 기념일은 닫기 버튼 행, 가이드는 관련 링크 행.
+  // 두 배치의 대응이 1:1이라 한쪽을 고치면 다른 쪽 자리가 자동으로 정해진다.
   let wasMobile = null;
   function syncBarPlacement() {
-    const mobile = innerWidth <= 1100;
+    const mobile = innerWidth <= 1400;
     if (mobile === wasMobile) return;
     wasMobile = mobile;
-    const extra = document.getElementById('drawerExtra');
     const bar = document.querySelector('.main-header');
-    const right = document.querySelector('.topbar-right');
-    const pt = document.getElementById('pageTitle');
+    const mid = document.getElementById('subbarMid');
+    const lead = document.getElementById('subbarLead');
+    const right = document.getElementById('subbarRight');
     const guide = document.getElementById('guideLink');
-    if (!extra || !bar || !right || !pt || !guide) return;
-    if (mobile) { extra.appendChild(pt); extra.appendChild(guide); }
-    else { bar.appendChild(pt); bar.appendChild(guide); }   // PC: 둘 다 보조바 (상단바 우측은 갱신 문구 전용)
+    const auxLinks = document.getElementById('auxLinks');
+    const side = document.getElementById('sidebar');
+    if (!bar || !mid || !lead || !right || !guide || !auxLinks || !side) return;
+    if (mobile) {
+      side.appendChild(mid);        // 드로어 우측 칸 = 보조바 가운데 묶음 그대로
+      mid.insertBefore(lead, mid.firstChild);   // 기념일·링크 = 닫기 버튼과 같은 행(맨 위)
+      auxLinks.appendChild(guide);              // 가이드 = 관련 링크와 같은 행(맨 아래)
+    } else {
+      bar.appendChild(mid);
+      bar.insertBefore(lead, mid);
+      bar.appendChild(right);
+      right.appendChild(guide);
+    }
   }
   syncBarPlacement();
+  const closeBtn = document.getElementById('drawerClose');
+  if (closeBtn) closeBtn.addEventListener('click', () => setDrawer('l', false));
   let rsz;
   addEventListener('resize', () => { clearTimeout(rsz); rsz = setTimeout(() => { syncBarPlacement(); syncDrawerFilterBtn(); }, 120); });
 
@@ -4110,13 +4172,15 @@ async function loadTopbarLinks() {
 }
 
 function updatePageTitle() {
-  const el = document.getElementById('pageTitle');
-  if (!el) return;
   const scheduleBtn = scheduleBtnHTML();  // 가장 임박한 날짜의 일정 묶음(같은 날 2건+는 열 정렬, 데이터 전엔 셸)
   const celebrations = getTodayCelebrations();
-  // 좋아요 요청·순위 버튼은 2026-08-31 폐지 — 컨텐츠 신청 탭이 그 둘을 다 담는다.
-  // 보조바 버튼과 탭이 같은 것을 두 군데서 열게 두면 어느 쪽이 본체인지 알 수 없다.
-  el.innerHTML = scheduleBtn + topbarLinksHtml() + celebrations.join('');
+  // 자리 규칙(2026-08-31): 기념일 → 맨 왼쪽(로고 아래) · 상단바 링크 → 그 오른쪽으로 하나씩 ·
+  // 일정 → 달력 탭 아래 칸 · 가이드 → 맨 오른쪽(갱신 문구 아래, 마크업 고정).
+  // 좋아요 요청·순위 버튼은 폐지 — 컨텐츠 신청 탭이 그 둘을 다 담는다.
+  const lead = document.getElementById('subbarLead');
+  if (lead) lead.innerHTML = celebrations.join('') + topbarLinksHtml();
+  const auxContent = document.getElementById('auxContent');
+  if (auxContent) auxContent.innerHTML = scheduleBtn;
   const schBtn = document.getElementById('schBtn');
   if (schBtn) {
     schBtn.addEventListener('mouseenter', preloadSchedule);
@@ -4234,9 +4298,16 @@ function renderLikeReqBody() {
   const checked = lsKeySet(LS_LIKE_CHECKED);
   body.innerHTML = buildLikeReqGroups(likeReqShown).map(g => {
     const title = escapeHtml(likeReqGroupTitle(g.entries));
+    // 순위 버튼은 '그 글의 순위 집계가 시트에 있을 때만' 붙는다 — 없는 컨텐츠에 빈 순위를 열게 하지 않는다.
+    // 매칭은 시트의 글번호가 그 묶음 주소에 들어 있는지로 본다. 카페 글은 숲 글번호가 없어 자연히 버튼이 안 생긴다
+    // (네이버 카페 좋아요 수를 받아올 수 있는지는 미확인 — 가능해지면 여기 조건을 넓히면 된다).
+    const rb = likeRankBtns.find(b => b.titleNo && g.url && g.url.includes('/' + b.titleNo));
+    const rankBtn = rb
+      ? `<button class="lrg-rank-btn${applyRankPost === rb.titleNo ? ' on' : ''}" type="button" data-post="${escapeHtml(rb.titleNo)}" style="--tb-rgb:${hexToRgb(rb.hex)};color:${lightenForText(rb.hex)}" title="좋아요 순위 보기">${SVG_ICONS.barChart}<span>순위</span></button>`
+      : '';
     const head = `<div class="lrg-head">` + (g.url
       ? `<a class="lrg-head-txt" href="${escapeHtml(g.url)}" target="_blank" rel="noopener">${title}</a>`
-      : `<span class="lrg-head-txt">${title}</span>`) + `</div>`;
+      : `<span class="lrg-head-txt">${title}</span>`) + rankBtn + `</div>`;
     const rows = g.entries.map(e => {
       const key = likeReqKey(e);
       const m = findMember(e.member_id);
@@ -4532,13 +4603,13 @@ function scheduleBtnHTML() {
   scheduleSig = h.sig;
   // 버튼 상시 노출 — 데이터 로드 전 첫 페인트 순간만 셸(일정이 비는 경우는 전제상 없음).
   if (!h.vis.length) {
-    return `<button class="page-title-link sch-btn" id="schBtn" type="button" onclick="openSchedule()">${SVG_ICONS.calendar}<span class="tb-t-pc">다가오는 일정 <br class="tb-br"><span class="sch-btn-dday">불러오는 중</span></span><span class="tb-t-mb">일정</span></button>`;
+    return `<button class="page-title-link sch-btn" id="schBtn" type="button" onclick="openSchedule()">${SVG_ICONS.calendar}<span class="sch-btn-dday">일정</span></button>`;
   }
   const head = h.vis[0];
   // 단일 일정 — 현행: 제목 + (당일부터 D-time, 그 전 D-day). 모바일은 항상 D-day.
   if (h.group.length < 2) {
     const second = (head.hasTime && ddayNum(head) === 0) ? dtimeText(head) : ddayText(head);
-    return `<button class="page-title-link sch-btn" id="schBtn" type="button" onclick="openSchedule()">${SVG_ICONS.calendar}<span class="tb-t-pc">${escapeHtml(head.shortTitle)} <br class="tb-br"><span class="sch-btn-dday">${second}</span></span><span class="tb-t-mb">${ddayText(head)}</span></button>`;
+    return `<button class="page-title-link sch-btn" id="schBtn" type="button" onclick="openSchedule()">${SVG_ICONS.calendar}<span class="sch-btn-dday">${ddayText(head)}</span></button>`;
   }
   // 같은 날 2건+ (C): 제목 행 + dtime 행(열 정렬), 사이에 가운뎃점(·)으로 분리 표시. dtime 전부 같으면 한 칸 병합.
   const sep = `<span class="sch-sep">·</span>`;
@@ -5101,7 +5172,7 @@ if (notifyBellEl) {
     navEventsIcon: SVG_ICONS.eventList,
     navStatsIcon: SVG_ICONS.pencil,   // 기록 탭(2026-08-31) — barChart는 좋아요 순위가 쓴다. 방제 변경 아이콘과 같은 그림인 건 Crenop 확인 후 수용
     navChemistryIcon: SVG_ICONS.chemistry,
-    navContentIcon: SVG_ICONS.film,
+    navContentIcon: SVG_ICONS.calendar,   // 달력 탭(2026-08-31) — film은 '컨텐츠'였을 때의 그림
     navLinksIcon: SVG_ICONS.link,
     navBannerIcon: SVG_ICONS.flag,
     navDiscoIcon: SVG_ICONS.music,
@@ -5165,10 +5236,12 @@ function updateHeaderCenter() {
 function renderDisco() {
   const el = document.getElementById('discoBody');
   if (!el) return;
-  const targets = [{ name: '천타버스', img: 'CHUNTAVERSE.webp' }].concat(MEMBERS.map(m => ({ name: m.name, img: m.img })));
+  const targets = [{ name: '천타버스', img: 'CHUNTAVERSE.webp', color: '' }].concat(MEMBERS.map(m => ({ name: m.name, img: m.img, color: m.color })));
   const html = targets.map(t => {
     const strips = renderVideoStrips(t.name, t.img, 1200);
-    return strips ? `<section class="disco-member"><h2 class="disco-member-name">${escapeHtml(t.name)}</h2>${strips}</section>` : '';
+    if (!strips) return '';
+    const color = t.color ? ` style="color:${t.color}"` : '';
+    return `<section class="disco-member"><h2 class="disco-member-name"><img src="${escapeHtml(t.img)}" alt="" onerror="this.style.display='none'"><span${color}>${escapeHtml(t.name)}</span></h2>${strips}</section>`;
   }).join('');
   el.innerHTML = html || '<div class="lr-msg">등록된 곡이 없습니다.</div>';
 }
@@ -5191,11 +5264,22 @@ function renderApplyBtns() {
   }).join('');
 }
 
+function clearApplyRank() {
+  applyRankPost = null;
+  stopApplyPoll();
+  const body = document.getElementById('applyRankBody');
+  if (body) body.innerHTML = '<div class="lr-msg">컨텐츠를 고르면 순위가 나옵니다.</div>';
+  document.body.classList.remove('apply-rank-on');
+  renderLikeReqBody();
+}
+
 function selectApplyRank(titleNo) {
   applyRankPost = titleNo;
+  document.body.classList.add('apply-rank-on');
   rankOpenPost = titleNo;
   likeRankTarget = 'applyRankBody';
   renderApplyBtns();
+  if (likeReqShown) renderLikeReqBody();   // 고른 표시를 행 버튼에도 반영
   const body = document.getElementById('applyRankBody');
   if (body) body.innerHTML = '<div class="lr-msg">불러오는 중…</div>';
   loadLikeRanking();
@@ -5232,8 +5316,12 @@ function renderApply() {
 }
 
 document.addEventListener('click', e => {
-  const b = e.target.closest('.apply-btn');
-  if (b) selectApplyRank(b.dataset.post);
+  const b = e.target.closest('.apply-btn, .lrg-rank-btn');
+  if (!b) return;
+  const post = b.dataset.post;
+  // 좁은 폭에선 우측 칸이 아래로 내려가 멀다 → 같은 버튼을 다시 누르면 닫히는 토글로 쓴다.
+  if (applyRankPost === post && b.classList.contains('lrg-rank-btn')) { clearApplyRank(); return; }
+  selectApplyRank(post);
 });
 
 function switchPage(page, opts) {
