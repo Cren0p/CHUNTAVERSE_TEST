@@ -388,9 +388,8 @@
   .drawer-btn:hover { border-color: var(--accent); }
   .drawer-btn svg { width: 18px; height: 18px; display: block; }
   /* 걸린 필터 개수 — 필터가 서랍에 숨으면 "왜 안 나오지"가 되므로 버튼에 남겨 둔다 */
-  /* 깔때기를 '통과하는 만큼' 채운다(2026-08-31). 전부 켜면 가득, 많이 끌수록 얕게 남는다 —
-     아이콘 자체가 양을 보여주므로 곁에 붙는 숫자·점을 해석할 일이 없다.
-     --funnel-fill = 켜진 비율(0~1)을 JS가 넣는다. clip-path가 위에서부터 잘라내 아래쪽만 남긴다. */
+  /* 켜둔 비율만큼 채운다. 아이콘 자체가 양을 보여주므로 곁에 붙는 숫자·점을 해석할 일이 없다.
+     --funnel-fill = 켜진 비율(0~1)을 JS가 넣는다. 이 '채움' 장치는 아이콘 모양과 무관하게 재사용 가능하다. */
   .drawer-btn .funnel-fill { clip-path: inset(calc((1 - var(--funnel-fill, 1)) * 100%) 0 0 0); }
   .drawer-btn.filtered { color: var(--accent); border-color: var(--accent); }
   /* 드로어 뒤 가림막 — 누르면 닫힌다(우측 드로어의 유일한 닫기 경로이므로 값이 싸야 한다) */
@@ -757,7 +756,7 @@
   .page.active { display: flex; }
 
   /* 컨테이너 쿼리 기준점: 각 탭 콘텐츠 영역(뷰포트가 아닌 실제 폭) 기준으로 열 수/전환 판단 → 좌측 사이드바·패딩 자동 반영 + 멤버 증가 대응 */
-  #app, #statsBody, #linksBody, #membersBody, .hall-main { container-type: inline-size; }   /* .hall-main: 기둥을 뺀 본문 폭 기준(2026-09-01) — .hall-wrap이면 기둥 폭까지 세어 카드가 기둥 위로 넘쳤다 */
+  #app, #statsBody, #linksBody, #membersBody, .hall-main, .cal-main { container-type: inline-size; }   /* .hall-main: 기둥을 뺀 본문 폭 기준(2026-09-01) — .hall-wrap이면 기둥 폭까지 세어 카드가 기둥 위로 넘쳤다 */
 
   .grid {
     display: grid;
@@ -1193,7 +1192,7 @@
     aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
     white-space: normal; line-height: 1.15; padding: 2px;
   }
-  .stats-period-btn .pb-y { font-size: 9px; opacity: 0.75; }
+  .stats-period-btn .pb-y { font-size: 12px; }   /* 월과 같은 크기 — 굵기 차이만으로 위계를 준다(Crenop: 읽히게 하려고 26년으로 줄인 것) */
   .stats-period-btn .pb-m { font-size: 12px; font-weight: 700; }
   /* 멤버 개별탭: 스테퍼 줄(전폭) + 6열 2행 월 버튼 — 블록 외곽만 달력·요약과 정렬(내부 7열 정렬은 폐기) */
   /* 연도 화살표는 격자 좌우(2026-09-01, 음악 탭 스트립과 같은 자리 문법).
@@ -1991,11 +1990,20 @@
      칸에 썸네일을 넣지 않는 이유: 그러면 달력만 1450px를 요구해 그 폭을 못 만드는 화면에서 통째로 못 본다
      (기록 탭에서 그 이유로 걷어낸 형태다). 그림은 눌렀을 때 옆 칸에 나온다. */
   .cal-wrap {
-    padding: 20px 24px; width: 100%; flex: 1;
+    padding: 20px 24px; max-width: 1400px; width: 100%; margin: 0 auto; flex: 1;
     display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 20px; align-items: start;
   }
   .calendar-grid + .calendar-grid { margin-top: 4px; }
   .cal-detail { background: var(--surface2); border: 1px solid var(--border); padding: 12px; margin: 4px 0; min-width: 0; }
+  /* 상세 자리 = 폭이 정한다. 기본(좁음) = 주 아래, 넉넉하면 오른쪽 열로 옮긴다.
+     기준 950px: 달력 7칸이 90px 아래로 좁아지지 않는 선(7×90 + 상세 320 + 간격 16). */
+  .cal-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+  .cal-detail-side { display: none; margin: 0; }
+  @container (min-width: 950px) {
+    .cal-layout.has-sel { grid-template-columns: minmax(0, 1fr) 320px; }
+    .cal-layout.has-sel .cal-detail-week { display: none; }
+    .cal-layout.has-sel .cal-detail-side { display: block; position: sticky; top: 20px; }
+  }
   /* min-width: 0 — 없으면 칸이 제 안의 가장 긴 제목만큼 벌어져 7열 폭이 제각각이 된다(실사고).
      칸 폭을 격자가 정하고 제목은 말줄임으로 맞춘다. */
   .cal-cell { align-items: stretch; justify-content: flex-start; gap: 2px; padding: 4px; min-height: 78px; text-align: left; min-width: 0; overflow: hidden; }
@@ -2023,7 +2031,9 @@
   @media (max-width: 1150px) { .cal-wrap { grid-template-columns: 1fr; } }
   /* 좁은 폭(스마트폰)에서만: 요청 목록과 순위를 같이 쌓으면 화면이 길어져 '요청 ↔ 순위' 토글로 쓴다.
      태블릿까지 걸면 폭이 남는데도 목록이 사라진다(실사고 — 순위만 보이던 화면). */
-  @media (max-width: 700px) { body.apply-rank-on .apply-main { display: none; } }
+  /* 한 줄로 쌓이는 폭(≤1100)에서는 순위가 요청 목록의 '자리를 대신 쓴다' — 아래로 더 길어지지 않게(Crenop 지정).
+     종전 700px 한정은 태블릿에서 순위와 목록이 세로로 겹쳐 쌓이게 두어 지시와 어긋났다. */
+  @media (max-width: 1100px) { body.apply-rank-on .apply-main { display: none; } }
 
   .content-grid {
     display: grid;
@@ -2131,7 +2141,7 @@
 
   .hall-wrap {
     padding: 20px 24px;
-    width: 100%;
+    max-width: 1400px; width: 100%; margin: 0 auto;
     flex: 1;
     /* 좌 = 본문 / 우 = 고르는 기둥. 종전 세로 flex 선언이 뒤에 남아 이 grid를 덮고 있었다(2026-09-01 실사고 —
        같은 규칙 안에서 뒤 선언이 이긴다. 한 속성을 두 번 쓰지 말 것) */
@@ -2217,11 +2227,14 @@
   /* === 구성원 탭 === */
   /* 좌=본문 / 우=고르는 기둥(2026-08-31). 이벤트·케미 필터와 같은 280px 규격을 쓴다 —
      사이트에서 '고르는 것'의 자리가 탭마다 다를 이유가 없다. */
-  /* 기둥은 화면 오른쪽에 붙이고, 본문은 남은 폭 안에서 가운데 정렬한다(2026-09-01).
-     묶음 전체를 가운데 정렬하면 기둥이 안쪽으로 들어와 본문이 왼쪽으로 밀려 보인다(실사고). */
+  /* 본문과 기둥을 '한 덩어리'로 보고 그 덩어리를 가운데 정렬한다(2026-09-01 재수정).
+     최근 이벤트·케미(.events-wrap)가 쓰던 문법으로 통일 — Crenop 지정.
+     [왜 뒤집었나] 종전에는 묶음이 화면 폭을 다 쓰고 본문만 그 안에서 가운데였다. 그러면 기둥 안쪽의
+     좌우 44px 빈 슬롯이 화면 오른쪽 여백에 그대로 얹혀 오른쪽 68px : 왼쪽 24px이 되고,
+     본문이 왼쪽으로 쏠려 보인다(프로필 탭에서 특히 반복 지적됨). */
   .members-wrap, .stats-wrap {
     padding: 20px 24px;
-    width: 100%;
+    max-width: 1400px; width: 100%; margin: 0 auto;
     flex: 1;
     display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 20px; align-items: start;
   }
@@ -2234,13 +2247,15 @@
        · 연·월  : 왼쪽·오른쪽 = 연도 화살표 */
   .side-pick { position: sticky; top: 20px; min-width: 0; }
   /* 본문은 남은 폭 안에서 가운데 — 기둥이 오른쪽에 붙어도 본문이 치우쳐 보이지 않게 */
-  .members-wrap > #membersBody, .stats-wrap > #statsBody, .hall-main, .cal-main { max-width: 1300px; margin: 0 auto; width: 100%; min-width: 0; }
-  .side-pick > * + * { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .members-wrap > #membersBody, .stats-wrap > #statsBody, .hall-main, .cal-main { width: 100%; min-width: 0; }   /* 폭 상한은 묶음(.〜-wrap)이 갖는다 — 여기서 또 조이면 본문만 안쪽으로 밀린다 */
+  .side-pick > * + *, .side-pick .side-stack > * + * { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
+  /* .side-stack: 한 자리에서 내용을 갈아끼우는 묶음(#hallPeriodSide)도 안쪽 칸을 같은 간격·구분선으로 나눈다.
+     종전엔 직계 자식만 걸려 2·3위 토글과 기간 버튼이 간격 0으로 붙어 있었다(반복 지적된 자리). */
   .side-pick .hall-bar { justify-content: flex-start; gap: 10px; margin-left: 44px; }   /* 위아래 버튼 묶음과 같은 왼쪽 기준 */
   .side-pick .filter-title { margin-left: 44px; }
   .members-tabs-wrap, .stats-tabs-wrap, .hall-kind, #hallPeriodSide .hall-period { margin: 0 44px; }
   .hall-kind, #hallPeriodSide .hall-period { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-  .hall-period-btn .pb-y { font-size: 9px; opacity: 0.75; }
+  .hall-period-btn .pb-y { font-size: 11px; }   /* 상동 — 이 격자는 월 글자가 11px */
   .hall-period-btn .pb-m { font-size: 11px; font-weight: 700; }
   .hall-kind-btn, #hallPeriodSide .hall-period-btn {
     aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
@@ -2334,8 +2349,10 @@
     line-height: 1.8;
     margin: 0 auto; word-break: keep-all;
   }
+  /* 글 묶음은 가운데(2026-09-01, Crenop 지정) — 본문이 왼쪽으로 쏠려 보이던 인상의 한 축.
+     각 줄 안의 글자는 좌측정렬 그대로 두고, 줄들이 이루는 덩어리만 가운데 세운다. */
   .members-crew-activities {
-    flex: 1; min-width: 0;
+    flex: 1; min-width: 0; align-items: center;
     background: var(--surface);
     border: 1px solid var(--border);
     padding: 22px 24px;
@@ -2431,6 +2448,7 @@
   /* 700px 이하에서 .members-wrap 패딩이 16px로 줄어 22px 버튼을 못 받는다. 그 폭은 터치가 주라
      스와이프로 넘기면 되므로 화살표를 아예 숨긴다(컨테이너 900 ≈ 뷰포트 948 — 패딩 24px 구간 안). */
   @container (max-width: 900px) { .vs-arrow { display: none; } }
+  .crew-act-body { width: 100%; max-width: 760px; }   /* 글줄 길이 상한 — 넓은 화면에서 한 줄이 지나치게 길어지지 않게 */
   .crew-act-li {
     display: flex; gap: 9px;
     font-size: 14px; color: var(--text3);
@@ -2647,6 +2665,10 @@
     .subbar-mid { display: flex; flex-direction: column; gap: 2px; padding: 2px 10px 0 0; grid-column: 2; grid-row: 1 / span 2; min-width: 0; }
     .subbar-lead, .tab-aux { flex: none; justify-content: flex-start; }
     .tab-aux { height: var(--nav-row-h); }
+    /* 일정 줄은 흐름 안으로 되돌린다 — 가로 보조바에서 '양옆 빈 탭 자리를 빌리는' 절대배치가
+       세로 목록에도 남아 있어 줄이 칸 밖으로 나가 사이드 목록을 넘쳤다(반복 지적된 자리). */
+    .tab-aux[data-for="content"] { overflow: hidden; position: static; }
+    .tab-aux[data-for="content"] .sch-line { position: static; transform: none; width: auto; max-width: 100%; }
     .subbar-lead { gap: 6px; overflow-x: auto; scrollbar-width: none; }
     .page-title-link, .celebration-box { padding: 4px 10px; }
     /* 기념일만 짧은 요약('이름 종류')으로 — PC 문구는 길어 세로형 행 폭을 넘긴다(2026-09-01) */
@@ -2691,7 +2713,7 @@
     .side-pick, .filter-panel, .chem-filter-panel { top: 0; }
     body.drawer-l .sidebar { transform: none; }
     .drawer-btn#drawerBtnL { display: inline-flex; }
-    .drawer-close { display: flex; }
+    #drawerClose { display: flex; }   /* 왼쪽(메뉴) 닫기만 — 공용 클래스로 켜면 우측 서랍의 ✕까지 상시 노출된다(우상단 점거 사고) */
   }
   /* 통합탭 카드: 지표 행 클릭=그래프 모달 (헤더→멤버 이동은 폐지 — 멤버 상세는 상단 아바타 탭이 유일 동선).
      hover 민트 테두리 = 사이트 공통 '클릭 가능' 문법. 투명 기본 테두리+마진 보정으로 레이아웃 시프트 없음 */
@@ -2798,14 +2820,14 @@
   <div class="topbar-right">
     <div class="header-center" id="headerCenter"></div>
   </div>
-  <button class="drawer-btn" id="drawerBtnR" type="button" aria-label="필터 열기" aria-expanded="false" style="display:none"></button>
+  <button class="drawer-btn" id="drawerBtnR" type="button" aria-label="조작부 열기" aria-expanded="false" style="display:none"></button>
   <!-- 가림막이 상단바 '안'에 있어야 한다: .topbar가 z-index를 가진 순간 그 안쪽 z-index는 바깥과 겨루지 못하고
        상단바 값(5)으로 묶인다. body 직속에 두면 가림막(30)이 상단바 전체(5) 위로 올라와 드로어까지 덮었다(실제 사고). -->
   <div class="drawer-scrim" id="drawerScrim"></div>
 </header>
 <!-- 우측 서랍 닫기: 상단바 '밖'에 둔다. 안에 두면 상단바 z-index(5)에 값이 묶여, 본문 쪽에서 뜨는
      우측 서랍(전역 40)에 가려 안 보인다 — 좌측 가림막에서 겪은 것과 같은 쌓임 맥락 문제(실사고). -->
-  <button class="drawer-close drawer-close-r" id="drawerCloseR" type="button" aria-label="필터 닫기"></button>
+  <button class="drawer-close drawer-close-r" id="drawerCloseR" type="button" aria-label="조작부 닫기"></button>
 
 <main class="main">
   <!-- 보조바: 탭별 버튼만 남는다(문구·가이드는 상단바 우측으로 올라갔다). 모바일에서는 통째로 사라지고
@@ -3003,14 +3025,14 @@
            명전은 통산·상/하반기, 나머지 둘은 연/월. 그래서 한 자리에서 갈아끼운다. -->
       <aside class="side-pick">
         <div><div class="filter-title">종류</div><div class="hall-kind" id="hallKindBox"></div></div>
-        <div id="hallPeriodSide"></div>
+        <div class="side-stack" id="hallPeriodSide"></div>
       </aside>
     </div>
   </div>
 </main>
 
 <script>
-const BUILD = '2026-09-01p';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
+const BUILD = '2026-09-01t';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
 console.log('[build] front ' + BUILD);
 const WORKER_URL = 'https://chuntaverse.crenop.workers.dev';
 const BASE_TITLE = '천타버스';
@@ -3497,7 +3519,8 @@ const SVG_ICONS = {
   // 종전엔 마크업에 직접 박아 넣었는데, 그러면 새 아이콘이 이 표에 없어 다음 사람이 못 찾는다.
   menu: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>`,
   close: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>`,
-  // 깔때기는 '얼마나 통과하는가'를 채움 높이로 보인다 — 아래 filter-fill의 clip-path가 그 비율을 받는다
+  // 깔때기는 '얼마나 통과하는가'를 채움 높이로 보인다 — 아래 funnel-fill의 clip-path가 그 비율을 받는다.
+  // (이 자리 아이콘은 미확정 — 조작부가 필터와 선택기를 겸해 깔때기가 절반만 맞는다는 지적이 열려 있다)
   funnel: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path class="funnel-fill" d="M3 5h18l-7 8v6l-4 2v-8z" fill="currentColor" stroke="none"/><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg>`,
   // 달력 항목 종류(2026-09-01). 같은 규격: viewBox 24 · 16×16 · stroke 2 · round.
   soccer: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5l4.2 3-1.6 5h-5.2l-1.6-5z" fill="currentColor" stroke="none"/><path d="M12 3v4.5M3.6 9.3l4.6 1.2M20.4 9.3l-4.6 1.2M7 20l2.4-4.5M17 20l-2.4-4.5"/></svg>`,
@@ -5272,19 +5295,25 @@ function renderCalendarTab() {
     const titles = list.map(it => `<span class="cal-t ${it.kind}">${escapeHtml(it.title)}</span>`).join('');
     cells.push(`<button class="${cls.join(' ')}" data-caldate="${key}"><span class="calendar-daynum${dow === 0 ? ' sun' : dow === 6 ? ' sat' : ''}">${d}</span><span class="cal-titles">${titles}</span></button>`);
   }
-  // 상세는 '고른 날이 속한 주' 바로 아래에 끼운다(2026-09-01) — 지난 활동 탭 달력과 같은 문법.
-  // 우측 열로 두면 폭이 모자랄 때 화면 맨 아래로 밀려 달력에서 멀어진다.
+  // 상세를 놓는 자리는 폭이 정한다(2026-09-01 재수정 — Crenop 지시 복구).
+  //   넉넉하면 달력 오른쪽 열, 좁으면 고른 날이 속한 주 바로 아래.
+  // 두 자리 모두에 같은 내용을 넣어 두고 컨테이너 질의(.cal-main 폭)가 하나만 보인다 —
+  // 창 크기 변화에 다시 그릴 필요가 없고, 상세 안은 전부 링크뿐이라 두 벌이어도 배선이 겹치지 않는다.
   const weeks = [];
   for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
   const selIdx = calState.selected ? Math.floor((lead + Number(calState.selected.slice(8)) - 1) / 7) : -1;
+  const detail = selIdx >= 0 ? calDetailHtml(items) : '';
   const rows = weeks.map((w, i) => {
     const grid = `<div class="calendar-grid">${w.join('')}</div>`;
-    return i === selIdx ? grid + `<div class="cal-detail">${calDetailHtml(items)}</div>` : grid;
+    return i === selIdx ? grid + `<div class="cal-detail cal-detail-week">${detail}</div>` : grid;
   }).join('');
   body.innerHTML = `
-    <div class="calendar">
-      <div class="calendar-grid cal-head">${['일','월','화','수','목','금','토'].map((w, i) => `<div class="calendar-weekday${i === 0 ? ' sun' : i === 6 ? ' sat' : ''}">${w}</div>`).join('')}</div>
-      ${rows}
+    <div class="cal-layout${selIdx >= 0 ? ' has-sel' : ''}">
+      <div class="calendar">
+        <div class="calendar-grid cal-head">${['일','월','화','수','목','금','토'].map((w, i) => `<div class="calendar-weekday${i === 0 ? ' sun' : i === 6 ? ' sat' : ''}">${w}</div>`).join('')}</div>
+        ${rows}
+      </div>
+      <div class="cal-detail cal-detail-side">${detail}</div>
     </div>`;
   body.querySelectorAll('.cal-cell').forEach(btn => btn.addEventListener('click', () => {
     const d = btn.dataset.caldate;
@@ -8780,7 +8809,7 @@ function renderHallStats() {
         renderHallStats();
       }));
     } else {
-      side.innerHTML = `<div class="filter-title">기간</div>` + periodSelectorHtml(true);
+      side.innerHTML = `<div><div class="filter-title">기간</div>${periodSelectorHtml(true)}</div>`;   // 라벨+버튼은 한 칸 — 사이에 구분선이 끼지 않게
       bindPeriodSelector(side, true, renderHallStats);
     }
   }
@@ -9132,7 +9161,7 @@ function renderMembersCrew(body) {
         <p>천타버스는 원래 천양님이 크루 콘텐츠에 참가하기 위해 결성한 '위장 크루'로 시작했으나<br><br>지속적인 합방과 다채로운 자체 콘텐츠를 통해<br><br>이제는 그 누구도 대체할 수 없는 독보적인 매력을 뽐내는 버추얼 크루로 당당히 성장해 나가는 중입니다.</p>
       </div>
       <div class="members-crew-activities">
-        ${actsHtml}
+        <div class="crew-act-body">${actsHtml}</div>
       </div>
     </div>
   `;
