@@ -3146,7 +3146,7 @@
 </main>
 
 <script>
-const BUILD = '2026-09-02h';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
+const BUILD = '2026-09-02i';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
 console.log('[build] front ' + BUILD);
 const WORKER_URL = 'https://chuntaverse.crenop.workers.dev';
 const BASE_TITLE = '천타버스';
@@ -3244,7 +3244,9 @@ const MEMBER_BIRTHDAYS = {
     if (!btnL) return;
     const closed = tabletPinned() ? (body.classList.contains('side-off') || body.classList.contains('drawer-r'))
                                   : !body.classList.contains('drawer-l');
-    btnL.innerHTML = closed ? SVG_ICONS.menu : SVG_ICONS.close;
+    // 아이콘 표는 이 블록보다 아래에서 만들어진다(const라 그 전엔 접근 자체가 예외 — 부팅이 통째로 멈춘다).
+    // 그래서 여기서는 실패를 삼키고, 표가 준비된 뒤 아이콘 주입 블록이 한 번 더 부른다.
+    try { btnL.innerHTML = closed ? SVG_ICONS.menu : SVG_ICONS.close; } catch (e) {}
     btnL.setAttribute('aria-label', closed ? '메뉴 열기' : '메뉴 닫기');
     btnL.setAttribute('aria-expanded', String(!closed));
   }
@@ -5326,6 +5328,7 @@ if (notifyBellEl) {
     const el = document.getElementById(id);
     if (el) el.innerHTML = html;
   }
+  if (window.syncBtnL) window.syncBtnL();   // 아이콘 표가 준비된 지금 좌측 버튼 모양을 상태에 맞춘다
 })();
 
 function updateHeaderCenter() {
