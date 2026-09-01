@@ -902,7 +902,7 @@
 
   .events-wrap {
     padding: 20px 24px;
-    max-width: 1400px; width: 100%; margin: 0 auto;
+    max-width: 1444px; width: 100%; margin: 0 auto;
     flex: 1;
     display: grid; grid-template-columns: 1fr 280px;
     gap: 20px; align-items: start;
@@ -920,6 +920,8 @@
   /* 기둥은 테두리를 두지 않는다(2026-09-01) — .side-pick과 같은 규칙.
      종전엔 여기 background·border·padding이 그대로 남아 최근 활동·케미만 박스가 보였다(실사고). */
   .filter-panel { position: sticky; top: 20px; }
+  /* 기둥 오른쪽 44px 빈 슬롯과 짝이 되는 왼쪽 44px — 기둥을 쓰는 탭 전부에 같은 값(2026-09-01 전수 적용) */
+  .events-wrap > .timeline, .chem-wrap > .chem-content { margin-left: 44px; }
   .filter-section + .filter-section {
     margin-top: 20px; padding-top: 20px;
     border-top: 1px solid var(--border);
@@ -977,6 +979,7 @@
   .filter-types { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; flex: 1; min-width: 0; }
   .filter-type {
     display: flex; align-items: center; justify-content: center;
+    color: var(--text);   /* 버튼은 UA 기본색(검정)을 쓴다 — 글자 라벨을 넣는 순간 드러난다(2026-09-01 실사고) */
     aspect-ratio: 1;
     min-height: 0; overflow: hidden;
     background: var(--surface2);
@@ -1760,6 +1763,7 @@
 
   /* === 케미 탭 === */
   .chem-wrap {
+    max-width: 1444px; margin: 0 auto;
     padding: 20px 24px;
     max-width: 1400px; width: 100%; margin: 0 auto;
     flex: 1;
@@ -1995,16 +1999,17 @@
     display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 20px; align-items: start;
   }
   .calendar-grid + .calendar-grid { margin-top: 4px; }
-  .cal-detail { background: var(--surface2); border: 1px solid var(--border); padding: 12px; margin: 4px 0; min-width: 0; min-height: 180px; }
+  .cal-detail { background: var(--surface2); border: 1px solid var(--border); padding: 12px; margin: 4px 0; min-width: 0; }
+  .cal-di-none { color: var(--muted); font-size: 12px; }
   .cal-detail + .calendar-grid { margin-top: 4px; }   /* 상세가 끼면 '격자+격자' 규칙이 안 걸려 아래 주가 붙어 버린다 */
   /* 상세 자리 = 폭이 정한다. 기본(좁음) = 주 아래, 넉넉하면 오른쪽 열로 옮긴다.
      기준 950px: 달력 7칸이 90px 아래로 좁아지지 않는 선(7×90 + 상세 320 + 간격 16). */
   .cal-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
   .cal-detail-side { display: none; margin: 0; }
   @container (min-width: 950px) {
-    .cal-layout.has-sel { grid-template-columns: minmax(0, 1fr) 320px; }
-    .cal-layout.has-sel .cal-detail-week { display: none; }
-    .cal-layout.has-sel .cal-detail-side { display: block; position: sticky; top: 20px; }
+    .cal-layout { grid-template-columns: minmax(0, 1fr) 320px; }   /* 자리는 늘 잡아 둔다 — 고른 날 유무로 폭이 바뀌지 않게 */
+    .cal-detail-week { display: none; }
+    .cal-detail-side { display: block; position: sticky; top: 20px; }
   }
   /* min-width: 0 — 없으면 칸이 제 안의 가장 긴 제목만큼 벌어져 7열 폭이 제각각이 된다(실사고).
      칸 폭을 격자가 정하고 제목은 말줄임으로 맞춘다. */
@@ -2033,9 +2038,13 @@
   @media (max-width: 1150px) { .cal-wrap { grid-template-columns: 1fr; } }
   /* 좁은 폭(스마트폰)에서만: 요청 목록과 순위를 같이 쌓으면 화면이 길어져 '요청 ↔ 순위' 토글로 쓴다.
      태블릿까지 걸면 폭이 남는데도 목록이 사라진다(실사고 — 순위만 보이던 화면). */
-  /* 한 줄로 쌓이는 폭(≤1100)에서는 순위가 요청 목록의 '자리를 대신 쓴다' — 아래로 더 길어지지 않게(Crenop 지정).
-     종전 700px 한정은 태블릿에서 순위와 목록이 세로로 겹쳐 쌓이게 두어 지시와 어긋났다. */
-  @media (max-width: 1100px) { body.apply-rank-on .apply-main { display: none; } }
+  /* 한 줄로 쌓이는 폭(≤1100)에서 순위를 켜면 '댓글 모음'만 순위로 갈린다(2026-09-01 재수정, Crenop 지정).
+     묶음 머리와 그 안의 순위 버튼은 남는다 — 목록을 통째로 감췄더니 순위를 끄거나 다른 컨텐츠로 옮길
+     길이 사라졌다(실사고). 순위는 머리 바로 아래에 오도록 조작부 묶음을 목록 뒤로 보낸다. */
+  @media (max-width: 1100px) {
+    body.apply-rank-on .apply-main .lrq-row { display: none; }
+    body.apply-rank-on .apply-side { order: 0; }
+  }
 
   .content-grid {
     display: grid;
@@ -2635,8 +2644,10 @@
   @media (max-width: 900px) {
     /* 강제 두 줄(display:block)을 폐지(2026-09-01) — 폭이 남는데도 두 줄이 됐다.
        자연 줄바꿈에 맡기고, 두 줄이 될 때의 높이를 미리 확보해 띠 높이가 오르내리지 않게 한다. */
-    .header-center-line { white-space: normal; min-height: 2.8em; display: flex; flex-wrap: wrap;
-      align-items: center; justify-content: center; column-gap: 4px; }
+    /* 미리 잡아둔 두 줄 높이는 한 줄일 때 그대로 빈칸이 됐다(철회). 대신 시각 숫자를 등폭으로 고정해
+       초가 바뀔 때 폭이 흔들리지 않게 한다 — 줄바꿈이 오락가락하지 않으면 높이도 안 움직인다. */
+    .header-center-line { white-space: normal; display: flex; flex-wrap: wrap;
+      align-items: center; justify-content: center; column-gap: 4px; font-variant-numeric: tabular-nums; }
   }
 
   /* ══ 세로형 배치(≤1150px) ═══════════════════════════════════════════════════
@@ -2702,13 +2713,19 @@
     body.drawer-r .side-pick, body.drawer-r .filter-panel, body.drawer-r .chem-filter-panel { transform: none; }
     .members-wrap, .stats-wrap, .hall-wrap, .cal-wrap { grid-template-columns: 1fr; }
     .members-wrap > #membersBody, .stats-wrap > #statsBody, .hall-main, .cal-main { padding-left: 0; }   /* 기둥이 서랍으로 빠지면 왼쪽 44px도 뜻이 없다 */
+    .events-wrap > .timeline, .chem-wrap > .chem-content { margin-left: 0; }
     .drawer-btn#drawerBtnR { display: inline-flex; }   /* 고르는 기둥이 서랍이므로 태블릿에서도 필요하다 */
   }
 
   /* 태블릿: 기둥이 상시 보이고 본문을 밀어낸다(덮지 않는다) */
   @media (min-width: 701px) and (max-width: 1150px) {
-    .sidebar { transform: none; }
-    .main { margin-left: var(--drawer-w); min-width: 0; }
+    .sidebar { transform: none; transition: transform 0.22s ease; }
+    .main { margin-left: var(--drawer-w); min-width: 0; transition: margin-left 0.22s ease; }
+    /* 좌우 중 하나만 자리를 차지한다(2026-09-01, Crenop 제안). 탭을 고르고 나면 조작부가 더 자주 쓰이므로
+       조작부를 열 때 탭 기둥이 물러나 본문 폭을 지킨다. 다시 부르는 길은 좌상단 ☰. */
+    .drawer-btn#drawerBtnL { display: inline-flex; }
+    body.drawer-r .sidebar { transform: translateX(-100%); }
+    body.drawer-r .main { margin-left: 0; }
     /* 가림막을 끄지 않는다(2026-09-01 수정): 왼쪽 기둥은 상시 표시라 가림막이 필요 없지만,
        오른쪽 조작부는 이 폭에서도 서랍이다 — 껐더니 바깥을 눌러도 안 닫히고 뒤가 가려지지도 않았다. */
     body.drawer-l .drawer-scrim { display: none; }
@@ -2724,7 +2741,9 @@
     #drawerClose { display: flex; }   /* 왼쪽(메뉴) 닫기만 — 공용 클래스로 켜면 우측 서랍의 ✕까지 상시 노출된다(우상단 점거 사고) */
     /* ✕가 왼쪽 칸의 첫 행을 차지하므로 부속 칸도 같은 행에서 시작해야 한다.
        종전 grid-row: 1 / span 2 그대로면 부속만 ✕ 높이만큼 위로 올라가 탭과 한 줄씩 어긋난다(실사고). */
-    .subbar-mid { grid-row: 2; }
+    #drawerClose { grid-column: 1 / -1; grid-row: 1; }
+    .nav-list { grid-column: 1; grid-row: 2; }
+    .subbar-mid { grid-column: 2; grid-row: 2; }
   }
   /* 통합탭 카드: 지표 행 클릭=그래프 모달 (헤더→멤버 이동은 폐지 — 멤버 상세는 상단 아바타 탭이 유일 동선).
      hover 민트 테두리 = 사이트 공통 '클릭 가능' 문법. 투명 기본 테두리+마진 보정으로 레이아웃 시프트 없음 */
@@ -3043,7 +3062,7 @@
 </main>
 
 <script>
-const BUILD = '2026-09-01u';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
+const BUILD = '2026-09-01v';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
 console.log('[build] front ' + BUILD);
 const WORKER_URL = 'https://chuntaverse.crenop.workers.dev';
 const BASE_TITLE = '천타버스';
@@ -5314,13 +5333,14 @@ function renderCalendarTab() {
   const weeks = [];
   for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
   const selIdx = calState.selected ? Math.floor((lead + Number(calState.selected.slice(8)) - 1) / 7) : -1;
-  const detail = selIdx >= 0 ? calDetailHtml(items) : '';
+  // 고른 날이 없어도 상세 자리는 늘 잡아 둔다 — 누를 때마다 달력 폭이 변하면 칸이 움직인다.
+  const detail = selIdx >= 0 ? calDetailHtml(items) : '<div class="cal-di-none">날짜를 누르면 그날의 활동이 나옵니다.</div>';
   const rows = weeks.map((w, i) => {
     const grid = `<div class="calendar-grid">${w.join('')}</div>`;
-    return i === selIdx ? grid + `<div class="cal-detail cal-detail-week">${detail}</div>` : grid;
+    return i === selIdx ? grid + `<div class="cal-detail cal-detail-week">${detail}</div>` : grid;   // 좁은 폭에서만 보이는 자리
   }).join('');
   body.innerHTML = `
-    <div class="cal-layout${selIdx >= 0 ? ' has-sel' : ''}">
+    <div class="cal-layout">
       <div class="calendar">
         <div class="calendar-grid cal-head">${['일','월','화','수','목','금','토'].map((w, i) => `<div class="calendar-weekday${i === 0 ? ' sun' : i === 6 ? ' sat' : ''}">${w}</div>`).join('')}</div>
         ${rows}
@@ -8506,13 +8526,13 @@ function renderChemistry() {
 
   body.innerHTML = `
     <div class="chem-content">
-      <div class="chem-toggle-sticky">${descBar}</div>
       <div class="chem-grid${chemShowDesc ? ' chem-show-desc' : ''}">
         ${topHtml}
         ${botHtml}
       </div>
     </div>
     <div class="chem-filter-panel">
+      <div class="filter-section chem-desc-section">${descBar}</div>
       <div class="filter-section">
         <div class="filter-title">멤버</div>
         <div class="filter-row">
