@@ -2118,13 +2118,15 @@
   .hall-kind + #hallPeriodSide .hall-period { display: grid; gap: 6px; }
 
   .hall-wrap {
-    display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 20px; align-items: start;
     padding: 20px 24px;
     max-width: 1400px; width: 100%; margin: 0 auto;
     flex: 1;
-    display: flex; flex-direction: column;
-    gap: 16px;
+    /* 좌 = 본문 / 우 = 고르는 기둥. 종전 세로 flex 선언이 뒤에 남아 이 grid를 덮고 있었다(2026-09-01 실사고 —
+       같은 규칙 안에서 뒤 선언이 이긴다. 한 속성을 두 번 쓰지 말 것) */
+    display: grid; grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 20px; align-items: start;
   }
+  .hall-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
   .hall-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;
     /* sticky(2026-08-21 Crenop): PC는 명전이 거의 한 화면이지만 모바일은 카드 수만큼 스크롤이 길어
        좌측 기간 버튼·우측 2·3위 토글이 떠내려간다 — 이벤트 헤더바·케미 토글과 같은 관례(top 20px)로 상시 조작.
@@ -2172,8 +2174,9 @@
   .hall-content { display: flex; flex-direction: column; justify-content: center; }
   .hall-h { display: none; flex-direction: column; gap: 3px; padding-right: 20px; }   /* 우측 여백: 토글 ON에서 카드 간 기록 값(우측 정렬) 열을 맞추기 위해 단독·공동 모두 동일 적용 */
   .hall-h-body { display: flex; align-items: center; gap: 12px; }   /* 설명 제외 [사진 | 1·2·3행] — 사진 수직중앙이 행 블록(=2등 행) 중앙과 맞음 */
-  .hall-wrap.show-ranks .hall-v { display: none; }
-  .hall-wrap.show-ranks .hall-h { display: flex; }
+  /* show-ranks는 #hallBody에 붙는다 — 종전엔 그 요소가 .hall-wrap이기도 했으나 2026-09-01 마크업 분리로 갈렸다 */
+  .show-ranks .hall-v { display: none; }
+  .show-ranks .hall-h { display: flex; }
   /* 끔: 세로 (사진 + 이름 + 설명:값) — 기존의 그 화면 */
   .hall-v { display: flex; flex-direction: column; align-items: center; gap: 10px; }   /* 이름블록↔값 간격 — 실측 값 텍스트 위8px/아래17px 불균형이라 5→10으로 균형(13/12) */
   .hall-v-winners { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; align-items: flex-end; }
@@ -2622,7 +2625,10 @@
     /* 드로어 2열: 좌 = [닫기] + 탭 목록 / 우 = 부속(보조바 가운데 묶음이 통째로 내려온 것).
        두 열이 같은 행 높이(--nav-row-h)를 써야 부속이 자기 탭과 같은 줄에 선다. */
     /* 폭 가변: 우측 부속 칸은 내용만큼만 차지한다(auto) — 고정 폭이면 부속이 없는 날에도 빈 칸이 넓게 남는다. */
-    .sidebar { display: grid; grid-template-columns: 176px auto; align-content: start; width: auto; padding: 2px 0; }
+    /* 두 칸 모두 내용 폭(auto) — 176px 고정은 짧은 라벨에서 빈 폭이 크게 남았다.
+       로고는 JS가 이 격자의 첫 행(col1)으로 옮긴다 — 그래야 기념일·링크 줄과 같은 행에 서고 아래 행들이 안 밀린다. */
+    .sidebar { display: grid; grid-template-columns: auto auto; align-content: start; width: auto; padding: 2px 0; }
+    .sidebar > .topbar-logo { grid-column: 1; padding: 6px 10px; justify-content: flex-start; }
     .nav-list { padding: 0; display: flex; flex-direction: column; gap: 2px; }
     .subbar-mid { display: flex; flex-direction: column; gap: 2px; padding: 0 10px 0 0; grid-column: 2; grid-row: 1 / span 2; min-width: 0; }
     .subbar-lead, .tab-aux { flex: none; justify-content: flex-start; }
@@ -2635,8 +2641,9 @@
       border-bottom: none; border-left: 3px solid transparent;
     }   /* 높이를 --nav-row-h로 고정: 우측 부속 칸과 행이 맞아야 '같은 줄'이 성립한다 */
     .nav-item.active { border-bottom-color: transparent; border-left-color: var(--accent); }
-    .nav-lbl { position: relative; }
-    .nav-badge { top: -6px; right: -10px; }   /* 세로 목록: 라벨 우상단 위로(흐름을 안 차지해 라벨이 안 밀린다) */
+    /* 세로 목록: 배지를 겹치지 않고 라벨 옆에 둔다 — 칸이 내용 폭이라 밀려도 문제가 없다 */
+    .nav-lbl { position: static; gap: 6px; }
+    .nav-badge { position: static; }
 
     /* ── 우측 드로어: 탭 내부 조작(필터) ────────────────────────────────────────
        PC의 우측 기둥이 그대로 서랍이 된 것. 좌=탭 전환 / 우=탭 내부 조작이라는 대응이
@@ -2651,8 +2658,10 @@
     }
     body.drawer-r .side-pick, body.drawer-r .filter-panel, body.drawer-r .chem-filter-panel { transform: none; }
 
-    .drawer-btn { display: inline-flex; }
-    .members-wrap, .stats-wrap { grid-template-columns: 1fr; }
+    /* ☰·깔때기는 도킹 상태에선 안 보인다(사이드바가 이미 펼쳐져 있다) — 겹쳐 뜨는 폭(≤700)에서만 나온다.
+       우측 서랍 여는 깔때기는 예외: 도킹 상태에서도 고르는 기둥이 서랍이므로 필요하다. */
+    .drawer-btn#drawerBtnR { display: inline-flex; }
+    .members-wrap, .stats-wrap, .hall-wrap, .cal-wrap { grid-template-columns: 1fr; }
     .drawer-close-r {
       display: none; position: fixed; top: 6px; right: 10px; z-index: 45;
       width: 34px; height: 34px; margin: 0;
@@ -3022,7 +3031,7 @@
 </main>
 
 <script>
-const BUILD = '2026-09-01a';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
+const BUILD = '2026-09-01c';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
 console.log('[build] front ' + BUILD);
 const WORKER_URL = 'https://chuntaverse.crenop.workers.dev';
 const BASE_TITLE = '천타버스';
@@ -3114,12 +3123,16 @@ const MEMBER_BIRTHDAYS = {
   //  PC   : [기념일·링크] [탭별 부속 11칸] [가이드]  — 보조바 한 줄
   //  모바일: 드로어 우측 칸에 같은 순서로 세로 배치 — 기념일은 닫기 버튼 행, 가이드는 관련 링크 행.
   // 두 배치의 대응이 1:1이라 한쪽을 고치면 다른 쪽 자리가 자동으로 정해진다.
-  let wasMobile = null;
+  let wasMobile = null, wasOverlay = null;
   function syncBarPlacement() {
-    // 1150 이하 = 탭 줄이 세로(도킹 사이드바 또는 서랍) → 보조바 내용물이 그 안으로 들어간다
+    // 세 상태: 상단바(>1150) · 도킹 사이드바(701~1150) · 겹쳐 뜨는 서랍(≤700)
     const mobile = innerWidth <= 1150;
-    if (mobile === wasMobile) return;
-    wasMobile = mobile;
+    const overlay = innerWidth <= 700;
+    // 폭이 넓어져 서랍이 사라졌는데 열림 상태가 남으면 가림막·닫기 버튼만 화면에 떠 있게 된다(실사고)
+    if (!overlay && document.body.classList.contains('drawer-l')) setDrawer('l', false);
+    if (!mobile && document.body.classList.contains('drawer-r')) setDrawer('r', false);
+    if (mobile === wasMobile && overlay === wasOverlay) return;
+    wasMobile = mobile; wasOverlay = overlay;
     const bar = document.querySelector('.main-header');
     const mid = document.getElementById('subbarMid');
     const lead = document.getElementById('subbarLead');
@@ -3137,6 +3150,14 @@ const MEMBER_BIRTHDAYS = {
       bar.insertBefore(lead, mid);
       bar.appendChild(right);
       right.appendChild(guide);
+    }
+    // 로고 자리: 도킹(사이드바가 펼쳐진 상태)에서는 격자 첫 행으로 넣어 기념일 줄과 짝을 맞춘다.
+    // 겹쳐 뜨는 폭에서는 위 띠로 되돌린다(서랍이 화면 밖이라 로고가 같이 사라지면 안 된다).
+    const logo = document.querySelector('.topbar-logo');
+    const topbar = document.querySelector('.topbar');
+    if (logo && topbar) {
+      if (mobile && !overlay) side.insertBefore(logo, side.firstChild);
+      else topbar.insertBefore(logo, topbar.firstChild.nextSibling);
     }
     // 문구는 항상 .topbar-right에 둔다 — 상단바가 눕으면 그 칸이 사이드바 발치가 되므로 옮길 필요가 없다
   }
