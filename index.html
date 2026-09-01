@@ -59,7 +59,9 @@
     --mode-restricted: #a78bfa;
     --filter-post: #2EF5E1;
     --sidebar-w: 200px;
-    --tab-w: 92px;      /* 탭 한 칸 폭 — 상단바와 보조바가 공유(칸 정렬의 단일 소스) */
+    --tab-w: 76px;      /* 탭 한 칸 폭 — 상단바와 보조바가 공유(칸 정렬의 단일 소스).
+                           가장 긴 라벨 5글자(최근 활동·지난 활동·관련 링크) × 12px + 좌우 8px.
+                           라벨을 6글자 이상으로 만들면 이 값과 전환점을 함께 다시 잡을 것. */
     --nav-row-h: 40px;  /* 드로어 한 행 높이 — 탭과 부속이 같은 행에 서려면 두 쪽이 같은 값을 써야 한다 */
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -318,6 +320,8 @@
   .subbar-mid { display: grid; grid-auto-flow: column; grid-auto-columns: var(--tab-w); gap: 2px; padding: 0 6px; }
   .tab-aux { display: flex; align-items: center; justify-content: center; min-width: 0; }
   .drawer-close { display: none; }
+  .drawer-close svg { width: 18px; height: 18px; display: block; }
+  .drawer-close:hover { color: var(--accent); border-color: var(--accent); }
   .main-header {
     padding: 6px 12px;
     border-bottom: 1px solid var(--border);
@@ -345,11 +349,11 @@
   .drawer-btn:hover { color: var(--accent); border-color: var(--accent); }
   .drawer-btn svg { width: 18px; height: 18px; display: block; }
   /* 걸린 필터 개수 — 필터가 서랍에 숨으면 "왜 안 나오지"가 되므로 버튼에 남겨 둔다 */
-  .drawer-btn .drawer-cnt {
-    position: absolute; top: -6px; right: -6px;
-    min-width: 15px; height: 15px; padding: 0 3px;
-    background: var(--ev-unread); color: var(--bg);
-    font-size: 10px; font-weight: 700; line-height: 15px; text-align: center;
+  /* 필터가 걸려 있음 = 점 하나(생방송·새 요청과 같은 문법). 몇 개 껐는지는 서랍을 열면 보인다 */
+  .drawer-btn.filtered::after {
+    content: ''; position: absolute; top: -4px; right: -4px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--ev-unread);
   }
   /* 드로어 뒤 가림막 — 누르면 닫힌다(우측 드로어의 유일한 닫기 경로이므로 값이 싸야 한다) */
   .drawer-scrim {
@@ -1140,22 +1144,15 @@
   }
   .sort-toggle svg { width: 12px; height: 12px; display: block; flex-shrink: 0; }   /* 세로는 flex 중앙 = 테두리 기준 정중앙(실측 ±0.5px 이내). 텍스트 대비 보정은 하지 않는다 — 한글 글리프가 반픽셀 위에 앉는 폰트 특성이라 아이콘을 옮기면 테두리 기준이 틀어짐(2026-08-09 실측 확정) */
 
-  .stats-wrap {
-    padding: 20px 24px;
-    max-width: 1600px; width: 100%; margin: 0 auto;
-    flex: 1;
-  }
+
 
   .stats-tabs-wrap {
     display: grid;
-    grid-template-columns: repeat(14, 1fr);   /* 통합1 + 멤버13 (2026-07-31 빙밍 합류) */
+    grid-template-columns: repeat(3, 1fr);   /* 우측 기둥 규격 — 이벤트 필터(3열)와 같은 칸.
+       종전 14열 가로 스트립은 본문 위에 눕혀 있을 때의 배치였다(2026-08-31 기둥 이전). */
     gap: 6px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    padding: 8px;
-    margin: 0 auto 16px;
-    max-width: 980px;
   }
+
   /* 기간 선택줄: ‹연도› 스테퍼 + [전체][1월..12월] 13버튼(통합탭) / 12버튼(멤버탭, 전체 없음) */
   /* 통합탭 기간줄: ‹연도› 스테퍼 박스 + [전체][1~12월] 13버튼 */
   .stats-period-bar { display: flex; align-items: stretch; gap: 8px; margin-bottom: 16px; }
@@ -2151,21 +2148,22 @@
   }
 
   /* === 구성원 탭 === */
-  .members-wrap {
+  /* 좌=본문 / 우=고르는 기둥(2026-08-31). 이벤트·케미 필터와 같은 280px 규격을 쓴다 —
+     사이트에서 '고르는 것'의 자리가 탭마다 다를 이유가 없다. */
+  .members-wrap, .stats-wrap {
     padding: 20px 24px;
     max-width: 1600px; width: 100%; margin: 0 auto;
     flex: 1;
+    display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 20px; align-items: start;
   }
+  .side-pick { position: sticky; top: 20px; background: var(--surface); border: 1px solid var(--border); padding: 16px; min-width: 0; }
   .members-tabs-wrap {
     display: grid;
-    grid-template-columns: repeat(14, 1fr);   /* 통합1 + 멤버13 (2026-07-31 빙밍 합류) */
+    grid-template-columns: repeat(3, 1fr);   /* 우측 기둥 규격 — 이벤트 필터(3열)와 같은 칸.
+       종전 14열 가로 스트립은 본문 위에 눕혀 있을 때의 배치였다(2026-08-31 기둥 이전). */
     gap: 6px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    padding: 8px;
-    margin: 0 auto 16px;
-    max-width: 980px;   /* 통계 스트립과 동일값 통일(2026-07-13) — 쌍둥이 컴포넌트인데 근거 없이 920으로 달랐던 표류 해소. 두 스트립은 1100px 미디어쿼리도 공유하므로 이제 전 폭에서 동일 반응 */
   }
+
   .members-tab {
     position: relative;
     aspect-ratio: 1;
@@ -2273,9 +2271,6 @@
   }
   .apply-main { background: var(--surface); border: 1px solid var(--border); min-width: 0; }
   .apply-side { position: sticky; top: 20px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-  .apply-btns { display: flex; flex-direction: column; gap: 8px; }
-  .apply-btn { width: 100%; justify-content: flex-start; }
-  .apply-btn.on { background: rgba(var(--tb-rgb), 0.28); border-color: rgb(var(--tb-rgb)); }
   /* 묶음 머리 우측의 순위 버튼 — 그 글의 집계가 시트에 있을 때만 나온다 */
   .lrg-rank-btn {
     display: inline-flex; align-items: center; gap: 4px; flex: none; margin-left: auto;
@@ -2521,7 +2516,7 @@
        타일이 114px로 뛰어 넓은 PC(63px)보다 커졌다 — 화면이 좁아졌는데 버튼이 커지는 역전.
        496 = 7×63.14(PC 타일) + 6×6(간격) + 16(패딩) + 2(테두리). 여기서 멈추고 더 좁아지면 같이 줄어든다.
        PC 타일 값이 바뀌면(14열·max-width 980·gap 6) 이 496도 다시 계산할 것. */
-    .stats-tabs-wrap, .members-tabs-wrap { grid-template-columns: repeat(7, 1fr); max-width: 496px; }
+  
     /* 크루/통합 버튼 2행 스팬 제거(2026-08-02): 12인 시절엔 스팬+12명이 7×2로 맞아떨어졌으나
        13인부턴 스팬이 마지막 1명을 3행으로 밀어냄 → 일반 크기 14타일 = 정확히 7×2 */
     .stats-period-wrap:not(.no-all) { grid-template-columns: repeat(7, 1fr); }
@@ -2537,7 +2532,7 @@
     .header-center-line .hc-mid { display: none; }
   }
 
-  @media (max-width: 1400px) {
+  @media (max-width: 1200px) {
     /* 상단바 모달(모바일): PC처럼 중앙 + 내부 스크롤 유지(패널 max-height:80vh, lr-body 스크롤). 헤더(X)가 고정돼야 내용 스크롤 중에도 닫기 가능 → 페이지 스크롤 대신 내부 스크롤. 짧으면 중앙 정렬 */
     .lr-overlay { align-items: center; }
 
@@ -2569,17 +2564,23 @@
     .topbar-right .header-center { flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px 10px; text-align: center; }
     /* 드로어 2열: 좌 = [닫기] + 탭 목록 / 우 = 부속(보조바 가운데 묶음이 통째로 내려온 것).
        두 열이 같은 행 높이(--nav-row-h)를 써야 부속이 자기 탭과 같은 줄에 선다. */
-    .sidebar { display: grid; grid-template-columns: 176px 1fr; align-content: start; width: 330px; max-width: 90vw; padding: 8px 0; }
+    /* 폭 가변: 우측 부속 칸은 내용만큼만 차지한다(auto) — 고정 폭이면 부속이 없는 날에도 빈 칸이 넓게 남는다.
+       상단 여백 6px은 상단바와 같은 값 — 닫기 버튼이 여는 버튼(☰)과 정확히 같은 자리에 겹치게 하기 위함. */
+    .sidebar { display: grid; grid-template-columns: 176px auto; align-content: start; width: auto; max-width: 90vw; padding: 6px 0; }
     .drawer-close {
       display: flex; align-items: center; justify-content: center;
-      height: var(--nav-row-h); width: 100%;
-      background: none; border: none; color: var(--muted); cursor: pointer;
+      width: 34px; height: 34px; margin-left: 10px;   /* ☰와 동일 규격·위치 */
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--muted); cursor: pointer;
     }
     .drawer-close:hover { color: var(--accent); }
     .drawer-close svg { width: 20px; height: 20px; }
     .nav-list { padding: 0; display: flex; flex-direction: column; gap: 2px; }
-    .subbar-mid { display: flex; flex-direction: column; gap: 2px; padding: 0 8px 0 0; grid-column: 2; grid-row: 1 / span 2; }
-    .subbar-lead, .tab-aux { height: var(--nav-row-h); flex: none; justify-content: flex-start; }
+    .subbar-mid { display: flex; flex-direction: column; gap: 2px; padding: 0 10px 0 0; grid-column: 2; grid-row: 1 / span 2; min-width: 0; }
+    .subbar-lead, .tab-aux { flex: none; justify-content: flex-start; }
+    .tab-aux { height: var(--nav-row-h); }
+    .subbar-lead { height: 34px; }   /* 닫기 버튼 행과 같은 높이 */
+    .nav-list { padding-top: 6px; }  /* 닫기 버튼(34) + 상단 여백을 탭 첫 행과 맞춤 */
     .subbar-lead { gap: 6px; overflow-x: auto; scrollbar-width: none; }
     .nav-item {
       flex-direction: row; align-items: center; justify-content: flex-start; gap: 12px;
@@ -2591,7 +2592,7 @@
     /* ── 우측 드로어: 탭 내부 조작(필터) ────────────────────────────────────────
        PC의 우측 기둥이 그대로 서랍이 된 것. 좌=탭 전환 / 우=탭 내부 조작이라는 대응이
        PC(상단바 / 우측 기둥)와 1:1로 맞는다. 바깥 가림막을 눌러 닫는다. */
-    .filter-panel, .chem-filter-panel {
+    .side-pick, .filter-panel, .chem-filter-panel {
       position: fixed; top: 0; right: 0; bottom: 0;
       width: 280px; max-width: 88vw;   /* PC 우측 기둥과 같은 폭 — 3열 칸이 78px로 PC와 같아진다(200px면 46px로 쪼그라든다) */
       transform: translateX(100%);
@@ -2599,9 +2600,16 @@
       overflow-y: auto; overscroll-behavior: contain;
       z-index: 40;
     }
-    body.drawer-r .filter-panel, body.drawer-r .chem-filter-panel { transform: none; }
+    body.drawer-r .side-pick, body.drawer-r .filter-panel, body.drawer-r .chem-filter-panel { transform: none; }
 
     .drawer-btn { display: inline-flex; }
+    .members-wrap, .stats-wrap { grid-template-columns: 1fr; }
+    .drawer-close-r {
+      display: none; position: fixed; top: 6px; right: 10px; z-index: 41;
+      width: 34px; height: 34px; margin: 0;
+    }
+    body.drawer-r .drawer-close-r { display: flex; }
+    .side-pick, .filter-panel, .chem-filter-panel { padding-top: 48px; }   /* 겹쳐 뜨는 닫기 버튼 자리 확보 */
     .main-header { display: none; }   /* 보조바 폐지 — 내용물은 드로어 우측 칸으로 내려간다 */
     /* 갱신 문구도 버튼들과 같은 가로 스크롤 흐름 안에 둔다 — 보조바가 한 줄이라 3줄 분리를 되돌린다 */
     .header-center-line { white-space: nowrap; }
@@ -2690,13 +2698,13 @@
     <button class="nav-item" data-page="events">
       <span class="nav-icon" id="navEventsIcon"></span>
       <span class="nav-lbl">
-        <span>최근 이벤트</span>
+        <span>최근 활동</span>
         <span class="nav-badge" id="navBadge" role="img" style="display:none"></span>
       </span>
     </button>
     <button class="nav-item" data-page="stats">
       <span class="nav-icon" id="navStatsIcon"></span>
-      <span>기록</span>
+      <span>지난 활동</span>
     </button>
     <button class="nav-item" data-page="chemistry">
       <span class="nav-icon" id="navChemistryIcon"></span>
@@ -2704,7 +2712,7 @@
     </button>
     <button class="nav-item" data-page="hall">
       <span class="nav-icon" id="navHallIcon"></span>
-      <span>명예의 전당</span>
+      <span>통계</span>
     </button>
     <button class="nav-item" data-page="content">
       <span class="nav-icon" id="navContentIcon"></span>
@@ -2716,11 +2724,11 @@
     </button>
     <button class="nav-item" data-page="disco">
       <span class="nav-icon" id="navDiscoIcon"></span>
-      <span>디스코그래피</span>
+      <span>음악</span>
     </button>
     <button class="nav-item" data-page="apply">
       <span class="nav-icon" id="navApplyIcon"></span>
-      <span>컨텐츠 신청</span>
+      <span>좋아요</span>
     </button>
     <button class="nav-item" data-page="links">
       <span class="nav-icon" id="navLinksIcon"></span>
@@ -2731,10 +2739,13 @@
   <div class="topbar-right">
     <div class="header-center" id="headerCenter"></div>
   </div>
-  <button class="drawer-btn" id="drawerBtnR" type="button" aria-label="필터 열기" aria-expanded="false" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg><span class="drawer-cnt" style="display:none"></span></button>
+  <button class="drawer-btn" id="drawerBtnR" type="button" aria-label="필터 열기" aria-expanded="false" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg></button>
   <!-- 가림막이 상단바 '안'에 있어야 한다: .topbar가 z-index를 가진 순간 그 안쪽 z-index는 바깥과 겨루지 못하고
        상단바 값(5)으로 묶인다. body 직속에 두면 가림막(30)이 상단바 전체(5) 위로 올라와 드로어까지 덮었다(실제 사고). -->
   <div class="drawer-scrim" id="drawerScrim"></div>
+  <!-- 우측 서랍 닫기 — 필터 패널은 탭마다 다른 마크업이라 버튼을 그 안에 넣을 수 없다. 서랍이 열렸을 때만
+       그 위에 겹쳐 띄우고, 자리는 여는 버튼(우상단 깔때기)과 같게 둔다. -->
+  <button class="drawer-close drawer-close-r" id="drawerCloseR" type="button" aria-label="필터 닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
 </header>
 
 <main class="main">
@@ -2772,13 +2783,17 @@
 
   <div class="page" id="page-members">
     <div class="members-wrap">
-      <div class="members-tabs-wrap" id="membersTabsWrap"></div>
       <div id="membersBody">
         <div class="loading">
           <div class="spinner"></div>
           <div>구성원 정보를 불러오는 중...</div>
         </div>
       </div>
+      <!-- 멤버 선택 스트립을 우측 기둥으로(2026-08-31). 좁은 폭에서는 우측 서랍으로 들어간다 —
+           '스트립 = 화면을 갈아끼우는 선택'이라 필터와 같은 자리 규칙을 쓴다. -->
+      <aside class="side-pick">
+        <div class="members-tabs-wrap" id="membersTabsWrap"></div>
+      </aside>
     </div>
   </div>
 
@@ -2835,16 +2850,18 @@
 
   <div class="page" id="page-stats">
     <div class="stats-wrap">
-      <div class="stats-tabs-wrap">
-        <div class="stats-tabs-side" id="statsTabsSide"></div>
-        <div class="stats-tabs-members" id="statsTabsMembers"></div>
-      </div>
       <div id="statsBody">
         <div class="loading">
           <div class="spinner"></div>
           <div>통계 불러오는 중...</div>
         </div>
       </div>
+      <aside class="side-pick">
+        <div class="stats-tabs-wrap">
+          <div class="stats-tabs-side" id="statsTabsSide"></div>
+          <div class="stats-tabs-members" id="statsTabsMembers"></div>
+        </div>
+      </aside>
     </div>
   </div>
 
@@ -2884,9 +2901,9 @@
       <div class="apply-main" id="applyReqBody">
         <div class="loading"><div class="spinner"></div><div>좋아요 요청 불러오는 중...</div></div>
       </div>
+      <!-- 우측은 순위만. 컨텐츠 고르기는 좌측 각 묶음 머리의 순위 버튼이 담당한다(2026-08-31) —
+           같은 일을 하는 목록이 양쪽에 있으면 어느 쪽이 본체인지 갈린다. -->
       <aside class="apply-side">
-        <div class="filter-title">컨텐츠</div>
-        <div class="apply-btns" id="applyBtns"></div>
         <div class="apply-rank" id="applyRankBody"><div class="lr-msg">컨텐츠를 고르면 순위가 나옵니다.</div></div>
       </aside>
     </div>
@@ -2912,7 +2929,7 @@
 </main>
 
 <script>
-const BUILD = '2026-08-31m';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
+const BUILD = '2026-08-31o';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
 console.log('[build] front ' + BUILD);
 const WORKER_URL = 'https://chuntaverse.crenop.workers.dev';
 const BASE_TITLE = '천타버스';
@@ -2987,14 +3004,15 @@ const MEMBER_BIRTHDAYS = {
   // 발생시키지 않아 버튼이 첫 화면 이후로 갱신되지 않았다(실제 사고). 지금 열려 있는 화면을 직접 본다.
   window.syncDrawerFilterBtn = function () {
     if (!btnR) return;
-    const panel = document.querySelector('.page.active .filter-panel, .page.active .chem-filter-panel');
+    const panel = document.querySelector('.page.active .filter-panel, .page.active .chem-filter-panel, .page.active .side-pick');
     btnR.style.display = panel ? '' : 'none';
     if (!panel) { if (body.classList.contains('drawer-r')) setDrawer('r', false); return; }
     // [data-type]으로 좁히는 이유: 3열을 채우는 빈칸(evt-type-spacer·chem-type-spacer)도 .filter-type이라
     // 그냥 세면 '꺼진 필터'로 잡힌다 — 다 켜둔 상태에서 이벤트 1·케미 2가 뜨던 것이 정확히 그 빈칸 수였다.
-    const off = panel.querySelectorAll('.filter-member:not(.on), .filter-type[data-type]:not(.on)').length;
-    const cnt = btnR.querySelector('.drawer-cnt');
-    if (cnt) { cnt.textContent = off > 99 ? '99+' : String(off); cnt.style.display = off ? '' : 'none'; }
+    // 숫자를 쓰지 않는 이유(2026-08-31): 사람이 알고 싶은 건 '필터가 걸려 있나' 하나뿐인데, 숫자를 보이면
+    // 그 값이 켜진 수인지 꺼진 수인지를 다시 해석해야 한다. 생방송 점·새 요청 점과 같은 문법으로 통일한다.
+    const filtered = panel.querySelector('.filter-member:not(.on), .filter-type[data-type]:not(.on)') !== null;   // 고르는 기둥(.side-pick)에는 필터가 없어 점이 안 켜진다 — 정상
+    btnR.classList.toggle('filtered', filtered);
   };
   // 폭에 따라 실제로 요소를 옮긴다(CSS로는 부모를 못 바꾼다).
   //  PC   : [기념일·링크] [탭별 부속 11칸] [가이드]  — 보조바 한 줄
@@ -3002,7 +3020,7 @@ const MEMBER_BIRTHDAYS = {
   // 두 배치의 대응이 1:1이라 한쪽을 고치면 다른 쪽 자리가 자동으로 정해진다.
   let wasMobile = null;
   function syncBarPlacement() {
-    const mobile = innerWidth <= 1400;
+    const mobile = innerWidth <= 1200;
     if (mobile === wasMobile) return;
     wasMobile = mobile;
     const bar = document.querySelector('.main-header');
@@ -3027,6 +3045,8 @@ const MEMBER_BIRTHDAYS = {
   syncBarPlacement();
   const closeBtn = document.getElementById('drawerClose');
   if (closeBtn) closeBtn.addEventListener('click', () => setDrawer('l', false));
+  const closeBtnR = document.getElementById('drawerCloseR');
+  if (closeBtnR) closeBtnR.addEventListener('click', () => setDrawer('r', false));
   let rsz;
   addEventListener('resize', () => { clearTimeout(rsz); rsz = setTimeout(() => { syncBarPlacement(); syncDrawerFilterBtn(); }, 120); });
 
@@ -3045,7 +3065,7 @@ const MEMBER_BIRTHDAYS = {
   // 서랍으로 판정한다 — 그러지 않으면 세로로 훑다가 서랍이 튀어나온다.
   let sx = 0, sy = 0, track = false;
   document.addEventListener('touchstart', e => {
-    if (e.touches.length !== 1 || innerWidth > 1100) { track = false; return; }
+    if (e.touches.length !== 1 || innerWidth > 1200) { track = false; return; }
     sx = e.touches[0].clientX; sy = e.touches[0].clientY;
     track = sx > 20 && sx < innerWidth - 20;
   }, { passive: true });
@@ -4608,19 +4628,14 @@ function scheduleBtnHTML() {
   const head = h.vis[0];
   // 단일 일정 — 현행: 제목 + (당일부터 D-time, 그 전 D-day). 모바일은 항상 D-day.
   if (h.group.length < 2) {
-    const second = (head.hasTime && ddayNum(head) === 0) ? dtimeText(head) : ddayText(head);
     return `<button class="page-title-link sch-btn" id="schBtn" type="button" onclick="openSchedule()">${SVG_ICONS.calendar}<span class="sch-btn-dday">${ddayText(head)}</span></button>`;
   }
-  // 같은 날 2건+ (C): 제목 행 + dtime 행(열 정렬), 사이에 가운뎃점(·)으로 분리 표시. dtime 전부 같으면 한 칸 병합.
-  const sep = `<span class="sch-sep">·</span>`;
-  const titleCells = h.group.map(e => `<span class="sch-col-title">${escapeHtml(e.shortTitle)}</span>`).join(sep);
-  const dtimeRow = h.allSame
-    ? `<span class="sch-btn-dtime sch-dtime-merged">${h.dtimes[0]}</span>`
-    : h.dtimes.map(d => `<span class="sch-btn-dtime">${d}</span>`).join(sep);
-  const cols = 2 * h.group.length - 1;   // 이벤트 N칸 + 구분점 N-1칸
-  const pc = `<span class="tb-t-pc sch-grid" style="grid-template-columns:repeat(${cols},auto)">${titleCells}${dtimeRow}</span>`;
-  return `<button class="page-title-link sch-btn" id="schBtn" type="button" onclick="openSchedule()">${SVG_ICONS.calendar}${pc}<span class="tb-t-mb">${ddayText(head)}</span></button>`;
+  // 같은 날 2건+: 종전엔 제목 열 + dtime 열을 격자로 폈지만, 보조바 칸이 92px이라 들어가지 않는다.
+  // 건수만 덧붙이고 내용은 달력 탭에서 본다(버튼의 역할 = '언제'까지).
+  const head2 = h.vis[0];
+  return `<button class="page-title-link sch-btn" id="schBtn" type="button" onclick="openSchedule()">${SVG_ICONS.calendar}<span class="sch-btn-dday">${ddayText(head2)}<span class="sch-more">+${h.group.length - 1}</span></span></button>`;
 }
+
 
 // 1초마다: 구조(묶음 구성·병합/분리)가 바뀌었으면 상단바 전체 재구성, 아니면 카운트다운 숫자만 교체.
 function tickSchedule() {
@@ -5254,15 +5269,6 @@ let applyRankPost = null;
 let applyTimer = null;
 function stopApplyPoll() { if (applyTimer) { clearInterval(applyTimer); applyTimer = null; } }
 
-function renderApplyBtns() {
-  const el = document.getElementById('applyBtns');
-  if (!el) return;
-  if (!likeRankBtns.length) { el.innerHTML = '<div class="lr-msg">진행 중인 컨텐츠가 없습니다.</div>'; return; }
-  el.innerHTML = likeRankBtns.map(b => {
-    const tx = lightenForText(b.hex);
-    return `<button class="page-title-link rank-btn apply-btn${b.titleNo === applyRankPost ? ' on' : ''}" type="button" data-post="${escapeHtml(b.titleNo)}" style="--tb-rgb:${hexToRgb(b.hex)};color:${b.hex}">${SVG_ICONS.barChart}<span style="color:${tx}">${escapeHtml(b.label || '좋아요 순위')}</span></button>`;
-  }).join('');
-}
 
 function clearApplyRank() {
   applyRankPost = null;
@@ -5278,8 +5284,7 @@ function selectApplyRank(titleNo) {
   document.body.classList.add('apply-rank-on');
   rankOpenPost = titleNo;
   likeRankTarget = 'applyRankBody';
-  renderApplyBtns();
-  if (likeReqShown) renderLikeReqBody();   // 고른 표시를 행 버튼에도 반영
+  if (likeReqShown) renderLikeReqBody();   // 고른 표시를 행 버튼에 반영
   const body = document.getElementById('applyRankBody');
   if (body) body.innerHTML = '<div class="lr-msg">불러오는 중…</div>';
   loadLikeRanking();
@@ -5295,7 +5300,6 @@ function selectApplyRank(titleNo) {
 }
 
 function renderApply() {
-  renderApplyBtns();
   const body = document.getElementById('applyReqBody');
   if (!body) return;
   likeReqTarget = 'applyReqBody';
@@ -5316,7 +5320,7 @@ function renderApply() {
 }
 
 document.addEventListener('click', e => {
-  const b = e.target.closest('.apply-btn, .lrg-rank-btn');
+  const b = e.target.closest('.lrg-rank-btn');
   if (!b) return;
   const post = b.dataset.post;
   // 좁은 폭에선 우측 칸이 아래로 내려가 멀다 → 같은 버튼을 다시 누르면 닫히는 토글로 쓴다.
