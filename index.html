@@ -979,14 +979,17 @@
   .filter-types { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; flex: 1; min-width: 0; }
   .filter-type {
     display: flex; align-items: center; justify-content: center;
-    color: var(--text);   /* 버튼은 UA 기본색(검정)을 쓴다 — 글자 라벨을 넣는 순간 드러난다(2026-09-01 실사고) */
+    color: var(--text);   /* 이 규칙에만 색 선언이 없어 버튼의 UA 기본색(검정)이 나왔다. 다른 필터 글자(모두 해제·라벨)는 각자 색을 갖고 있어 멀쩡했다 */
     aspect-ratio: 1;
     min-height: 0; overflow: hidden;
     background: var(--surface2);
     border: 1.5px solid var(--border);
     cursor: pointer; transition: all 0.15s;
   }
-  .filter-type .filter-lbl { font-size: 11px; font-weight: 600; line-height: 1; }   /* 케미 종류 — 아이콘 대신 글자(라벨 배지 글자와 같은 크기) */
+  /* 케미 종류 = 아이콘 위 · 글자 아래. 아이콘은 '무엇 계열인지', 글자는 '정확히 무엇인지'를 맡는다 */
+  .filter-type:has(.filter-lbl) { flex-direction: column; gap: 3px; }
+  .filter-type:has(.filter-lbl) .filter-icon { width: 40%; height: 40%; }
+  .filter-type .filter-lbl { font-size: 11px; font-weight: 600; line-height: 1; }
   .filter-type:hover { border-color: var(--accent); }
   .filter-type.on { border-color: var(--accent); }
   .filter-type:not(.on) { opacity: 0.35; }
@@ -2042,8 +2045,9 @@
      묶음 머리와 그 안의 순위 버튼은 남는다 — 목록을 통째로 감췄더니 순위를 끄거나 다른 컨텐츠로 옮길
      길이 사라졌다(실사고). 순위는 머리 바로 아래에 오도록 조작부 묶음을 목록 뒤로 보낸다. */
   @media (max-width: 1100px) {
-    body.apply-rank-on .apply-main .lrq-row { display: none; }
-    body.apply-rank-on .apply-side { order: 0; }
+    body.apply-rank-on .apply-main .lrq-row { display: none; }   /* 댓글 모음만 감춘다 — 묶음 머리와 순위 버튼은 남는다 */
+    body.apply-rank-on .apply-side:empty { display: none; }      /* 순위가 목록 안으로 옮겨가면 빈 껍데기만 남는다 */
+    body.apply-rank-on .apply-main .apply-rank { margin: 0 12px 12px; }
   }
 
   .content-grid {
@@ -2134,7 +2138,8 @@
   .hall-heat { margin-bottom: 28px; }
   .hall-heat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }   /* 셀이 정사각에 가깝게 서려면 24칸 × 15px + 축·여백 ≈ 340px 필요(2026-09-01) */
   .hall-heat-cell { background: var(--surface); border: 1px solid var(--border); padding: 12px; min-width: 0; }
-  .hall-heat-name { font-size: 12px; font-weight: 700; margin-bottom: 6px; }
+  .hall-heat-name { font-size: 12px; font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .hall-heat-name img { width: 22px; height: 22px; flex: none; }   /* 사진+이름 — 케미·순위 화면과 같은 문법 */
   .hall-heat-cell .toh-wrap { margin: 0; }
 
   .hall-main { min-width: 0; }
@@ -2163,7 +2168,7 @@
   /* 2·3위 토글은 우측 기둥으로 옮겼다(2026-09-01) — 본문 sticky 바·백드롭·우측 묶음은 그 자리에서 죽었다.
      남은 것은 기둥 안 한 줄뿐이라 라벨과 최소 배치만 둔다. */
   .hall-bar { display: flex; align-items: center; gap: 8px; }
-  .hall-bar-label { font-size: 13px; font-weight: 600; color: var(--muted); user-select: none; }
+  .hall-bar-label { font-size: 12px; font-weight: 700; letter-spacing: 1px; color: var(--muted); user-select: none; }   /* .filter-title(멤버·종류·기간)과 같은 규격 — 둘 다 '이 묶음이 무엇인가'를 말하는 층이다 */
   .hall-period { display: flex; gap: 4px; flex-wrap: wrap; }
   .hall-period-btn { font-family: inherit; font-size: 12px; font-weight: 600; padding: 5px 10px; background: var(--surface2); border: 1.5px solid transparent; color: var(--muted); cursor: pointer; transition: all 0.15s; white-space: nowrap; }   /* inherit 없으면 버튼은 UA 기본 폰트라 Pretendard를 못 받는다 — 통계 탭 .stats-period-btn과 동일 처리(2026-08-10) */
   /* 문법 통일(2026-08-31): 같은 '기간 고르기'인데 여기만 평소 테두리 있음·hover=테두리·선택=배경교체라
@@ -2668,8 +2673,8 @@
 
     .sidebar {
       position: fixed; top: var(--strip-h, 44px); left: 0; bottom: 0;
-      width: var(--drawer-w);
-      display: grid; grid-template-columns: auto 1fr; align-content: start;
+      width: max-content; min-width: 244px; max-width: 90vw;   /* 내용 폭에 맞춘다 — 부속 칸이 짧으면 기둥도 좁아진다 */
+      display: grid; grid-template-columns: auto auto; align-content: start;
       padding: 2px 0;
       background: var(--surface); border-right: 1px solid var(--border); border-bottom: none;
       overflow-y: auto; overscroll-behavior: contain;   /* contain 없으면 끝까지 민 뒤 뒤 본문이 따라 움직인다 */
@@ -2698,12 +2703,12 @@
     .nav-item.active { border-bottom-color: transparent; border-left-color: var(--accent); }
     /* 세로 목록: 배지를 겹치지 않고 라벨 옆에 둔다 */
     .nav-lbl { position: static; gap: 6px; }
-    .nav-badge { position: static; }
+    .nav-badge { position: static; min-width: 30px; }   /* 안읽음이 네 자리(1000)가 돼도 기둥 폭이 안 변하게 자리를 미리 잡는다 */
 
     /* 우측 서랍: PC의 우측 기둥이 그대로 서랍이 된 것. 좌=탭 전환 / 우=탭 내부 조작 대응이 PC와 1:1 */
     .side-pick, .filter-panel, .chem-filter-panel {
       position: fixed; top: var(--strip-h, 44px); right: 0; bottom: 0;
-      width: 300px; max-width: 88vw; padding: 16px 12px 16px 16px;
+      width: var(--drawer-w); max-width: 88vw; padding: 16px 12px 16px 16px;   /* 좌우 서랍 폭은 한 값으로 묶는다(자리를 주고받는 관계) */
       background: var(--surface); border-left: 1px solid var(--border);
       transform: translateX(100%);
       transition: transform 0.22s ease;
@@ -2726,9 +2731,8 @@
     .drawer-btn#drawerBtnL { display: inline-flex; }
     body.drawer-r .sidebar { transform: translateX(-100%); }
     body.drawer-r .main { margin-left: 0; }
-    /* 가림막을 끄지 않는다(2026-09-01 수정): 왼쪽 기둥은 상시 표시라 가림막이 필요 없지만,
-       오른쪽 조작부는 이 폭에서도 서랍이다 — 껐더니 바깥을 눌러도 안 닫히고 뒤가 가려지지도 않았다. */
-    body.drawer-l .drawer-scrim { display: none; }
+    /* 이 폭에서는 좌우가 '자리를 주고받는' 관계다(하나만 상시). 덮는 게 아니라 밀어내므로 가림막을 쓰지 않는다. */
+    .drawer-scrim { display: none; }
   }
 
   /* 모바일: 같은 기둥이 화면 밖으로 나가 ☰로 여는 서랍이 된다 */
@@ -3062,7 +3066,7 @@
 </main>
 
 <script>
-const BUILD = '2026-09-01v';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
+const BUILD = '2026-09-01w';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
 console.log('[build] front ' + BUILD);
 const WORKER_URL = 'https://chuntaverse.crenop.workers.dev';
 const BASE_TITLE = '천타버스';
@@ -3110,6 +3114,16 @@ const MEMBER_BIRTHDAYS = {
   const body = document.body;
   const btnL = document.getElementById('drawerBtnL');
   const btnR = document.getElementById('drawerBtnR');
+  // 기둥 폭이 내용에 따라 달라지므로 본문을 밀어낼 값도 실측해서 넣는다(--strip-h와 같은 방식).
+  const sideEl = document.getElementById('sidebar');
+  function syncDrawerW() {
+    if (!sideEl) return;
+    const w = sideEl.getBoundingClientRect().width;
+    if (w > 0) document.documentElement.style.setProperty('--drawer-w', Math.round(w) + 'px');
+  }
+  window.addEventListener('resize', syncDrawerW);
+  setTimeout(syncDrawerW, 0);
+  window.syncDrawerW = syncDrawerW;
   const scrim = document.getElementById('drawerScrim');
 
   function setDrawer(side, on) {
@@ -5376,6 +5390,23 @@ let applyTimer = null;
 function stopApplyPoll() { if (applyTimer) { clearInterval(applyTimer); applyTimer = null; } }
 
 
+// 좁은 폭에서는 순위가 '댓글 모음이 있던 자리'에 들어가야 한다 — 고른 묶음 머리 바로 아래.
+// CSS만으로는 못 옮긴다(다른 부모의 자식이 되어야 한다). 넓은 폭에서는 원래 자리(우측 칸)로 되돌린다.
+function placeApplyRank() {
+  const rank = document.getElementById('applyRankBody');
+  const side = document.querySelector('.apply-side');
+  if (!rank || !side) return;
+  const narrow = window.matchMedia('(max-width: 1100px)').matches;
+  if (narrow && applyRankPost) {
+    const btn = document.querySelector(`.lrg-rank-btn[data-post="${CSS.escape(String(applyRankPost))}"]`);
+    const head = btn && btn.closest('.lrg-head');
+    if (head && rank.previousElementSibling !== head) head.insertAdjacentElement('afterend', rank);
+    return;
+  }
+  if (rank.parentElement !== side) side.appendChild(rank);
+}
+window.addEventListener('resize', placeApplyRank);
+
 function clearApplyRank() {
   applyRankPost = null;
   stopApplyPoll();
@@ -5383,6 +5414,7 @@ function clearApplyRank() {
   if (body) body.innerHTML = '<div class="lr-msg">컨텐츠를 고르면 순위가 나옵니다.</div>';
   document.body.classList.remove('apply-rank-on');
   renderLikeReqBody();
+  placeApplyRank();
 }
 
 function selectApplyRank(titleNo) {
@@ -5391,6 +5423,7 @@ function selectApplyRank(titleNo) {
   rankOpenPost = titleNo;
   likeRankTarget = 'applyRankBody';
   if (likeReqShown) renderLikeReqBody();   // 고른 표시를 행 버튼에 반영
+  placeApplyRank();
   const body = document.getElementById('applyRankBody');
   if (body) body.innerHTML = '<div class="lr-msg">불러오는 중…</div>';
   loadLikeRanking();
@@ -5419,6 +5452,7 @@ function renderApply() {
       const seen = lsKeySet(LS_LIKE_SEEN);
       likeReqNewSet = new Set(likeReqShown.map(likeReqKey).filter(k => !seen.has(k)));
       renderLikeReqBody();
+      placeApplyRank();   // 목록을 다시 그리면 머리 요소가 새로 나므로 순위도 다시 그 아래로
       lsKeyAdd(LS_LIKE_SEEN, likeReqShown.map(likeReqKey));
       refreshLikeDot();
     })
@@ -8515,11 +8549,12 @@ function renderChemistry() {
 
   // 종류 필터 버튼(2026-08-08): 이벤트 탭 .filter-type 재사용, 아이콘 전부 흰색.
   // 3열에 2×2 + 우측 열 spacer(이벤트 탭 evt-type-spacer와 같은 수법) — 모바일 한 줄에선 spacer가 사라져 4개 연속.
-  // 아이콘 → 글자(2026-09-01, Crenop 지정): 네 종류는 아이콘만으로 뜻이 안 갈렸다(태그 채움/윤곽 = 기타/미분류).
+  // 아이콘 + 글자(2026-09-01): 아이콘만으로는 태그 채움/윤곽이 기타/미분류로 안 갈렸고, 글자만 두니 한 눈에 안 잡혔다.
+  const typeIcon = { '컨텐츠': SVG_ICONS.film, '프로필': SVG_ICONS.people, '기타': SVG_ICONS.tagFilled, '미분류': SVG_ICONS.tagOutline };
   const typeSpacer = '<span class="filter-type chem-type-spacer" style="visibility:hidden;pointer-events:none"></span>';
   const typeBtns = CHEM_TYPES.map((t, i) => `
     <button class="filter-type ${chemFilterTypes.has(t) ? 'on' : ''}" data-ctype="${t}" title="${t}">
-      <span class="filter-lbl">${t}</span>
+      <span class="filter-icon">${typeIcon[t]}</span><span class="filter-lbl">${t}</span>
     </button>${i === 1 ? typeSpacer : ''}
   `).join('') + typeSpacer;
   const allTypesOn = chemFilterTypes.size === CHEM_TYPES.length;
@@ -8854,7 +8889,7 @@ function renderHallStats() {
     const cells = MEMBERS.map(m => {
       const sum = computeMonthSummary(getMemberStatsForView(m.id), year, month);
       const h = renderTimeOfDayHeatmap(year, month, sum, isCur);
-      return h ? `<div class="hall-heat-cell"><div class="hall-heat-name" style="color:${m.color}">${escapeHtml(m.name)}</div>${h}</div>` : '';
+      return h ? `<div class="hall-heat-cell"><div class="hall-heat-name"><img src="${m.img}" alt="${escapeHtml(m.name)}"><span style="color:${m.color}">${escapeHtml(m.name)}</span></div>${h}</div>` : '';
     }).filter(Boolean).join('');
     heat.innerHTML = cells ? `<div class="hall-heat-grid">${cells}</div>` : '<div class="lr-msg">그 달의 방송 기록이 없습니다.</div>';
   }
