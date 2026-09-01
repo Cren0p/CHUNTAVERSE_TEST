@@ -2709,10 +2709,13 @@
        같은 행을 지정한다. 배지가 라벨을 덮는 것과 같은 문법이고, 부속은 행의 오른쪽 끝에 선다. */
     .nav-list, .subbar-mid { display: contents; }
     #drawerClose { grid-row: 1; justify-self: start; }
-    .subbar-lead { grid-row: 1; justify-self: end; align-self: center; padding-right: 12px; }   /* 닫기 버튼과 같은 줄·같은 높이 */
+    /* 시트 버튼은 닫기 ✕ 바로 오른쪽. 왼쪽 여백 52px = ✕의 왼쪽 여백 10 + 버튼 34 + 간격 8 */
+    .subbar-lead { grid-row: 1; justify-self: start; align-self: center; padding-left: 52px; }
     /* 배지·점의 기준을 라벨로 되돌린다 — 상단바에서는 칸 우상단이 맞지만, 세로 목록에서는 행 오른쪽 끝에
        붙어 라벨에서 한참 떨어졌다(2026-09-02 실사고). 좋아요 점도 같은 기준으로 옮긴다. */
     .nav-lbl { position: relative; }
+    /* 글자를 통째로 덮지 않도록 라벨 오른쪽 위 '바깥'에 살짝 걸친다(2026-09-02) */
+    .nav-badge { top: -6px; right: auto; left: 100%; margin-left: -6px; }
     .nav-item.has-new::after { top: 50%; right: auto; left: 100%; margin: -4px 0 0 6px; }
     .nav-item[data-page="members"],    .tab-aux[data-for="members"]    { grid-row: 2; }
     .nav-item[data-page="live"],       .tab-aux[data-for="live"]       { grid-row: 3; }
@@ -2742,7 +2745,10 @@
     /* 부속은 라벨 바로 뒤에 선다(2026-09-02). 행 오른쪽 끝(justify-self: end)에 붙였더니 라벨과 사이가
        과하게 벌어졌다. 왼쪽 여백 112px = 탭 왼쪽 패딩 16 + 아이콘 20 + 간격 12 + 최장 라벨('최근 활동') 약 56 + 여유 8.
        탭 라벨이 길어지면 이 값도 같이 올려야 한다(고정값 — 실측 아님). */
-    .tab-aux { justify-self: start; position: relative; z-index: 1; }
+    /* 칸 자체는 클릭을 통과시킨다 — 행 위에 겹쳐 있어 라벨 쪽 클릭을 가로채고 있었다(2026-09-02 실사고).
+       실제 부속(벨·기념일·일정)만 클릭을 받는다. */
+    .tab-aux { justify-self: start; position: relative; z-index: 1; pointer-events: none; }
+    .tab-aux > * { pointer-events: auto; }
     .subbar-lead, .tab-aux { flex: none; justify-content: flex-start; }
     .tab-aux { height: var(--nav-row-h); }
     /* 일정 줄은 흐름 안으로 되돌린다 — 가로 보조바에서 '양옆 빈 탭 자리를 빌리는' 절대배치가
@@ -2799,6 +2805,10 @@
     /* 좌우 중 하나만 자리를 차지한다(2026-09-01, Crenop 제안). 탭을 고르고 나면 조작부가 더 자주 쓰이므로
        조작부를 열 때 탭 기둥이 물러나 본문 폭을 지킨다. 다시 부르는 길은 좌상단 ☰. */
     .drawer-btn#drawerBtnL { display: inline-flex; }
+    /* 기둥을 접어 두는 상태(2026-09-02) — 우측 조작부가 열렸을 때와 같은 자리·같은 모양으로 좌측도 대칭이 된다.
+       버튼 모양(☰↔✕)은 JS가 갈아끼운다: 기둥이 보이면 ✕(닫기), 접혀 있으면 ☰(열기). */
+    body.side-off .sidebar { transform: translateX(-100%); }
+    body.side-off .main { margin-left: 0; padding-left: 0; padding-right: 0; }
     body.drawer-r .sidebar { transform: translateX(-100%); }
     body.drawer-r .main { margin-left: 0; margin-right: 300px;
       padding-left: calc((max(var(--drawer-w, 300px), 300px) - 300px) / 2);
@@ -3136,7 +3146,7 @@
 </main>
 
 <script>
-const BUILD = '2026-09-02g';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
+const BUILD = '2026-09-02h';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
 console.log('[build] front ' + BUILD);
 const WORKER_URL = 'https://chuntaverse.crenop.workers.dev';
 const BASE_TITLE = '천타버스';
@@ -3213,6 +3223,7 @@ const MEMBER_BIRTHDAYS = {
   const scrim = document.getElementById('drawerScrim');
 
   function setDrawer(side, on) {
+    if (side === 'r' && on) body.classList.remove('side-off');   // 조작부를 열면 기둥 접힘 상태는 뜻이 없다
     // 지정한 쪽만 건드린다. 종전엔 부를 때마다 양쪽을 다시 칠해서, 조작부 버튼 동기화가 부르는
     // setDrawer('r', false) 한 번에 열려 있던 좌측 서랍까지 닫혔다(모바일에서 스크롤로 주소창이
     // 접힐 때 resize가 나 '아무 것도 안 했는데' 닫히던 실사고 — 2026-09-02).
@@ -3221,11 +3232,32 @@ const MEMBER_BIRTHDAYS = {
     if (on) body.classList.remove(side === 'l' ? 'drawer-r' : 'drawer-l');
     if (btnL) btnL.setAttribute('aria-expanded', String(body.classList.contains('drawer-l')));
     if (btnR) btnR.setAttribute('aria-expanded', String(body.classList.contains('drawer-r')));
+    if (window.syncBtnL) window.syncBtnL();
   }
   function closeAll() { setDrawer('l', false); setDrawer('r', false); }
   window.closeDrawers = closeAll;
 
-  if (btnL) btnL.addEventListener('click', () => setDrawer('l', !body.classList.contains('drawer-l')));
+  // 태블릿(기둥 상시 표시)에서는 좌측 버튼이 '기둥 접기/펴기'다 — 우측 조작부와 같은 대칭을 만든다.
+  // 스마트폰에서는 종전대로 서랍 여닫기.
+  function tabletPinned() { return innerWidth > 700 && innerWidth <= 1150; }
+  function syncBtnL() {
+    if (!btnL) return;
+    const closed = tabletPinned() ? (body.classList.contains('side-off') || body.classList.contains('drawer-r'))
+                                  : !body.classList.contains('drawer-l');
+    btnL.innerHTML = closed ? SVG_ICONS.menu : SVG_ICONS.close;
+    btnL.setAttribute('aria-label', closed ? '메뉴 열기' : '메뉴 닫기');
+    btnL.setAttribute('aria-expanded', String(!closed));
+  }
+  window.syncBtnL = syncBtnL;
+  if (btnL) btnL.addEventListener('click', () => {
+    if (tabletPinned()) {
+      if (body.classList.contains('drawer-r')) setDrawer('r', false);        // 조작부가 밀어낸 상태면 되부르기
+      else body.classList.toggle('side-off');
+      syncBtnL();
+      return;
+    }
+    setDrawer('l', !body.classList.contains('drawer-l'));
+  });
   if (btnR) btnR.addEventListener('click', () => setDrawer('r', !body.classList.contains('drawer-r')));
   if (scrim) scrim.addEventListener('click', closeAll);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(); });
@@ -3293,6 +3325,7 @@ const MEMBER_BIRTHDAYS = {
     // 로고·문구는 언제나 상단 띠에 있다(2026-09-01). 세로형에서도 띠는 그대로 있고 탭 목록만 내려간다.
   }
   syncBarPlacement();
+  if (window.syncBtnL) window.syncBtnL();   // 첫 페인트에서도 버튼 모양이 상태와 맞게
   // 상단 띠 높이를 실측해 --strip-h에 넣는다 — 기둥이 그 아래에서 시작해야 띠를 덮지도, 뜨지도 않는다.
   // 문구가 줄바꿈되면 높이가 달라지므로 고정값을 쓸 수 없다.
   const stripEl = document.querySelector('.topbar');
@@ -3308,7 +3341,7 @@ const MEMBER_BIRTHDAYS = {
   const closeBtnR = document.getElementById('drawerCloseR');
   if (closeBtnR) closeBtnR.addEventListener('click', () => setDrawer('r', false));
   let rsz;
-  addEventListener('resize', () => { clearTimeout(rsz); rsz = setTimeout(() => { syncBarPlacement(); syncDrawerFilterBtn(); }, 120); });
+  addEventListener('resize', () => { clearTimeout(rsz); rsz = setTimeout(() => { syncBarPlacement(); syncDrawerFilterBtn(); if (window.syncBtnL) window.syncBtnL(); }, 120); });
 
   window.addEventListener('hashchange', () => { closeAll(); syncDrawerFilterBtn(); });
   // 케미 필터는 마크업이 아니라 렌더에서 만들어지므로 '탭을 눌렀을 때'만으론 늦다. 화면이 실제로 바뀐 뒤에
