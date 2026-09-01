@@ -2818,12 +2818,11 @@
     .drawer-btn#drawerBtnL { display: inline-flex; }
     /* 기둥을 접어 두는 상태(2026-09-02) — 우측 조작부가 열렸을 때와 같은 자리·같은 모양으로 좌측도 대칭이 된다.
        버튼 모양(☰↔✕)은 JS가 갈아끼운다: 기둥이 보이면 ✕(닫기), 접혀 있으면 ☰(열기). */
+    /* 기둥이 접혔는지는 side-off 하나로만 정한다(2026-09-02). 종전엔 drawer-r에도 얹혀 있어서
+       조작부를 닫는 순간 기둥이 저절로 돌아왔다 — 닫기가 반대쪽을 여는 셈이었다. */
     body.side-off .sidebar { transform: translateX(-100%); }
     body.side-off .main { margin-left: 0; padding-left: 0; padding-right: 0; }
-    body.drawer-r .sidebar { transform: translateX(-100%); }
-    body.drawer-r .main { margin-left: 0; margin-right: 300px;
-      padding-left: calc((max(var(--drawer-w, 300px), 300px) - 300px) / 2);
-      padding-right: calc((max(var(--drawer-w, 300px), 300px) - 300px) / 2); }   /* 우측도 덮지 않고 밀어낸다 */
+    body.drawer-r .main { margin-right: 300px; }   /* 조작부도 덮지 않고 밀어낸다 */
     /* 이 폭에서는 좌우가 '자리를 주고받는' 관계다(하나만 상시). 덮는 게 아니라 밀어내므로 가림막을 쓰지 않는다. */
     .drawer-scrim { display: none; }
   }
@@ -3157,7 +3156,7 @@
 </main>
 
 <script>
-const BUILD = '2026-09-02k';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
+const BUILD = '2026-09-02l';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
 console.log('[build] front ' + BUILD);
 const WORKER_URL = 'https://chuntaverse.crenop.workers.dev';
 const BASE_TITLE = '천타버스';
@@ -3234,7 +3233,8 @@ const MEMBER_BIRTHDAYS = {
   const scrim = document.getElementById('drawerScrim');
 
   function setDrawer(side, on) {
-    if (side === 'r' && on) body.classList.remove('side-off');   // 조작부를 열면 기둥 접힘 상태는 뜻이 없다
+    // 여는 것은 명시적 행동이라 반대쪽을 접는다. 닫을 때는 아무것도 되돌리지 않는다(닫기는 닫기만).
+    if (side === 'r' && on && innerWidth > 700 && innerWidth <= 1150) body.classList.add('side-off');
     // 지정한 쪽만 건드린다. 종전엔 부를 때마다 양쪽을 다시 칠해서, 조작부 버튼 동기화가 부르는
     // setDrawer('r', false) 한 번에 열려 있던 좌측 서랍까지 닫혔다(모바일에서 스크롤로 주소창이
     // 접힐 때 resize가 나 '아무 것도 안 했는데' 닫히던 실사고 — 2026-09-02).
@@ -3253,7 +3253,7 @@ const MEMBER_BIRTHDAYS = {
   function tabletPinned() { return innerWidth > 700 && innerWidth <= 1150; }
   function syncBtnL() {
     if (!btnL) return;
-    const closed = tabletPinned() ? (body.classList.contains('side-off') || body.classList.contains('drawer-r'))
+    const closed = tabletPinned() ? body.classList.contains('side-off')
                                   : !body.classList.contains('drawer-l');
     // 아이콘 표는 이 블록보다 아래에서 만들어진다(const라 그 전엔 접근 자체가 예외 — 부팅이 통째로 멈춘다).
     // 그래서 여기서는 실패를 삼키고, 표가 준비된 뒤 아이콘 주입 블록이 한 번 더 부른다.
@@ -3264,10 +3264,12 @@ const MEMBER_BIRTHDAYS = {
   window.syncBtnL = syncBtnL;
   if (btnL) btnL.addEventListener('click', () => {
     if (tabletPinned()) {
-      // 닫기는 닫기만 한다(2026-09-02 철회): 반대쪽을 자동으로 열면 둘 중 하나가 늘 열려 있어
+      // 닫기는 닫기만 한다: 반대쪽을 자동으로 열면 둘 중 하나가 늘 열려 있어
       // '양쪽 다 치우고 본문만 크게 보기'라는 선택지가 사라진다.
-      if (body.classList.contains('drawer-r')) setDrawer('r', false);   // 조작부가 밀어낸 상태면 기둥 되부르기
-      else body.classList.toggle('side-off');
+      // 펴는 것은 여는 행동이라 그때만 조작부를 닫는다.
+      const opening = body.classList.contains('side-off');
+      body.classList.toggle('side-off');
+      if (opening) setDrawer('r', false);
       syncBtnL();
       return;
     }
