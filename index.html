@@ -2714,8 +2714,9 @@
     /* 배지·점의 기준을 라벨로 되돌린다 — 상단바에서는 칸 우상단이 맞지만, 세로 목록에서는 행 오른쪽 끝에
        붙어 라벨에서 한참 떨어졌다(2026-09-02 실사고). 좋아요 점도 같은 기준으로 옮긴다. */
     .nav-lbl { position: relative; }
-    /* 글자를 통째로 덮지 않도록 라벨 오른쪽 위 '바깥'에 살짝 걸친다(2026-09-02) */
-    .nav-badge { top: -6px; right: auto; left: 100%; margin-left: -6px; }
+    /* 배포본(2026-08-31a)과 같은 자리 — 라벨 우상단에 얹혀 글자를 상당 부분 덮는다.
+       자릿수가 늘면 왼쪽(글자 쪽)으로 자라므로 벨을 밀어낼 일이 없다(Crenop 확인). */
+    .nav-badge { top: -6px; right: -10px; left: auto; margin-left: 0; }
     .nav-item.has-new::after { top: 50%; right: auto; left: 100%; margin: -4px 0 0 6px; }
     .nav-item[data-page="members"],    .tab-aux[data-for="members"]    { grid-row: 2; }
     .nav-item[data-page="live"],       .tab-aux[data-for="live"]       { grid-row: 3; }
@@ -2733,11 +2734,11 @@
        탭 이름이 바뀌면 그 줄의 값도 같이 고쳐야 한다(고정값 — 실측 아님). */
     .tab-aux[data-for="members"]   { padding-left: 98px; }
     .tab-aux[data-for="live"]      { padding-left: 98px; }
-    .tab-aux[data-for="events"]    { padding-left: 116px; }
+    .tab-aux[data-for="events"]    { padding-left: 126px; }   /* 배지가 라벨 오른쪽으로 10px 걸치므로 벨을 그만큼 더 민다 */
     .tab-aux[data-for="stats"]     { padding-left: 116px; }
     .tab-aux[data-for="chemistry"] { padding-left: 84px; }
     .tab-aux[data-for="hall"]      { padding-left: 84px; }
-    .tab-aux[data-for="content"]   { padding-left: 84px; }
+    .tab-aux[data-for="content"]   { padding-left: 94px; }   /* 일정 줄이 두 줄이라 달력 라벨과 붙어 갑갑했다 */
     .tab-aux[data-for="banner"]    { padding-left: 98px; }
     .tab-aux[data-for="disco"]     { padding-left: 84px; }
     .tab-aux[data-for="apply"]     { padding-left: 98px; }
@@ -2748,7 +2749,9 @@
     /* 칸 자체는 클릭을 통과시킨다 — 행 위에 겹쳐 있어 라벨 쪽 클릭을 가로채고 있었다(2026-09-02 실사고).
        실제 부속(벨·기념일·일정)만 클릭을 받는다. */
     .tab-aux { justify-self: start; position: relative; z-index: 1; pointer-events: none; }
-    .tab-aux > * { pointer-events: auto; }
+    /* 누를 것만 클릭을 받는다 — 생방송 카운터·일정 줄은 표시라 눌릴 이유가 없고,
+       칸이 클릭을 먹으면 그 자리에서 탭 자체가 안 눌린다(2026-09-02). */
+    .tab-aux .nav-notify-bell, .tab-aux .celebration-box, .tab-aux #guideLink { pointer-events: auto; }
     .subbar-lead, .tab-aux { flex: none; justify-content: flex-start; }
     .tab-aux { height: var(--nav-row-h); }
     /* 일정 줄은 흐름 안으로 되돌린다 — 가로 보조바에서 '양옆 빈 탭 자리를 빌리는' 절대배치가
@@ -3146,7 +3149,7 @@
 </main>
 
 <script>
-const BUILD = '2026-09-02i';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
+const BUILD = '2026-09-02j';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
 console.log('[build] front ' + BUILD);
 const WORKER_URL = 'https://chuntaverse.crenop.workers.dev';
 const BASE_TITLE = '천타버스';
@@ -3253,7 +3256,11 @@ const MEMBER_BIRTHDAYS = {
   window.syncBtnL = syncBtnL;
   if (btnL) btnL.addEventListener('click', () => {
     if (tabletPinned()) {
-      if (body.classList.contains('drawer-r')) setDrawer('r', false);        // 조작부가 밀어낸 상태면 되부르기
+      // 좌우가 한 자리를 주고받는다: 기둥을 접으면 조작부가 그 자리를 바로 넘겨받고, 조작부를 닫으면 기둥이 선다.
+      // 그 탭에 조작부가 없으면(버튼이 숨겨진 상태) 넘겨줄 상대가 없으므로 기둥만 접는다.
+      const hasPanel = btnR && getComputedStyle(btnR).visibility !== 'hidden' && btnR.offsetParent !== null;
+      if (body.classList.contains('drawer-r')) setDrawer('r', false);
+      else if (hasPanel) { body.classList.remove('side-off'); setDrawer('r', true); }
       else body.classList.toggle('side-off');
       syncBtnL();
       return;
