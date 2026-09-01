@@ -360,7 +360,7 @@
   /* 보조바 버튼은 한 줄 — 종전 2줄 줄바꿈(<br class="tb-br">)을 접는다. 원문에 br 앞 공백을 넣어 뒀으므로
      접어도 낱말이 붙지 않는다. 모바일에서는 짧은 라벨(.tb-t-mb)로 갈아끼우므로 이 규칙과 무관. */
   .tb-br { display: none; }
-  .page-title-link, .celebration-box, .celebration-box * { white-space: nowrap; }   /* 안쪽 조각이 따로 접히던 것 차단(2026-09-02) */
+  .page-title-link, .celebration-box, .celebration-box * { white-space: nowrap; }   /* 문구의 <br>도 함께 제거했다 — 줄바꿈 금지만으로는 <br>을 못 막는다(2026-09-02) */
   .page-title { flex-wrap: nowrap; }   /* 보조바가 한 줄이므로 버튼 묶음도 안 접힌다 */
   /* 일정 줄(2026-08-31): 버튼이 아니라 표시다. 누를 일이 없고(동선은 달력 탭이 가진다) 테두리도 없다.
      제목 · 남은 시간 한 줄, 같은 날 일정이 더 있으면 +N. 칸을 넘치면 제목만 말줄임된다. */
@@ -2711,6 +2711,7 @@
     .page-title-link, .celebration-box { padding: 4px 10px; }
     /* 기념일만 짧은 요약('이름 종류')으로 — PC 문구는 길어 세로형 행 폭을 넘긴다(2026-09-01) */
     .celebration-box .tb-t-pc { display: none; }
+    .tab-aux .celebration-box { padding: 2px 8px; font-size: 10px; }   /* 탭 줄 안에 서므로 행 높이를 넘지 않게 */
     .celebration-box .tb-t-mb { display: inline; }
     #guideLink span:not(#guideIcon) { display: none; }   /* 가이드는 아이콘만 — 기둥 폭을 이 버튼이 정하고 있었다 */
     #guideLink { padding: 4px 8px; }
@@ -3084,7 +3085,7 @@
 </main>
 
 <script>
-const BUILD = '2026-09-02b';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
+const BUILD = '2026-09-02c';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
 console.log('[build] front ' + BUILD);
 const WORKER_URL = 'https://chuntaverse.crenop.workers.dev';
 const BASE_TITLE = '천타버스';
@@ -3158,11 +3159,14 @@ const MEMBER_BIRTHDAYS = {
   const scrim = document.getElementById('drawerScrim');
 
   function setDrawer(side, on) {
+    // 지정한 쪽만 건드린다. 종전엔 부를 때마다 양쪽을 다시 칠해서, 조작부 버튼 동기화가 부르는
+    // setDrawer('r', false) 한 번에 열려 있던 좌측 서랍까지 닫혔다(모바일에서 스크롤로 주소창이
+    // 접힐 때 resize가 나 '아무 것도 안 했는데' 닫히던 실사고 — 2026-09-02).
+    body.classList.toggle('drawer-' + side, !!on);
     // 한 번에 하나만 — 양쪽이 동시에 열리면 가림막을 눌러도 무엇이 닫히는지 알 수 없다
-    body.classList.toggle('drawer-l', side === 'l' && on);
-    body.classList.toggle('drawer-r', side === 'r' && on);
-    if (btnL) btnL.setAttribute('aria-expanded', String(side === 'l' && on));
-    if (btnR) btnR.setAttribute('aria-expanded', String(side === 'r' && on));
+    if (on) body.classList.remove(side === 'l' ? 'drawer-r' : 'drawer-l');
+    if (btnL) btnL.setAttribute('aria-expanded', String(body.classList.contains('drawer-l')));
+    if (btnR) btnR.setAttribute('aria-expanded', String(body.classList.contains('drawer-r')));
   }
   function closeAll() { setDrawer('l', false); setDrawer('r', false); }
   window.closeDrawers = closeAll;
@@ -4184,11 +4188,11 @@ function getTodayCelebrations() {
     // '만 N세'로 못박는다(2026-08-11): 구 'N번째 생일'은 태어난 날을 첫 번째로 세는 감각과 충돌해 해석이 갈렸다.
     // 값 자체는 동일(cy - 출생연도 = 만 나이). 출생연도를 모르면 나이 조각을 통째로 뺀다.
     const nthText = birthMatch ? `만 ${cy - parseInt(birthMatch[1])}세 ` : '';
-    results.push(celebBox(CELEB_SVG.birthday, `${m.name}님의 ${nthText}생일을<br>축하합니다!`, m.name, '생축!', m.color, `members:${m.en}`));
+    results.push(celebBox(CELEB_SVG.birthday, `${m.name}님의 ${nthText}생일을 축하합니다!`, m.name, '생축!', m.color, `members:${m.en}`));
   }
 
   if (cm === 11 && cd === 30 && cy > 2025) {
-    results.push(celebBox(CELEB_SVG.chuntaverse, `천타버스 결성 ${cy - 2025}주년을<br>축하합니다!`, '천타버스', `${cy - 2025}주년!`, '#61FFEC', 'members:crew'));
+    results.push(celebBox(CELEB_SVG.chuntaverse, `천타버스 결성 ${cy - 2025}주년을 축하합니다!`, '천타버스', `${cy - 2025}주년!`, '#61FFEC', 'members:crew'));
   }
   // N00일 기념은 폐지(2026-08-11): 경과일(시작일=0) 기준이라 시작일을 1일차로 세는 실제 기념 방식과 하루 어긋난다.
   // 기준을 바꾸면 프로필의 (D+N일) 표기와 어긋나므로, 해석이 갈리지 않는 연 단위(주년)만 남긴다.
@@ -4210,7 +4214,7 @@ function getTodayCelebrations() {
     const bcWord = isSoop ? '숲 방송' : '방송';
     const fy = parseInt(match[1]), fm = parseInt(match[2]), fd = parseInt(match[3]);
     if (fm === cm && fd === cd && cy > fy) {
-      results.push(celebBox(CELEB_SVG.broadcast, `${m.name}님의 ${bcWord} ${cy - fy}주년을<br>축하합니다!`, m.name, `${cy - fy}주년!`, m.color, `members:${m.en}`));
+      results.push(celebBox(CELEB_SVG.broadcast, `${m.name}님의 ${bcWord} ${cy - fy}주년을 축하합니다!`, m.name, `${cy - fy}주년!`, m.color, `members:${m.en}`));
     }
   }
 
@@ -4413,8 +4417,12 @@ function updatePageTitle() {
   // 자리 규칙(2026-08-31): 기념일 → 맨 왼쪽(로고 아래) · 상단바 링크 → 그 오른쪽으로 하나씩 ·
   // 일정 → 달력 탭 아래 칸 · 가이드 → 맨 오른쪽(갱신 문구 아래, 마크업 고정).
   // 좋아요 요청·순위 버튼은 폐지 — 컨텐츠 신청 탭이 그 둘을 다 담는다.
+  // 세로형에서는 기념일이 자기 동선(프로필)의 탭 칸으로 들어간다 — 별도 보조바 자리를 만들지 않는다(2026-09-02).
+  const vertical = window.matchMedia('(max-width: 1150px)').matches;
+  const auxMembers = document.querySelector('.tab-aux[data-for="members"]');
+  if (auxMembers) auxMembers.innerHTML = vertical ? celebrations.join('') : '';
   const lead = document.getElementById('subbarLead');
-  if (lead) lead.innerHTML = celebrations.join('') + topbarLinksHtml('left');
+  if (lead) lead.innerHTML = (vertical ? '' : celebrations.join('')) + topbarLinksHtml('left');
   const sbRight = document.getElementById('subbarRight');
   const guideEl = document.getElementById('guideLink');
   if (sbRight && guideEl && guideEl.parentNode === sbRight) {
