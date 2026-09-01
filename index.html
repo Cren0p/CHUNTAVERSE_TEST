@@ -1200,14 +1200,17 @@
 
   /* 기간 선택줄: ‹연도› 스테퍼 + [전체][1월..12월] 13버튼(통합탭) / 12버튼(멤버탭, 전체 없음) */
   /* 통합탭 기간줄: ‹연도› 스테퍼 박스 + [전체][1~12월] 13버튼 */
-  .stats-period-wrap { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; flex: 1; min-width: 0; }   /* 기둥 규격 — 전체1+12칸이 3열로 쌓인다(2026-08-31) */
+  .stats-period-wrap { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; flex: 1; min-width: 0; }   /* 기둥 규격. 2026-09-02 아래에서 2열로 바꿈 — 한 줄 버튼('26년 9월')이 들어가야 한다 */
   /* 정사각형 — 같은 기둥의 멤버 타일·종류 필터와 같은 칸 모양(Crenop 지정). 격자가 전폭이라 78px로 일치한다 */
   .stats-period-wrap { flex: 1; min-width: 0; }
+  /* 한 줄 버튼(2026-09-02): 두 줄짜리 버튼은 사이트 어디에도 없다. '26년 9월'이 한 줄에 들어가도록
+     정사각을 풀고 3열 → 2열로 넓힌다(13칸이라 2열이면 7행, 기둥 세로도 감당된다). */
+  .stats-period-wrap { grid-template-columns: repeat(2, 1fr); }
   .stats-period-wrap .stats-period-btn {
-    aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
-    white-space: normal; line-height: 1.15; padding: 2px;
+    display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 4px;
+    white-space: nowrap; line-height: 1.15; padding: 7px 4px;
   }
-  .stats-period-btn .pb-y { font-size: 12px; }   /* 월과 같은 크기 — 굵기 차이만으로 위계를 준다(Crenop: 읽히게 하려고 26년으로 줄인 것) */
+  .stats-period-btn .pb-y { font-size: 12px; opacity: 0.85; }   /* 월과 같은 크기 — 굵기·농도 차이만으로 위계를 준다 */
   .stats-period-btn .pb-m { font-size: 12px; font-weight: 700; }
   /* 멤버 개별탭: 스테퍼 줄(전폭) + 6열 2행 월 버튼 — 블록 외곽만 달력·요약과 정렬(내부 7열 정렬은 폐기) */
   /* 연도 화살표는 격자 좌우(2026-09-01, 음악 탭 스트립과 같은 자리 문법).
@@ -2293,8 +2296,13 @@
   .side-pick .hall-bar { justify-content: flex-start; gap: 10px; margin-left: 44px; }   /* 위아래 버튼 묶음과 같은 왼쪽 기준 */
   .side-pick .filter-title { margin-left: 44px; }
   .members-tabs-wrap, .stats-tabs-wrap, .hall-kind, #hallPeriodSide .hall-period { margin: 0 44px; }
-  .hall-kind, #hallPeriodSide .hall-period { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-  .hall-period-btn .pb-y { font-size: 11px; }   /* 상동 — 이 격자는 월 글자가 11px */
+  .hall-kind { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  /* 명전 기간은 '26년 상반기'가 한 줄에 들어가야 하므로 한 열(세 칸뿐이라 세로로 길어지지 않는다) */
+  #hallPeriodSide .hall-period { display: grid; grid-template-columns: 1fr; gap: 6px; }
+  #hallPeriodSide .hall-period-btn {
+    aspect-ratio: auto; flex-direction: row; gap: 4px; white-space: nowrap; padding: 7px 8px;
+  }
+  .hall-period-btn .pb-y { font-size: 11px; opacity: 0.85; }   /* 상동 — 이 격자는 월 글자가 11px */
   .hall-period-btn .pb-m { font-size: 11px; font-weight: 700; }
   .hall-kind-btn, #hallPeriodSide .hall-period-btn {
     aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
@@ -2694,8 +2702,8 @@
 
     .sidebar {
       position: fixed; top: var(--strip-h, 44px); left: 0; bottom: 0;
-      width: max-content; min-width: 244px; max-width: 300px;   /* 내용 폭에 맞추되 조작부 폭(300)을 넘지 않는다 — 좌우가 자리를 주고받으므로 상한이 같아야 한다 */
-      display: grid; grid-template-columns: auto auto; align-content: start;
+      width: 300px; max-width: 90vw;   /* 조작부와 같은 폭으로 고정(2026-09-02) — 폭이 다르면 어느 쪽이 열렸느냐에 따라 본문 폭이 달라져 케미·명전 격자의 열 수가 3↔2로 널뛴다 */
+      display: grid; grid-template-columns: 1fr; align-content: start; row-gap: 2px;
       padding: 2px 0;
       background: var(--surface); border-right: 1px solid var(--border); border-bottom: none;
       overflow-y: auto; overscroll-behavior: contain;   /* contain 없으면 끝까지 민 뒤 뒤 본문이 따라 움직인다 */
@@ -2703,8 +2711,25 @@
     }
     /* 2열: 좌 = 탭 목록 / 우 = 부속(보조바 가운데 묶음이 통째로 내려온 것).
        두 열이 같은 행 높이(--nav-row-h)를 써야 부속이 자기 탭과 같은 줄에 선다. */
-    .nav-list { padding: 2px 0 0; display: flex; flex-direction: column; gap: 2px; }
-    .subbar-mid { display: flex; flex-direction: column; gap: 2px; padding: 2px 10px 0 0; grid-column: 2; grid-row: 1 / span 2; min-width: 0; }   /* 탭 줄과 붙인다 — 간격은 탭 버튼의 오른쪽 여백(8px)이 담당 */
+    /* 탭 목록과 부속을 같은 칸에 겹친다(2026-09-02) — '사이드바 | 보조바' 두 칸의 경계를 없앤다.
+       두 컨테이너를 display:contents로 풀어 자식들이 곧바로 사이드바 격자의 칸이 되고, 탭과 그 부속에
+       같은 행을 지정한다. 배지가 라벨을 덮는 것과 같은 문법이고, 부속은 행의 오른쪽 끝에 선다. */
+    .nav-list, .subbar-mid { display: contents; }
+    #drawerClose { grid-row: 1; justify-self: start; }
+    .subbar-lead { grid-row: 1; justify-self: end; }
+    .nav-item[data-page="members"],    .tab-aux[data-for="members"]    { grid-row: 2; }
+    .nav-item[data-page="live"],       .tab-aux[data-for="live"]       { grid-row: 3; }
+    .nav-item[data-page="events"],     .tab-aux[data-for="events"]     { grid-row: 4; }
+    .nav-item[data-page="stats"],      .tab-aux[data-for="stats"]      { grid-row: 5; }
+    .nav-item[data-page="chemistry"],  .tab-aux[data-for="chemistry"]  { grid-row: 6; }
+    .nav-item[data-page="hall"],       .tab-aux[data-for="hall"]       { grid-row: 7; }
+    .nav-item[data-page="content"],    .tab-aux[data-for="content"]    { grid-row: 8; }
+    .nav-item[data-page="banner"],     .tab-aux[data-for="banner"]     { grid-row: 9; }
+    .nav-item[data-page="disco"],      .tab-aux[data-for="disco"]      { grid-row: 10; }
+    .nav-item[data-page="apply"],      .tab-aux[data-for="apply"]      { grid-row: 11; }
+    .nav-item[data-page="links"],      .tab-aux[data-for="links"]      { grid-row: 12; }
+    .nav-item, .tab-aux, #drawerClose, .subbar-lead { grid-column: 1; }
+    .tab-aux { justify-self: end; padding-right: 12px; position: relative; z-index: 1; }
     .subbar-lead, .tab-aux { flex: none; justify-content: flex-start; }
     .tab-aux { height: var(--nav-row-h); }
     /* 일정 줄은 흐름 안으로 되돌린다 — 가로 보조바에서 '양옆 빈 탭 자리를 빌리는' 절대배치가
@@ -2772,9 +2797,7 @@
     #drawerClose { display: flex; }   /* 왼쪽(메뉴) 닫기만 — 공용 클래스로 켜면 우측 서랍의 ✕까지 상시 노출된다(우상단 점거 사고) */
     /* ✕가 왼쪽 칸의 첫 행을 차지하므로 부속 칸도 같은 행에서 시작해야 한다.
        종전 grid-row: 1 / span 2 그대로면 부속만 ✕ 높이만큼 위로 올라가 탭과 한 줄씩 어긋난다(실사고). */
-    #drawerClose { grid-column: 1 / -1; grid-row: 1; }
-    .nav-list { grid-column: 1; grid-row: 2; }
-    .subbar-mid { grid-column: 2; grid-row: 2; }
+
   }
   /* 통합탭 카드: 지표 행 클릭=그래프 모달 (헤더→멤버 이동은 폐지 — 멤버 상세는 상단 아바타 탭이 유일 동선).
      hover 민트 테두리 = 사이트 공통 '클릭 가능' 문법. 투명 기본 테두리+마진 보정으로 레이아웃 시프트 없음 */
@@ -3093,7 +3116,7 @@
 </main>
 
 <script>
-const BUILD = '2026-09-02d';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
+const BUILD = '2026-09-02e';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
 console.log('[build] front ' + BUILD);
 const WORKER_URL = 'https://chuntaverse.crenop.workers.dev';
 const BASE_TITLE = '천타버스';
