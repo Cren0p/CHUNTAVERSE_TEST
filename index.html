@@ -662,13 +662,10 @@
      통계 탭 .calendar-* 부품을 그대로 쓰고, 월 단위가 아니라 '오늘 주 ~ 마지막 일정 주'를 세로로 잇는다(월 경계 없음).
      한 칸이 74px(모바일 50px)뿐이라 칸에는 점만 두고, 날짜를 누르면 그 주 아래로 상세가 펼쳐진다.
      스크롤바 자리(both-edges): 스크롤 유무로 달력 폭이 바뀌지 않게 좌우에 같은 폭을 비워둔다 — 일정 모달에서만(다른 모달 레이아웃 불변). */
-  .lr-panel.sch-cal .lr-body { scrollbar-gutter: stable both-edges; padding-bottom: 12px; }   /* 달력 하단 여백은 좌우(.sch-week 패딩)와 같은 12px */
   /* 두 뷰 높이 통일(2026-08-11 재작업) — 반드시 '패널의 height'로 준다.
      [폐기된 방식] 본문(.lr-body)에 min-height를 박으면, flex 자식의 min-height가 부모의 max-height(80vh)를 이겨
        본문이 패널을 뚫고 나온다(실제 발생). height는 max-height가 이기므로 상한이 저절로 지켜진다.
      본문은 flex로 남는 공간을 채우고, 내용이 넘치면 자기 스크롤로 처리(min-height:0 = flex 자식이 콘텐츠보다 작아질 수 있게). */
-  .lr-panel.sch-fixed { height: var(--sch-h); }
-  .lr-panel.sch-fixed .lr-body { flex: 1 1 0; min-height: 0; }
   /* 목록 끝 표시: 짧은 뷰 아래 빈 공간이 남을 때 '내용은 여기까지'를 알린다.
      목록은 행마다 구분선이 이어지는 구조라 자연스럽지만, 달력은 선이 없는 구조라 붙이지 않는다(2026-08-11 확정).
      자체 border-top은 두지 않는다 — 끝 표시가 붙으면 마지막 .sch-item이 :last-child가 아니게 되어 그 행의 밑선이 살아나므로,
@@ -1235,26 +1232,7 @@
   .stats-tab:not(.active) { border-color: transparent; }
   .stats-tab.active { border-color: var(--accent); }
   .stats-tab:hover { border-color: var(--accent); }
-  .stats-tab-all {
-    position: relative;
-  }
-  .stats-tab-all img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-  }
-  .stats-tab-all span {
-    position: absolute;
-    bottom: 3px;
-    left: 4px;
-    text-align: left;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--muted);
-    text-shadow: 0 0 4px var(--bg), 0 0 4px var(--bg);
-    transition: color 0.15s;
-  }
-  .stats-tab-all.active span { color: #fff; }
+  /* .stats-tab-all 폐지(2026-08-31): 통합 칸이 통계 탭으로 옮겨가 지난 활동 스트립에서 사라졌다 */
 
   .stats-grid {
     display: grid;
@@ -2004,6 +1982,43 @@
     display: flex; flex-direction: column;
     gap: 16px;
   }
+  /* ── 달력 탭 (2026-08-31) ─────────────────────────────────────────────────
+     좌 = 달력(칸에 제목 글자만) / 우 = 고른 날의 컨텐츠·일정 / 그 오른쪽 = 연/월 기둥.
+     칸에 썸네일을 넣지 않는 이유: 그러면 달력만 1450px를 요구해 그 폭을 못 만드는 화면에서 통째로 못 본다
+     (기록 탭에서 그 이유로 걷어낸 형태다). 그림은 눌렀을 때 옆 칸에 나온다. */
+  .cal-wrap {
+    padding: 20px 24px; max-width: 1600px; width: 100%; margin: 0 auto; flex: 1;
+    display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 20px; align-items: start;
+  }
+  .cal-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 360px); gap: 16px; align-items: start; }
+  .cal-detail { background: var(--surface); border: 1px solid var(--border); padding: 12px; min-width: 0; }
+  .cal-cell { align-items: stretch; justify-content: flex-start; gap: 2px; padding: 4px; min-height: 78px; text-align: left; }
+  .cal-titles { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .cal-t {
+    font-size: 10px; line-height: 1.3; color: var(--text);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    border-left: 2px solid var(--border); padding-left: 4px;
+  }
+  .cal-t.schedule { border-left-style: dashed; border-left-color: var(--accent); color: var(--accent); }
+  .cal-t.more { color: var(--muted); border-left-color: transparent; }
+  /* 미래 칸 = 색 + 점선 두 겹. 색만 쓰면 색각 이상·흑백에서 사라진다(알림 벨의 색+모양 이중 단서와 같은 문법) */
+  .cal-cell.future.has { border-style: dashed; border-color: rgba(97,255,236,0.45); }
+  .cal-cell.has:hover { border-color: var(--accent); }
+  .cal-cell.selected { border-color: var(--accent); background: var(--surface2); }
+  .cal-di-list { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+  .cal-di { display: flex; gap: 10px; text-decoration: none; color: inherit; background: var(--surface2); border: 1px solid var(--border); padding: 8px; }
+  .cal-di.schedule { border-style: dashed; border-color: rgba(97,255,236,0.45); }
+  a.cal-di:hover { border-color: var(--accent); }
+  .cal-di-img { width: 96px; flex: none; }
+  .cal-di-img img { width: 100%; display: block; }
+  .cal-di-body { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .cal-di-title { font-size: 12px; font-weight: 600; color: var(--text); }
+  .cal-di-meta { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); }
+  .cal-di-who { display: inline-flex; gap: 2px; }
+  .cal-di-who img { width: 18px; height: 18px; }
+  @media (max-width: 1150px) { .cal-wrap { grid-template-columns: 1fr; } }
+  @media (max-width: 900px) { .cal-body { grid-template-columns: 1fr; } }
+
   .content-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -2087,6 +2102,15 @@
     gap: 16px;
   }
   /* === 명예의 전당 탭 === */
+  /* 통계 탭 상단 — 크루 숫자 격자(통계 카드 재사용) + 멤버별 시간대 분포 */
+  .hall-stats { margin-bottom: 24px; }
+  .hall-sec-title { font-size: 15px; font-weight: 700; color: var(--text); margin: 0 0 12px; }
+  .hall-heat { margin-bottom: 28px; }
+  .hall-heat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+  .hall-heat-cell { background: var(--surface); border: 1px solid var(--border); padding: 12px; min-width: 0; }
+  .hall-heat-name { font-size: 12px; font-weight: 700; margin-bottom: 6px; }
+  .hall-heat-cell .toh-wrap { margin: 0; }
+
   .hall-wrap {
     padding: 20px 24px;
     max-width: 1400px; width: 100%; margin: 0 auto;
@@ -2918,11 +2942,13 @@
   </div>
 
   <div class="page" id="page-content">
-    <div class="content-wrap" id="contentBody">
-      <div class="loading">
-        <div class="spinner"></div>
-        <div>컨텐츠 데이터 불러오는 중...</div>
+    <div class="cal-wrap">
+      <div class="cal-main" id="contentBody">
+        <div class="loading"><div class="spinner"></div><div>달력 불러오는 중...</div></div>
       </div>
+      <aside class="side-pick">
+        <div id="calPeriodSide"></div>
+      </aside>
     </div>
   </div>
 
@@ -2961,18 +2987,26 @@
     </div>
   </div>
 
+  <!-- 통계 탭(2026-08-31): '멤버를 가로질러 비교하는' 것을 한곳에 모았다 —
+       크루 전체 숫자 · 멤버별 시간대 분포 · 명예의 전당. 한 멤버를 파고드는 것은 지난 활동 탭이 맡는다.
+       시간대 분포가 여기로 온 이유: 개별 화면에선 '이 사람은 밤형'까지만 알 수 있지만
+       나란히 놓으면 '누가 밤형인가'를 알 수 있다 — 그게 이 지표의 본래 값어치다. -->
   <div class="page" id="page-hall">
-    <div class="hall-wrap" id="hallBody">
-      <div class="loading">
-        <div class="spinner"></div>
-        <div>명예의 전당 불러오는 중...</div>
+    <div class="hall-wrap">
+      <div class="hall-stats" id="hallStatsBox"></div>
+      <div class="hall-heat" id="hallHeatBox"></div>
+      <div id="hallBody">
+        <div class="loading">
+          <div class="spinner"></div>
+          <div>명예의 전당 불러오는 중...</div>
+        </div>
       </div>
     </div>
   </div>
 </main>
 
 <script>
-const BUILD = '2026-08-31v';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
+const BUILD = '2026-08-31x';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
 console.log('[build] front ' + BUILD);
 const WORKER_URL = 'https://chuntaverse.crenop.workers.dev';
 const BASE_TITLE = '천타버스';
@@ -3646,7 +3680,7 @@ function titleBadgeHtml(title) {
 // ── 말줄임 툴팁(2026-08-24) — 전수조사한 말줄임 클래스에서, 실제로 잘렸을 때만 hover 시 전체 텍스트를 네이티브 title로 ──
 // (종류 필터 버튼과 같은 문법. 잘림 판정: 가로 초과 = 1줄 ellipsis, 세로 +1px 초과 = 2줄 클램프 — +1은 라인하이트 반올림 오탐 방지.)
 // 안 잘린 요소는 title 제거(리사이즈로 풀린 경우 추종). 말줄임 클래스 신설 시 이 목록에 추가 — 누락은 dom 스위트가 CSS 대조로 잡는다.
-const ELLIPSIS_TIP_SEL = '.rk-name, .lrg-head-txt, .lrq-l1, .lrq-l2, .header-center-line, .card-name, .card-title, .event-member, .event-detail, .day-item-title, .chem-ndesc, .chem-member-name, .content-card-title, .vs-title, .ds-vod-tt, .sch-line-txt';
+const ELLIPSIS_TIP_SEL = '.rk-name, .lrg-head-txt, .lrq-l1, .lrq-l2, .header-center-line, .card-name, .card-title, .event-member, .event-detail, .day-item-title, .chem-ndesc, .chem-member-name, .content-card-title, .vs-title, .ds-vod-tt, .sch-line-txt, .cal-t';
 document.addEventListener('mouseover', (e) => {
   const el = e.target.closest ? e.target.closest(ELLIPSIS_TIP_SEL) : null;
   if (!el) return;
@@ -3770,7 +3804,7 @@ const statsState = {
   tabsInited: false,
   data: {},
   loadingMonths: new Set(),
-  selectedTab: 'all',        // 'all'(통합: 전체/월 선택) | 멤버 id
+  selectedTab: null,         // 멤버 id (2026-08-31: 통합 'all'은 통계 탭으로 이관 — 여기는 멤버 전용)
   periodAll: false,          // 통합탭에서 [전체](연간 뷰) 선택 여부. false면 viewMonth의 월간 뷰
   viewMonth: null,
   selectedDate: null,
@@ -4133,7 +4167,7 @@ function tbModalHtml(items) {
   return items.map(it => {
     const tag = it.link ? 'a' : 'div';
     const attrs = it.link ? ` href="${escapeHtml(it.link)}" target="_blank" rel="noopener"` : '';
-    // 링크가 있으면 제목 줄 끝에 externalLink — 일정 항목(renderScheduleItem)과 같은 표시 문법.
+    // 링크가 있으면 제목 줄 끝에 externalLink — 사이트 공통 '바깥으로 나감' 표시 문법.
     // 링크는 있는데 제목이 비면 아이콘만 있는 줄이 된다. 누를 수 있다는 신호는 어떤 조합에서도 남긴다.
     const title = (it.title || it.link)
       ? `<span class="tbm-title">${escapeHtml(it.title)}${it.link ? ' ' + SVG_ICONS.externalLink : ''}</span>` : '';
@@ -4397,7 +4431,7 @@ function renderLikeReqBody() {
 
 // ── 사이트 공용 모달 (2026-08-31 단일화) ──────────────────────────────────────
 // 종전엔 오버레이 3개를 여는 함수 8개가 제각각 다뤘고, 패널에 붙인 클래스는 닫기 함수가 '제거 목록'
-// (rk-modal·sch-cal·sch-fixed·tbm-modal·cc-modal)을 들고 지웠다. 모달을 하나 더 만들 때 그 목록에
+// (tbm-modal·cc-modal)을 들고 지웠다. 모달을 하나 더 만들 때 그 목록에
 // 추가하는 걸 잊으면 이전 모달의 색·여백이 새 모달에 묻어나는 구조였다.
 // 지금은 modalPanel()이 열 때마다 className과 인라인 style을 통째로 새로 지정한다 — 지울 목록이라는
 // 개념 자체가 없어서, 모달을 추가할 때 닫기 쪽을 손댈 일이 없다.
@@ -4720,212 +4754,9 @@ async function loadSchedule() {
   }
 }
 
-// 모달용 선로딩(hover/터치 시 1회). 실패 시 null을 돌려주고, openSchedule이 기존 데이터로 폴백.
-function preloadSchedule() {
-  if (!schedulePreload) {
-    schedulePreload = fetch(SCHEDULE_SHEET_URL)
-      .then(r => { if (!r.ok) throw new Error('no data'); return r.text(); })
-      .then(t => parseCSV(t))
-      .catch(() => null);
-  }
-  return schedulePreload;
-}
 
-const LS_SCH_VIEW = 'chuntaverse_sch_view_v1';   // 'cal'(달력) | 'list'(목록) — 모달을 닫아도 유지(2026-08-10 요청)
-let schOpenDate = '';   // 달력에서 펼친 날짜 (한 번에 하나 — 통계 탭 달력과 동일하게 '선택한 날짜의 정보만')
-
-// 달력 뷰: 오늘이 속한 주부터 마지막 일정이 속한 주까지 주 단위로 잇는다(월 그리드 아님 → 빈 달을 그리지 않음).
-// 일정 없는 주가 2주 이상 이어지면 한 줄 안내로 접는다(펼치기 없음 — 펼쳐도 빈 칸뿐).
-function renderScheduleCalendar(vis) {
-  const dayMs = 86400000;
-  const kst = kstNow();
-  const today = new Date(Date.UTC(kst.getUTCFullYear(), kst.getUTCMonth(), kst.getUTCDate()));
-  const key = d => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
-  const addDays = (d, n) => new Date(d.getTime() + n * dayMs);
-  const parseD = s => { const [y, m, dd] = s.split('-').map(Number); return new Date(Date.UTC(y, m - 1, dd)); };
-
-  const byDate = {};
-  for (const it of vis) (byDate[it.date] = byDate[it.date] || []).push(it);
-
-  // 주 배열 — 시작은 '오늘이 속한 주'(첫 일정 주부터 그리면 오늘이 화면에서 빠져 남은 기간 감각이 사라짐)
-  const start = addDays(today, -today.getUTCDay());
-  const last = parseD(vis[vis.length - 1].date);
-  const end = addDays(last, 6 - last.getUTCDay());
-  const weeks = [];
-  for (let s = start; s <= end; s = addDays(s, 7)) {
-    const days = [];
-    for (let i = 0; i < 7; i++) days.push(addDays(s, i));
-    weeks.push({ days, has: days.some(d => byDate[key(d)]) });
-  }
-
-  const dowNames = ['일', '월', '화', '수', '목', '금', '토'];
-  let html = '<div class="sch-weekdays">' + dowNames.map((d, i) =>
-    `<div class="calendar-weekday${i === 0 ? ' sun' : i === 6 ? ' sat' : ''}">${d}</div>`).join('') + '</div>';
-
-  const shownMonths = new Set();
-  let i = 0;
-  while (i < weeks.length) {
-    if (!weeks[i].has) {
-      let j = i;
-      while (j < weeks.length && !weeks[j].has) j++;
-      const gap = j - i;
-      if (gap >= 2) {   // 1주 공백은 그대로 그린다 — 접으면 달력의 연속성이 끊겨 오히려 읽기 나쁨
-        const from = weeks[i].days[0], to = weeks[j - 1].days[6];
-        html += `<div class="sch-gap">${from.getUTCMonth() + 1}/${from.getUTCDate()} – ${to.getUTCMonth() + 1}/${to.getUTCDate()} · 예정된 일정 없음</div>`;
-        i = j;
-        continue;
-      }
-    }
-    html += '<div class="sch-week"><div class="calendar-grid">';
-    for (const d of weeks[i].days) {
-      const k = key(d), items = byDate[k] || [];
-      const mo = d.getUTCMonth() + 1;
-      const firstOfMonth = !shownMonths.has(mo);   // 그 달이 화면에 처음 나오는 칸에만 9/1 형태로 — 월 라벨 행을 따로 두지 않는다
-      if (firstOfMonth) shownMonths.add(mo);
-      const cls = ['calendar-day'];
-      if (d < today) cls.push('past');
-      if (k === key(today)) cls.push('today');
-      if (items.length) cls.push('sch-has');
-      if (k === schOpenDate) cls.push('sch-open');
-      const num = firstOfMonth ? `${mo}/${d.getUTCDate()}` : `${d.getUTCDate()}`;
-      const dowCls = d.getUTCDay() === 0 ? ' sun' : d.getUTCDay() === 6 ? ' sat' : '';   // v6: 요일 날짜색 — 통계 달력 문법 이식(Crenop 지정)
-      // v6: 점(상한 4) → film 아이콘+실개수 칩 — 통계 달력의 개수 문법 이식. 한 요소라 폭 걱정 없이 실제 건수 그대로.
-      const cnt = items.length ? chipHtml('vod sch-cnt', 'film', items.length) : '';
-      html += `<div class="${cls.join(' ')}" data-schday="${items.length ? k : ''}"><span class="calendar-daynum${firstOfMonth ? ' sch-mo' : ''}${dowCls}">${num}</span>${cnt}</div>`;
-    }
-    html += '</div>';
-    const open = weeks[i].days.map(key).find(k => k === schOpenDate && byDate[k]);
-    html += `<div class="sch-detail">${open ? byDate[open].map(renderScheduleItem).join('') : ''}</div></div>`;
-    i++;
-  }
-  return html;
-}
-
-// 두 뷰의 최종 HTML은 반드시 이 헬퍼로만 만든다 — 렌더와 높이 측정이 다른 결과물을 쓰면 고정 높이가 어긋난다.
-// 끝 표시(구분선+점)는 목록에만: 목록은 행마다 구분선이 이어져 자연스럽지만 달력엔 그 어휘가 없다.
-const SCH_END_HTML = '<div class="sch-end">이후 예정된 일정 없음</div>';
-const schCalHtml = vis => renderScheduleCalendar(vis);
-const schListHtml = vis => vis.map(renderScheduleItem).join('') + SCH_END_HTML;
-
-// 달력↔목록 전환 시 모달 높이가 흔들리면 헤더의 토글 버튼 위치까지 움직여 조작감이 나빠진다.
-// 두 뷰를 실제로 한 번씩 그려 높이를 재고, 큰 쪽을 본문 최소 높이로 박아 둔다(케미 카드 높이 통일과 같은 방식).
-// 측정은 모달을 연 직후 1회. 중간 상태는 같은 실행 흐름 안에서 덮어써지므로 화면에 보이지 않는다.
-// 패널 max-height(80vh)가 상한이라, 잰 높이가 그보다 크면 어차피 두 뷰 모두 상한에 걸려 높이가 같아진다.
-function fitScheduleHeight(vis) {
-  const body = document.getElementById('lrBody');
-  const panel = document.querySelector('#lrOverlay .lr-panel');
-  if (!body || !panel) return;
-  panel.classList.remove('sch-fixed');            // 재측정 전 해제 — 이전 고정값이 측정을 오염시키지 않게
-  panel.style.removeProperty('--sch-h');
-  if (!vis.length) return;
-  const keep = body.innerHTML;
-  const wasCal = panel.classList.contains('sch-cal');
-  const keepOpen = schOpenDate;
-  // 달력은 '가장 큰 상세'가 열린 상태로 잰다(2026-08-12): 같은 날 일정이 여럿인 날을 누르면 상세가 그만큼 길어지는데,
-  // 첫 일정(대개 1건) 기준으로만 재두면 그 날을 누르는 순간 높이가 모자라 스크롤이 생긴다. 최악의 경우로 재두면 어떤 날짜를 눌러도 높이가 그대로.
-  const cnt = {};
-  for (const it of vis) cnt[it.date] = (cnt[it.date] || 0) + 1;
-  schOpenDate = Object.keys(cnt).reduce((a, b) => (cnt[b] > cnt[a] ? b : a));
-  // 측정법(2026-08-12 재작업): 상한(max-height)을 잠시 풀고 패널의 '자연 높이'를 통째로 잰다.
-  //   · 상한이 걸린 채 재면 잘린 값이 나와 필요 높이를 알 수 없다.
-  //   · 부분(머리말+본문)을 더해 조립하는 방식은 box-sizing:border-box 때문에 패널 자신의 상하 테두리 2px이 빠져
-  //     그만큼 본문이 모자라고, 딱 그 몇 px 때문에 스크롤바가 떴다(구 방식의 실패 원인).
-  //   패널을 통째로 재면 테두리·머리말·여백이 전부 포함되므로 산술 조립 자체가 필요 없다.
-  // 오버레이가 align-items:center라 상한을 풀어도 패널이 늘어나지 않고 내용 높이를 따른다.
-  // 측정 중 상태는 같은 실행 흐름에서 최종 화면으로 덮이므로 눈에 보이지 않는다.
-  const keepMax = panel.style.maxHeight;
-  panel.style.maxHeight = 'none';
-  panel.classList.add('sch-cal');                 // 달력 전용 여백(하단 12px·좌우 gutter)까지 포함해 재야 정확
-  body.innerHTML = schCalHtml(vis);
-  const hCal = panel.getBoundingClientRect().height;
-  panel.classList.remove('sch-cal');
-  body.innerHTML = schListHtml(vis);
-  const hList = panel.getBoundingClientRect().height;
-  panel.classList.toggle('sch-cal', wasCal);
-  schOpenDate = keepOpen;   // 측정용으로 바꿨던 펼침 날짜 원복
-  body.innerHTML = keep;
-  if (keepMax) panel.style.maxHeight = keepMax; else panel.style.removeProperty('max-height');
-  // 올림 + 1px 여유: 자연 높이는 소수(예: 626.4)라 내림하면 그 0.4px 때문에 다시 스크롤바가 뜬다.
-  panel.style.setProperty('--sch-h', Math.ceil(Math.max(hCal, hList)) + 1 + 'px');
-  panel.classList.add('sch-fixed');               // height로 고정 — max-height(80vh)가 상한이라 넘칠 수 없다
-}
-
-// 본문만 다시 그린다(헤더·모달 상태 유지) — 뷰 전환·날짜 펼침 공용
-function paintSchedule() {
-  const body = document.getElementById('lrBody');
-  const panel = document.querySelector('#lrOverlay .lr-panel');
-  if (!body) return;
-  const vis = visibleSchedule();
-  const isCal = lsGet(LS_SCH_VIEW, 'cal') === 'cal' && vis.length > 0;
-  if (panel) panel.classList.toggle('sch-cal', isCal);   // 스크롤바 자리 확보는 달력일 때만
-  const btn = document.getElementById('schViewToggle');
-  if (btn) btn.innerHTML = isCal ? `${SVG_ICONS.calendar}<span>달력</span>` : `${SVG_ICONS.eventList}<span>목록</span>`;
-  if (vis.length === 0) { body.innerHTML = '<div class="lr-msg">예정된 일정이 없습니다.</div>'; return; }
-  body.innerHTML = isCal ? schCalHtml(vis) : schListHtml(vis);
-  // 잔여 오차 자동 보정(2026-08-12): 고정 높이를 씌운 뒤에도 실제로 몇 px 넘치면 그만큼만 키운다.
-  // 소수점 누락·폰트 교체·브라우저별 반올림 등 원인이 무엇이든 '실제 넘침량'으로 메우므로 추정에 기대지 않는다.
-  // 넘치지 않으면 계산이 0이라 아무 일도 없고, 진짜로 상한(80vh)을 넘는 내용은 max-height가 이겨 스크롤이 정상 동작으로 남는다.
-  if (panel && panel.classList.contains('sch-fixed')) {
-    const over = body.scrollHeight - body.clientHeight;
-    if (over > 0) panel.style.setProperty('--sch-h', Math.ceil(panel.getBoundingClientRect().height + over) + 'px');
-  }
-}
-
-async function openSchedule() {
-  modalPanel(null);
-  const ov = document.getElementById('lrOverlay');
-  const head = document.getElementById('lrHead');
-  const body = document.getElementById('lrBody');
-  if (!ov || !body) return;
-  head.innerHTML = `<span style="color:var(--accent)">${SVG_ICONS.calendar}다가오는 천타버스 일정</span>`
-    + `<span class="rk-head-right"><button class="sort-toggle" id="schViewToggle" type="button"></button>`
-    + `<button class="lr-close" type="button" onclick="closeModal()">✕</button></span>`;
-  body.innerHTML = '<div class="lr-msg">불러오는 중…</div>';
-  showModal();
-  const rows = await preloadSchedule();  // hover로 미리 받아둔 게 있으면 그것, 없으면 지금 받음
-  if (rows) { lsSet(LS_SCHEDULE_CACHE, JSON.stringify(rows)); scheduleData = parseScheduleRows(rows); updatePageTitle(); }
-  const vis = visibleSchedule();
-  schOpenDate = vis.length ? vis[0].date : '';   // 열 때마다 가장 임박한 일정을 펼친 상태로(펼침 상태는 저장하지 않음)
-  fitScheduleHeight(vis);
-  paintSchedule();
-}
-
-// 달력 뷰 조작 — 날짜 펼침(한 번에 하나) · 목록/달력 전환(선택은 localStorage 유지)
-document.addEventListener('click', (e) => {
-  const cell = e.target.closest && e.target.closest('[data-schday]');
-  if (cell && cell.dataset.schday) {
-    schOpenDate = (schOpenDate === cell.dataset.schday) ? '' : cell.dataset.schday;
-    paintSchedule();
-    return;
-  }
-  if (e.target.closest && e.target.closest('#schViewToggle')) {
-    lsSet(LS_SCH_VIEW, lsGet(LS_SCH_VIEW, 'cal') === 'cal' ? 'list' : 'cal');
-    paintSchedule();
-  }
-});
-
-// 모달 리스트 항목: 절대 날짜·시간 + 제목(+링크) + D-day 배지(목록은 날짜 단위 D-day로 고정 — 똑딱이는 D-time은 상단바 버튼 전용).
-function renderScheduleItem(item) {
-  const [schY, schMo, schD] = item.date.split('-').map(Number);
-  const dateDisp = koDate(schY, schMo, schD);   // YYYY년 M월 D일 (한글 통일)
-  const dowIdx = new Date(Date.UTC(schY, schMo - 1, schD)).getUTCDay();   // 달력 요일(UTC 고정 계산 → 브라우저 타임존 무관)
-  const dowChar = ['일','월','화','수','목','금','토'][dowIdx];
-  const dowColor = dowIdx === 0 ? '#f87171' : (dowIdx === 6 ? '#60a5fa' : '');   // 일=빨강·토=파랑 (달력 주말색과 동일), 요일 글자에만
-  const dowHtml = dowColor ? `<span style="color:${dowColor}">${dowChar}</span>` : dowChar;
-  const when = item.hasTime ? `${dateDisp} (${dowHtml}) ${item.time}` : `${dateDisp} (${dowHtml})`;
-  const inner = `${escapeHtml(item.title)}${item.link ? ' ' + SVG_ICONS.externalLink : ''}`;
-  const titleEl = item.link
-    ? `<a class="sch-item-title" href="${escapeHtml(item.link)}" target="_blank" rel="noopener">${inner}</a>`
-    : `<span class="sch-item-title">${inner}</span>`;
-  // 참가 멤버 아바타(F~열) — 컨텐츠 카드와 동일 스타일. 6명 초과 시 max-width+wrap으로 2행(membersRowStyle 공용).
-  // 멤버 없는 행은 div 자체를 생략 — 빈 div가 끼면 flex gap(12px)이 이중으로 붙어 제목~D-day 간격이 벌어짐.
-  const memberImgs = (item.members || []).map(name => {
-    const m = MEMBERS.find(x => x.name === name);
-    return m ? `<img src="${m.img}" alt="${escapeHtml(name)}" title="${escapeHtml(name)}">` : '';
-  }).join('');
-  const membersEl = memberImgs ? `<div class="sch-item-members"${membersRowStyle(item.members.length)}>${memberImgs}</div>` : '';
-  return `<div class="sch-item"><div class="sch-item-main"><span class="sch-item-when">${when}</span>${titleEl}</div>${membersEl}<span class="sch-item-dday">${ddayText(item)}</span></div>`;
-}
+// 일정 모달은 2026-08-31 폐지 — 달력 탭이 지난 컨텐츠와 다가올 일정을 한 화면에 담는다.
+// 딸려 있던 것(달력/목록 전환·날짜 펼침·높이 고정·끝 표시)은 여는 곳이 없어져 함께 걷어냈다.
 
 const BANNER_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1HfDukpvqq9UfFYpT0JMTlX6V0UK95kimxP8EuABERr4/export?format=csv&gid=0';
 // 현수막·컨텐츠 시트를 이번 세션에 실제로 받았는지. ensure*Sheet가 읽고, 실패 시 각 로더의 catch가 되돌린다.
@@ -5312,6 +5143,121 @@ function renderDisco() {
   el.innerHTML = html || '<div class="lr-msg">등록된 곡이 없습니다.</div>';
 }
 
+
+// ══ 달력 탭 (2026-08-31) ═══════════════════════════════════════════════════
+// 구 컨텐츠 탭(카드 격자)을 달력으로 바꾸고 일정 모달을 여기로 흡수했다.
+// 한 시트의 앞뒤라 원래 한 화면에 있어야 했던 둘이다 — 지난 컨텐츠는 결과물, 다가올 일정은 예정.
+// 칸에는 제목 글자만 넣는다(썸네일 아님) — 그래야 달력 폭이 890px 남짓으로 끝나고, 그림은 눌렀을 때 옆 칸에 나온다.
+// 미래는 점선 + 민트: 색만 쓰면 색각 이상·흑백에서 사라지고, 안읽음 표시를 빌려 쓰면 '눌러서 지우는 것'과
+// '시간이 지나 사라지는 것'이 같은 모양이 되어 헷갈린다(알림 벨의 색+모양 이중 단서와 같은 문법).
+const calState = { year: 0, month: 0, selected: null };
+(function () { const n = kstNow(); calState.year = n.getUTCFullYear(); calState.month = n.getUTCMonth() + 1; })();
+
+function calItemsByDate() {
+  const map = {};
+  const push = (d, it) => { (map[d] = map[d] || []).push(it); };
+  for (const c of contentData) {
+    const key = c.date && c.date.sort ? String(c.date.sort).slice(0, 6) : '';
+    if (key.length !== 6) continue;
+    push(`20${key.slice(0, 2)}-${key.slice(2, 4)}-${key.slice(4, 6)}`,
+      { kind: 'content', title: c.title || '컨텐츠', link: c.link, img: c.url, members: c.members || [] });
+  }
+  for (const s of scheduleData) {
+    push(s.date, { kind: 'schedule', title: s.shortTitle || s.title, full: s.title, time: s.time, link: s.link, members: s.members || [] });
+  }
+  return map;
+}
+
+function calPeriodHtml() {
+  const now = kstNow();
+  const curY = now.getUTCFullYear(), curM = now.getUTCMonth() + 1;
+  const prevDis = calState.year <= STATS_START_YEAR ? 'disabled' : '';
+  const nextDis = calState.year >= curY ? 'disabled' : '';
+  const btns = [];
+  for (let mo = 1; mo <= 12; mo++) {
+    // 일정은 미래도 있으므로 현재 월까지로 막지 않는다 — 통계(지난 것만)와 다른 점
+    btns.push(`<button class="stats-period-btn${mo === calState.month ? ' active' : ''}" data-calmonth="${mo}">${mo}월</button>`);
+  }
+  return `
+    <div class="stats-member-period">
+      <div class="stats-detail-month"><button class="stats-month-btn" data-calydir="prev" ${prevDis}>${SVG_ICONS.chevronLeft}</button><button class="stats-month-btn" data-calydir="next" ${nextDis}>${SVG_ICONS.chevronRight}</button></div>
+      <div class="stats-period-wrap no-all">${btns.join('')}</div>
+    </div>
+    <div class="stats-period-year">${calState.year}년</div>`;
+}
+
+function calDetailHtml(items) {
+  if (!calState.selected) return '<div class="day-detail-empty">달력에서 날짜를 선택하면<br>그날의 컨텐츠와 일정을 볼 수 있습니다</div>';
+  const list = items[calState.selected] || [];
+  if (!list.length) return '<div class="day-detail-empty">그날 기록이 없습니다</div>';
+  const head = `<div class="day-detail-title"><span class="ddt-date">${calState.selected}</span></div>`;
+  const rows = list.map(it => {
+    const who = it.members.map(n => MEMBERS.find(m => m.name === n)).filter(Boolean)
+      .map(m => `<img src="${m.img}" alt="${escapeHtml(m.name)}" title="${escapeHtml(m.name)}">`).join('');
+    const img = it.kind === 'content' && it.img ? `<div class="cal-di-img"><img src="${escapeHtml(it.img)}" alt="" loading="lazy"></div>` : '';
+    const when = it.time ? `<span class="cal-di-time">${escapeHtml(it.time)}</span>` : '';
+    const inner = `${img}<div class="cal-di-body"><div class="cal-di-title">${escapeHtml(it.full || it.title)}</div><div class="cal-di-meta">${when}<span class="cal-di-who">${who}</span></div></div>`;
+    return it.link
+      ? `<a class="cal-di ${it.kind}" href="${escapeHtml(it.link)}" target="_blank" rel="noopener">${inner}</a>`
+      : `<div class="cal-di ${it.kind}">${inner}</div>`;
+  }).join('');
+  return head + `<div class="cal-di-list">${rows}</div>`;
+}
+
+function renderCalendarTab() {
+  const body = document.getElementById('contentBody');
+  if (!body) return;
+  const items = calItemsByDate();
+  const { year, month } = calState;
+  const t = kstNow();
+  const todayKey = `${t.getUTCFullYear()}-${String(t.getUTCMonth() + 1).padStart(2, '0')}-${String(t.getUTCDate()).padStart(2, '0')}`;
+  const first = new Date(Date.UTC(year, month - 1, 1));
+  const lead = first.getUTCDay();
+  const days = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const cells = [];
+  for (let i = 0; i < lead; i++) cells.push('<div class="calendar-day outside"></div>');
+  for (let d = 1; d <= days; d++) {
+    const key = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const dow = (lead + d - 1) % 7;
+    const list = items[key] || [];
+    const future = key > todayKey;
+    const cls = ['calendar-day', 'cal-cell'];
+    if (list.length) cls.push('has');
+    if (future) cls.push('future');
+    if (calState.selected === key) cls.push('selected');
+    if (key === todayKey) cls.push('today');
+    const titles = list.slice(0, 3).map(it => `<span class="cal-t ${it.kind}">${escapeHtml(it.title)}</span>`).join('');
+    const more = list.length > 3 ? `<span class="cal-t more">+${list.length - 3}</span>` : '';
+    cells.push(`<button class="${cls.join(' ')}" data-caldate="${key}"><span class="calendar-daynum${dow === 0 ? ' sun' : dow === 6 ? ' sat' : ''}">${d}</span><span class="cal-titles">${titles}${more}</span></button>`);
+  }
+  body.innerHTML = `
+    <div class="cal-body">
+      <div class="calendar">
+        <div class="calendar-grid">${['일','월','화','수','목','금','토'].map((w, i) => `<div class="calendar-weekday${i === 0 ? ' sun' : i === 6 ? ' sat' : ''}">${w}</div>`).join('')}</div>
+        <div class="calendar-grid">${cells.join('')}</div>
+      </div>
+      <div class="cal-detail">${calDetailHtml(items)}</div>
+    </div>`;
+  body.querySelectorAll('.cal-cell').forEach(btn => btn.addEventListener('click', () => {
+    const d = btn.dataset.caldate;
+    calState.selected = (calState.selected === d) ? null : d;
+    renderCalendarTab();
+  }));
+  const side = document.getElementById('calPeriodSide');
+  if (side) {
+    side.innerHTML = calPeriodHtml();
+    side.querySelectorAll('[data-calmonth]').forEach(b => b.addEventListener('click', () => {
+      calState.month = Number(b.dataset.calmonth); calState.selected = null; renderCalendarTab();
+    }));
+    side.querySelectorAll('[data-calydir]').forEach(b => b.addEventListener('click', () => {
+      const now = kstNow();
+      const y = calState.year + (b.dataset.calydir === 'prev' ? -1 : 1);
+      if (y < STATS_START_YEAR || y > now.getUTCFullYear()) return;
+      calState.year = y; calState.selected = null; renderCalendarTab();
+    }));
+  }
+}
+
 // ══ 컨텐츠 신청 (2026-08-31) ═══════════════════════════════════════════════
 // 흐름: 신청 → 좋아요가 필요 → 순위로 충분한지 판단. 그래서 한 탭에 요청 목록과 순위를 같이 둔다.
 // 좌: 멤버들의 좋아요 요청 댓글, 우: 컨텐츠별 버튼 → 누르면 그 컨텐츠의 우리 멤버 순위.
@@ -5397,6 +5343,8 @@ function switchPage(page, opts) {
     statsState.tabsInited = true;
   }
   if (page === 'disco') renderDisco();   // 시트는 부팅에서 받아 두므로 진입 시 그리기만 하면 된다
+  if (page === 'content') renderCalendarTab();
+  if (page === 'hall') renderHallStats();   // 크루 숫자·시간대 분포는 명예의 전당과 같은 화면
   if (page === 'apply') renderApply(); else stopApplyPoll();
   if (page === 'members' && !membersState.tabsInited) {
     initMembersTabs();
@@ -6267,9 +6215,8 @@ function initStatsTabs() {
       <img src="${m.img}" alt="${m.name}">
     </button>
   `).join('');
-  sideBox.innerHTML = `
-    <button class="stats-tab stats-tab-all" data-tab="all" title="통계"><img src="Favicon.webp" alt="통계"></button>
-  `;
+  // 통합('all') 칸은 2026-08-31 폐지 — 크루 전체 숫자는 통계 탭으로 옮겼다. 여기는 멤버 개별 전용.
+  sideBox.innerHTML = '';
   const allTabs = [...memberBox.querySelectorAll('.stats-tab'), ...sideBox.querySelectorAll('.stats-tab')];
   allTabs.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -6278,7 +6225,7 @@ function initStatsTabs() {
   });
   // 활성 표시는 현재 상태(주소로 지정된 하위탭일 수 있음)를 따른다 — 마크업에 active를 박아두면 #stats:dalta로
   // 들어왔을 때 [통합]이 활성으로 보이는 불일치가 난다.
-  syncSubTabActive('.stats-tab', statsState.selectedTab || 'all');
+  syncSubTabActive('.stats-tab', statsState.selectedTab || MEMBERS[0].id);
   if (statsState.data) renderStatsBody();
 }
 
@@ -6731,11 +6678,8 @@ function renderStatsBody() {
     }
   }
 
-  if (statsState.selectedTab === 'all') {
-    if (statsState.periodAll) renderStatsAnnual(body); else renderStatsAll(body);
-    return;
-  }
-  renderStatsMember(body, statsState.selectedTab);
+  // 통합 뷰는 통계 탭으로 이관(2026-08-31) — 여기는 멤버 개별만
+  renderStatsMember(body, statsState.selectedTab || MEMBERS[0].id);
 }
 
 // 해당 연도의 모든 월 stats 합산 — 통계 연간 탭과 명예의 전당이 공용 (수치·메달 일관성 보장)
@@ -6973,7 +6917,7 @@ function renderStatsMember(body, memberId) {
   ensureVodMonth(memberId, `${year}-${String(month).padStart(2, '0')}`);   // 달력·일별 요약 썸네일용 — 도착하면 재렌더
   const now = kstNow();
   const isCurrentMonth = (year === now.getUTCFullYear() && month === now.getUTCMonth() + 1);
-  const heatHtml = renderTimeOfDayHeatmap(year, month, sum, isCurrentMonth);
+  // 시간대 분포는 통계 탭으로 이관(2026-08-31) — 여기선 안 그린다
 
   // medals가 없거나 계산 기준월이 지금 보는 월과 다르면 재계산.
   // (구 가드 "이 멤버 메달이 비어있으면"은 computeMedals가 값 0 멤버에도 ''를 채워 medals 존재 시 절대 발화하지 않았음 →
@@ -7036,7 +6980,6 @@ function renderStatsMember(body, memberId) {
     <div class="stats-detail-body">
       ${renderCalendar(year, month, sum, memberId)}
       <div class="day-detail" id="dayDetail">${renderDayDetail(year, month, sum, memberId) || '<div class="day-detail-empty">달력에서 날짜를 선택하면<br>해당 일의 활동 기록을 볼 수 있습니다</div>'}</div>
-      ${heatHtml ? `<div class="toh-wrap">${heatHtml}</div>` : ''}
     </div>
   `;
   // 연/월은 본문이 아니라 우측 기둥에 그린다(2026-08-31) — 배선 대상도 그 칸이다
@@ -8225,7 +8168,7 @@ async function loadContent() {
     contentData.sort((a, b) => (b.date?.sort || '').localeCompare(a.date?.sort || ''));
     lsSet(LS_CONTENT_CACHE, JSON.stringify(contentData));
     lastContentUpdate = new Date();
-    if (currentPage === 'content') renderContent();
+    if (currentPage === 'content') renderCalendarTab();
     if (currentPage === 'hall') renderHall();
   } catch (e) {
     sheetPulled.content = false;   // 다음 진입을 재시도 기회로
@@ -8283,24 +8226,8 @@ function openContentCollect(key) {
   showModal();
 }
 
-function renderContent() {
-  const body = document.getElementById('contentBody');
-  if (!body) return;
-  if (contentData.length === 0) {
-    body.innerHTML = '<div class="loading"><div>컨텐츠 데이터가 없습니다</div></div>';
-    return;
-  }
-
-  // 데이터가 직전 렌더와 동일하고 이미 그려져 있으면 재구축 생략(탭 전환은 CSS show/hide라 DOM이 유지됨 → 매 진입 재구축은 낭비).
-  // 항목은 추가만 되고 삭제는 거의 없으므로 length + 최신 항목 정렬키로 변경을 충분히 감지.
-  const sig = contentData.length + '|' + (contentData[0]?.date?.sort || '');
-  if (sig === _contentRenderSig && body.querySelector('.content-grid')) return;
-  _contentRenderSig = sig;
-
-  const cardsHtml = contentData.map(contentCardHtml).join('');
-
-  body.innerHTML = `<div class="content-grid">${cardsHtml}</div>`;
-}
+// renderContent는 renderCalendarTab으로 대체(2026-08-31) — 컨텐츠 카드 격자 → 달력
+function renderContent() { renderCalendarTab(); }
 
 async function loadChemistry() {
   try {
@@ -8754,6 +8681,23 @@ function hallSumMonths(monthList, nowMs = Date.now()) {
     });
   }
   return sums;
+}
+
+// 통계 탭 상단(2026-08-31): 크루 전체 숫자와 멤버별 시간대 분포. 명예의 전당은 그 아래 이어진다.
+// renderStatsAll은 넘겨준 상자에 그리고 그 안에서만 배선하므로, 상자만 바꿔 그대로 재사용한다.
+function renderHallStats() {
+  const box = document.getElementById('hallStatsBox');
+  if (box) { if (!statsState.viewMonth) { const n = kstNow(); statsState.viewMonth = { year: n.getUTCFullYear(), month: n.getUTCMonth() + 1 }; } renderStatsAll(box); }
+  const heat = document.getElementById('hallHeatBox');
+  if (!heat) return;
+  const { year, month } = statsState.viewMonth;
+  const isCur = isCurrentMonth(`${year}-${String(month).padStart(2, '0')}`);
+  const cells = MEMBERS.map(m => {
+    const sum = computeMonthSummary(getMemberStatsForView(m.id), year, month);
+    const h = renderTimeOfDayHeatmap(year, month, sum, isCur);
+    return h ? `<div class="hall-heat-cell"><div class="hall-heat-name" style="color:${m.color}">${escapeHtml(m.name)}</div>${h}</div>` : '';
+  }).filter(Boolean).join('');
+  heat.innerHTML = cells ? `<h2 class="hall-sec-title">시간대별 방송 분포</h2><div class="hall-heat-grid">${cells}</div>` : '';
 }
 
 function renderHall() {
