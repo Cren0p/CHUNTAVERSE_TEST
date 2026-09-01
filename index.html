@@ -154,6 +154,7 @@
   /* 양옆에 같은 몫(flex: 1 1 0)을 주면 남는 폭이 정확히 반씩 갈려 탭 묶음이 화면 정중앙에 선다.
      로고(약 85px)와 문구(약 200px)는 폭이 다르지만, 칸이 같으니 가운데는 안 밀린다.
      min-width:0이 없으면 문구가 자기 폭만큼 칸을 밀어 중앙이 어긋난다. */
+  .topbar > .subbar-lead { flex: none; gap: 6px; padding: 0 8px; overflow: visible; }   /* 태블릿: 시트 버튼이 띠 안, 로고 왼쪽 */
   .topbar-logo {
     padding: 6px 12px;   /* 보조바(.main-header)와 같은 좌우 여백 — 다르면 두 줄의 시작점이 어긋난다 */
     display: flex; align-items: center; justify-content: flex-start;
@@ -2708,7 +2709,11 @@
        같은 행을 지정한다. 배지가 라벨을 덮는 것과 같은 문법이고, 부속은 행의 오른쪽 끝에 선다. */
     .nav-list, .subbar-mid { display: contents; }
     #drawerClose { grid-row: 1; justify-self: start; }
-    .subbar-lead { grid-row: 1; justify-self: end; }
+    .subbar-lead { grid-row: 1; justify-self: end; align-self: center; padding-right: 12px; }   /* 닫기 버튼과 같은 줄·같은 높이 */
+    /* 배지·점의 기준을 라벨로 되돌린다 — 상단바에서는 칸 우상단이 맞지만, 세로 목록에서는 행 오른쪽 끝에
+       붙어 라벨에서 한참 떨어졌다(2026-09-02 실사고). 좋아요 점도 같은 기준으로 옮긴다. */
+    .nav-lbl { position: relative; }
+    .nav-item.has-new::after { top: 50%; right: auto; left: 100%; margin: -4px 0 0 6px; }
     .nav-item[data-page="members"],    .tab-aux[data-for="members"]    { grid-row: 2; }
     .nav-item[data-page="live"],       .tab-aux[data-for="live"]       { grid-row: 3; }
     .nav-item[data-page="events"],     .tab-aux[data-for="events"]     { grid-row: 4; }
@@ -2721,10 +2726,23 @@
     .nav-item[data-page="apply"],      .tab-aux[data-for="apply"]      { grid-row: 11; }
     .nav-item[data-page="links"],      .tab-aux[data-for="links"]      { grid-row: 12; }
     .nav-item, .tab-aux, #drawerClose, .subbar-lead { grid-column: 1; }
+    /* 부속의 왼쪽 여백은 행마다 라벨 길이에 맞춘다 — 48px(좌패딩16+아이콘20+간격12) + 글자 폭 + 여유 8.
+       탭 이름이 바뀌면 그 줄의 값도 같이 고쳐야 한다(고정값 — 실측 아님). */
+    .tab-aux[data-for="members"]   { padding-left: 98px; }
+    .tab-aux[data-for="live"]      { padding-left: 98px; }
+    .tab-aux[data-for="events"]    { padding-left: 116px; }
+    .tab-aux[data-for="stats"]     { padding-left: 116px; }
+    .tab-aux[data-for="chemistry"] { padding-left: 84px; }
+    .tab-aux[data-for="hall"]      { padding-left: 84px; }
+    .tab-aux[data-for="content"]   { padding-left: 84px; }
+    .tab-aux[data-for="banner"]    { padding-left: 98px; }
+    .tab-aux[data-for="disco"]     { padding-left: 84px; }
+    .tab-aux[data-for="apply"]     { padding-left: 98px; }
+    .tab-aux[data-for="links"]     { padding-left: 116px; }
     /* 부속은 라벨 바로 뒤에 선다(2026-09-02). 행 오른쪽 끝(justify-self: end)에 붙였더니 라벨과 사이가
        과하게 벌어졌다. 왼쪽 여백 112px = 탭 왼쪽 패딩 16 + 아이콘 20 + 간격 12 + 최장 라벨('최근 활동') 약 56 + 여유 8.
        탭 라벨이 길어지면 이 값도 같이 올려야 한다(고정값 — 실측 아님). */
-    .tab-aux { justify-self: start; padding-left: 112px; position: relative; z-index: 1; }
+    .tab-aux { justify-self: start; position: relative; z-index: 1; }
     .subbar-lead, .tab-aux { flex: none; justify-content: flex-start; }
     .tab-aux { height: var(--nav-row-h); }
     /* 일정 줄은 흐름 안으로 되돌린다 — 가로 보조바에서 '양옆 빈 탭 자리를 빌리는' 절대배치가
@@ -2776,13 +2794,15 @@
        열렸느냐에 따라 본문 폭이 달라져 케미·명전 격자의 열 수가 3↔2로 널뛰었다. 서랍 폭은 각자 두고,
        좁은 쪽이 열렸을 때 그 차액만큼 반대편을 비워 본문 폭을 같게 만든다. */
     .main { margin-left: var(--drawer-w); min-width: 0; transition: margin-left 0.22s ease;
-      padding-right: calc(max(var(--drawer-w, 300px), 300px) - var(--drawer-w, 300px)); }
+      padding-left: calc((max(var(--drawer-w, 300px), 300px) - var(--drawer-w, 300px)) / 2);
+      padding-right: calc((max(var(--drawer-w, 300px), 300px) - var(--drawer-w, 300px)) / 2); }
     /* 좌우 중 하나만 자리를 차지한다(2026-09-01, Crenop 제안). 탭을 고르고 나면 조작부가 더 자주 쓰이므로
        조작부를 열 때 탭 기둥이 물러나 본문 폭을 지킨다. 다시 부르는 길은 좌상단 ☰. */
     .drawer-btn#drawerBtnL { display: inline-flex; }
     body.drawer-r .sidebar { transform: translateX(-100%); }
     body.drawer-r .main { margin-left: 0; margin-right: 300px;
-      padding-right: 0; padding-left: calc(max(var(--drawer-w, 300px), 300px) - 300px); }   /* 우측도 덮지 않고 밀어낸다 */
+      padding-left: calc((max(var(--drawer-w, 300px), 300px) - 300px) / 2);
+      padding-right: calc((max(var(--drawer-w, 300px), 300px) - 300px) / 2); }   /* 우측도 덮지 않고 밀어낸다 */
     /* 이 폭에서는 좌우가 '자리를 주고받는' 관계다(하나만 상시). 덮는 게 아니라 밀어내므로 가림막을 쓰지 않는다. */
     .drawer-scrim { display: none; }
   }
@@ -3116,7 +3136,7 @@
 </main>
 
 <script>
-const BUILD = '2026-09-02f';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
+const BUILD = '2026-09-02g';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
 console.log('[build] front ' + BUILD);
 const WORKER_URL = 'https://chuntaverse.crenop.workers.dev';
 const BASE_TITLE = '천타버스';
@@ -3168,6 +3188,9 @@ const MEMBER_BIRTHDAYS = {
   const sideEl = document.getElementById('sidebar');
   function syncDrawerW() {
     if (!sideEl) return;
+    // 세로형(기둥)일 때만 잰다. 상단바 배치에서 재면 가로로 누운 탭 줄의 폭(화면 전체)이 들어가고,
+    // 폭을 줄여 세로형으로 돌아오는 순간 그 값이 본문 왼쪽 여백이 되어 본문이 극단적으로 좁아진다(실사고).
+    if (window.innerWidth > 1150) { document.documentElement.style.setProperty('--drawer-w', '300px'); return; }
     const w = sideEl.getBoundingClientRect().width;
     if (w > 0) document.documentElement.style.setProperty('--drawer-w', Math.round(w) + 'px');
   }
@@ -3256,7 +3279,10 @@ const MEMBER_BIRTHDAYS = {
     if (!bar || !mid || !lead || !right || !guide || !auxLinks || !side) return;
     if (mobile) {
       side.appendChild(mid);        // 드로어 우측 칸 = 보조바 가운데 묶음 그대로
-      mid.insertBefore(lead, mid.firstChild);   // 기념일·링크 = 닫기 버튼과 같은 행(맨 위)
+      // 상단바 시트 버튼 자리(2026-09-02): 모바일은 서랍 맨 윗줄(닫기 ✕와 같은 줄), 태블릿은 서랍 밖 상단 띠.
+      // 태블릿은 기둥이 상시 표시라 ✕가 없어 기준 삼을 것이 없다 — 띠의 로고 왼쪽에 세우는 편이 맞다.
+      if (overlay) side.insertBefore(lead, side.firstChild);
+      else { const tb = document.querySelector('.topbar'); if (tb) tb.insertBefore(lead, tb.querySelector('.topbar-logo')); }
       auxLinks.appendChild(guide);              // 가이드 = 관련 링크와 같은 행(맨 아래)
     } else {
       bar.appendChild(mid);
