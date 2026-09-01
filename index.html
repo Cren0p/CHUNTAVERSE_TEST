@@ -59,9 +59,9 @@
     --mode-restricted: #a78bfa;
     --filter-post: #2EF5E1;
     --sidebar-w: 200px;
-    --tab-w: 76px;      /* 탭 한 칸 폭 — 상단바와 보조바가 공유(칸 정렬의 단일 소스).
-                           가장 긴 라벨 5글자(최근 활동·지난 활동·관련 링크) × 12px + 좌우 8px.
-                           라벨을 6글자 이상으로 만들면 이 값과 전환점을 함께 다시 잡을 것. */
+    --tab-w: 70px;      /* 탭 한 칸 폭 — 상단바와 보조바가 공유(칸 정렬의 단일 소스).
+                           가장 긴 라벨은 '최근 활동·지난 활동·관련 링크' = 글자 4 + 공백 1.
+                           4×12 + 공백 약 4 + 좌우 여백 16 ≈ 68 → 70. 라벨이 길어지면 이 값과 전환점을 함께 다시 잡을 것. */
     --nav-row-h: 40px;  /* 드로어 한 행 높이 — 탭과 부속이 같은 행에 서려면 두 쪽이 같은 값을 써야 한다 */
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -315,6 +315,14 @@
      반드시 '한 줄'이다: 버튼이 늘거나(좋아요 순위는 대회 수만큼 생긴다) 줄어도 본문 시작 높이가
      안 움직여야 한다(위치 일관성). 그래서 줄바꿈 대신 가로 스크롤로 흘린다. */
   .subbar-lead, .subbar-right { display: flex; align-items: center; gap: 8px; flex: 1 1 0; min-width: 0; }
+  /* 중간 폭(950~1150): 갱신 문구를 보조바 우측으로 내려 상단바를 [로고 + 탭]만으로 줄인다.
+     탭 11칸(770) + 로고(120) = 890이라 950px까지 버틴다 — 태블릿·폴더블을 모바일 UI로 보내지 않기 위한 단계.
+     탭을 2행으로 접는 대신 이 길을 택한 이유: 2행이 되면 보조바 부속이 '어느 행 아래'에 서야 하는지가
+     사라져 칸 정렬이 무너지고, 아낀 가로만큼 세로(54→108)를 잃어 이득이 상쇄된다. */
+  @media (max-width: 1150px) {
+    .topbar-right { display: none; }
+    .subbar-right .header-center { text-align: right; }
+  }
   .subbar-right { justify-content: flex-end; }
   /* 탭 줄과 같은 칸 규격 — 부속이 자기 탭 아래에 정확히 선다 */
   .subbar-mid { display: grid; grid-auto-flow: column; grid-auto-columns: var(--tab-w); gap: 2px; padding: 0 6px; }
@@ -338,7 +346,18 @@
   .tb-br { display: none; }
   .page-title-link, .celebration-box { white-space: nowrap; }
   .page-title { flex-wrap: nowrap; }   /* 보조바가 한 줄이므로 버튼 묶음도 안 접힌다 */
-  /* 드로어 여닫이 — 상단바가 화면 밖으로 나가는 1100px 이하에서만 나타난다 */
+  /* 일정 줄(2026-08-31): 버튼이 아니라 표시다. 누를 일이 없고(동선은 달력 탭이 가진다) 테두리도 없다.
+     제목 · 남은 시간 한 줄, 같은 날 일정이 더 있으면 +N. 칸을 넘치면 제목만 말줄임된다. */
+  .sch-line { display: inline-flex; align-items: center; gap: 6px; min-width: 0; font-size: 11px; font-weight: 600; color: var(--muted); }
+  .sch-line svg { width: 14px; height: 14px; flex: none; color: var(--ev-start); }
+  .sch-line-txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sch-line-when { flex: none; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .sch-more { flex: none; color: var(--accent); }
+  /* 일정 줄은 칸 하나를 넘겨도 된다 — 좌우 칸이 비어 있고, 제목을 못 읽으면 표시의 뜻이 사라진다 */
+  .tab-aux[data-for="content"] { overflow: visible; }
+  .tab-aux[data-for="content"] .sch-line { max-width: calc(var(--tab-w) * 3); }
+
+  /* 드로어 여닫이 — 상단바가 화면 밖으로 나가는 폭에서만 나타난다 */
   .drawer-btn {
     display: none; align-items: center; justify-content: center;
     width: 34px; height: 34px; flex-shrink: 0;
@@ -349,12 +368,10 @@
   .drawer-btn:hover { color: var(--accent); border-color: var(--accent); }
   .drawer-btn svg { width: 18px; height: 18px; display: block; }
   /* 걸린 필터 개수 — 필터가 서랍에 숨으면 "왜 안 나오지"가 되므로 버튼에 남겨 둔다 */
-  /* 필터가 걸려 있음 = 점 하나(생방송·새 요청과 같은 문법). 몇 개 껐는지는 서랍을 열면 보인다 */
-  .drawer-btn.filtered::after {
-    content: ''; position: absolute; top: -4px; right: -4px;
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--ev-unread);
-  }
+  /* 필터가 걸려 있음 = 깔때기를 채운다. 아이콘 자체가 뜻을 지니므로 곁에 붙는 표식(점·숫자)이 필요 없고,
+     '이 표시가 뭘 세는 건지'를 해석할 일도 없다(2026-08-31, 점 → 채우기로 교체). */
+  .drawer-btn.filtered { color: var(--accent); border-color: var(--accent); }
+  .drawer-btn.filtered svg { fill: currentColor; }
   /* 드로어 뒤 가림막 — 누르면 닫힌다(우측 드로어의 유일한 닫기 경로이므로 값이 싸야 한다) */
   .drawer-scrim {
     position: fixed; inset: 0; background: rgba(0,0,0,0.55);
@@ -596,7 +613,6 @@
   .lrq-row.checked .lrq-check { border-color: rgba(52, 211, 153, 0.7); background: rgba(52, 211, 153, 0.10); color: #6ee7b7; }
   .lrq-row.checked .lrq-link { opacity: 0.5; }   /* 처리한 요청은 살짝 가라앉힘(목록엔 남음) */
   /* 다가오는 일정: 버튼 카운트다운 + 모달 리스트(좋아요 모달의 lr-overlay 골격 재사용) */
-  .sch-btn-dday { color: var(--accent); font-variant-numeric: tabular-nums; }
   /* 같은 날 2건+ 일정 묶음: 제목 행 위 / 각 제목 아래 같은 열에 그 일정의 dtime(열 정렬). 폭은 내용으로 관리(컷·말줄임 없음). */
   .sch-grid { display: grid; column-gap: 6px; row-gap: 1px; }   /* 점이 자체 칸 → gap이 점 양옆에 붙으므로 6px(점 포함 총 ~16px, 점 추가 전 간격과 동일) */
   .sch-grid .sch-col-title { white-space: nowrap; }   /* 색 미지정 = 버튼 기본색(민트) 상속, 단일 일정 제목과 동일 */
@@ -1158,12 +1174,17 @@
   .stats-period-bar { display: flex; align-items: stretch; gap: 8px; margin-bottom: 16px; }
   .stats-period-wrap { display: grid; grid-template-columns: repeat(13, 1fr); gap: 6px; flex: 1; min-width: 0; }
   /* 멤버 개별탭: 스테퍼 줄(전폭) + 6열 2행 월 버튼 — 블록 외곽만 달력·요약과 정렬(내부 7열 정렬은 폐기) */
-  .stats-member-period { display: flex; gap: 8px; min-width: 0; align-items: stretch; }   /* v2(2026-08-29): PC는 ‹연도›+12개월 한 줄 */
-  .stats-member-period .stats-period-wrap.no-all { grid-template-columns: repeat(12, 1fr); }
-  @container (max-width: 1360px) {   /* 달력 컴팩트 폼과 같은 임계 — 그 밑에선 종전 세로(연도 줄 + 6열 2행) 복원 */
-    .stats-member-period { flex-direction: column; }
-    .stats-member-period .stats-period-wrap.no-all { grid-template-columns: repeat(6, 1fr); }
-  }
+  /* 우측 기둥형(2026-08-31): [‹] [12칸 3열 4행] [›] — 좌우 화살표가 연도를 옮긴다.
+     구 '한 줄 12칸'은 본문 위 전폭 배치였다. 기둥 280px에서 3열이면 칸이 약 64px. */
+  .stats-member-period { display: flex; gap: 6px; min-width: 0; align-items: stretch; margin-top: 12px; }
+  .stats-member-period .stats-period-wrap.no-all { grid-template-columns: repeat(3, 1fr); flex: 1; }
+  .stats-member-period .stats-detail-month { display: contents; }
+  .stats-member-period .stats-month-btn { order: 0; align-self: stretch; }
+  .stats-member-period .stats-month-btn[data-ydir="next"] { order: 2; }
+  .stats-member-period .stats-period-wrap { order: 1; }
+  .stats-member-period .stats-month-text { display: none; }   /* 연도는 아래 줄에 따로 — 화살표 사이 자리가 없다 */
+  .stats-period-year { text-align: center; font-size: 12px; font-weight: 700; color: var(--text); margin-top: 6px; }
+
   .stats-period-wrap.no-all { grid-template-columns: repeat(6, 1fr); }
   .stats-period-btn {
     background: var(--surface2);
@@ -2532,7 +2553,7 @@
     .header-center-line .hc-mid { display: none; }
   }
 
-  @media (max-width: 1200px) {
+  @media (max-width: 950px) {
     /* 상단바 모달(모바일): PC처럼 중앙 + 내부 스크롤 유지(패널 max-height:80vh, lr-body 스크롤). 헤더(X)가 고정돼야 내용 스크롤 중에도 닫기 가능 → 페이지 스크롤 대신 내부 스크롤. 짧으면 중앙 정렬 */
     .lr-overlay { align-items: center; }
 
@@ -2605,7 +2626,7 @@
     .drawer-btn { display: inline-flex; }
     .members-wrap, .stats-wrap { grid-template-columns: 1fr; }
     .drawer-close-r {
-      display: none; position: fixed; top: 6px; right: 10px; z-index: 41;
+      display: none; position: fixed; top: 6px; right: 10px; z-index: 45;
       width: 34px; height: 34px; margin: 0;
     }
     body.drawer-r .drawer-close-r { display: flex; }
@@ -2617,16 +2638,9 @@
     .page-title { gap: 6px; align-items: stretch; }
     /* 탭별 상단바 높이 통일: 갱신줄 유무로 1~3줄 차가 나 높이가 변하던 문제 → 3줄 높이 예약(모든 탭 동일 클램프) + 세로 가운데정렬(짧은 탭은 비공식문구가 중앙). PC는 main-header min-height:66px로 이미 통일. */
     .header-center { min-height: 0; justify-content: center; }
-    /* 상단바 버튼: 세로 미니(아이콘 위 · 짧은 텍스트 아래) + PC/모바일 토글 */
-    .page-title-link, .celebration-box {
-      flex-direction: column; gap: 2px; justify-content: center;
-      padding: 6px 8px; font-size: 9px;
-      text-align: center; line-height: 1.3;
-      min-width: 60px;   /* 전 버튼 동일 폭 — 가장 긴 라벨 기준 floor (좋아요·커버곡·N주년!·N일! 등 모두 수용) */
-    }
-    .tb-t-pc { display: none; }
-    .tb-t-mb { display: block; }
-    .page-title-link svg, .celebration-box svg { margin-top: 0; }   /* 모바일은 패딩 대칭(6/6) — PC용 -2px 상쇄 보정 해제 */
+    /* 버튼 양식은 PC와 같게(2026-08-31): 서랍 칸은 높이가 고정(--nav-row-h)이고 폭은 가변이라,
+       세로 미니(아이콘 위 · 짧은 글 아래)로 줄일 이유가 사라졌다. 아이콘 옆 전체 라벨 한 줄. */
+    .page-title-link, .celebration-box { padding: 4px 10px; }
     /* 기념일 박스 모바일(C안): 아이콘 + "이름 종류" 한 줄, 폭 가변(긴 이름은 넓어짐) */
     .celebration-box .tb-t-mb { white-space: nowrap; font-weight: 700; }
     /* 짧은 라벨(.nav-label-mb)·모바일 점(.nav-live-dot-m)은 2026-08-31 폐지.
@@ -2743,10 +2757,10 @@
   <!-- 가림막이 상단바 '안'에 있어야 한다: .topbar가 z-index를 가진 순간 그 안쪽 z-index는 바깥과 겨루지 못하고
        상단바 값(5)으로 묶인다. body 직속에 두면 가림막(30)이 상단바 전체(5) 위로 올라와 드로어까지 덮었다(실제 사고). -->
   <div class="drawer-scrim" id="drawerScrim"></div>
-  <!-- 우측 서랍 닫기 — 필터 패널은 탭마다 다른 마크업이라 버튼을 그 안에 넣을 수 없다. 서랍이 열렸을 때만
-       그 위에 겹쳐 띄우고, 자리는 여는 버튼(우상단 깔때기)과 같게 둔다. -->
-  <button class="drawer-close drawer-close-r" id="drawerCloseR" type="button" aria-label="필터 닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
 </header>
+<!-- 우측 서랍 닫기: 상단바 '밖'에 둔다. 안에 두면 상단바 z-index(5)에 값이 묶여, 본문 쪽에서 뜨는
+     우측 서랍(전역 40)에 가려 안 보인다 — 좌측 가림막에서 겪은 것과 같은 쌓임 맥락 문제(실사고). -->
+  <button class="drawer-close drawer-close-r" id="drawerCloseR" type="button" aria-label="필터 닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
 
 <main class="main">
   <!-- 보조바: 탭별 버튼만 남는다(문구·가이드는 상단바 우측으로 올라갔다). 모바일에서는 통째로 사라지고
@@ -2861,6 +2875,8 @@
           <div class="stats-tabs-side" id="statsTabsSide"></div>
           <div class="stats-tabs-members" id="statsTabsMembers"></div>
         </div>
+        <!-- 연/월 선택기 자리(2026-08-31). 멤버 스트립과 같은 기둥에 두 번째 '고르는 줄'로 선다 -->
+        <div id="statsPeriodSide"></div>
       </aside>
     </div>
   </div>
@@ -2929,7 +2945,7 @@
 </main>
 
 <script>
-const BUILD = '2026-08-31o';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
+const BUILD = '2026-08-31r';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
 console.log('[build] front ' + BUILD);
 const WORKER_URL = 'https://chuntaverse.crenop.workers.dev';
 const BASE_TITLE = '천타버스';
@@ -3018,11 +3034,12 @@ const MEMBER_BIRTHDAYS = {
   //  PC   : [기념일·링크] [탭별 부속 11칸] [가이드]  — 보조바 한 줄
   //  모바일: 드로어 우측 칸에 같은 순서로 세로 배치 — 기념일은 닫기 버튼 행, 가이드는 관련 링크 행.
   // 두 배치의 대응이 1:1이라 한쪽을 고치면 다른 쪽 자리가 자동으로 정해진다.
-  let wasMobile = null;
+  let wasMobile = null, wasNarrow = null;
   function syncBarPlacement() {
-    const mobile = innerWidth <= 1200;
-    if (mobile === wasMobile) return;
-    wasMobile = mobile;
+    const mobile = innerWidth <= 950;
+    const narrow = innerWidth <= 1150;
+    if (mobile === wasMobile && narrow === wasNarrow) return;
+    wasMobile = mobile; wasNarrow = narrow;
     const bar = document.querySelector('.main-header');
     const mid = document.getElementById('subbarMid');
     const lead = document.getElementById('subbarLead');
@@ -3040,6 +3057,13 @@ const MEMBER_BIRTHDAYS = {
       bar.insertBefore(lead, mid);
       bar.appendChild(right);
       right.appendChild(guide);
+    }
+    // 문구 자리: 넓으면 상단바 우측, 1150 이하면 보조바 우측(가이드 왼쪽) — 상단바를 [로고+탭]만으로 줄인다
+    const center = document.getElementById('headerCenter');
+    const tRight = document.querySelector('.topbar-right');
+    if (center && tRight) {
+      if (innerWidth <= 1150) right.insertBefore(center, guide);
+      else tRight.appendChild(center);
     }
   }
   syncBarPlacement();
@@ -3065,7 +3089,7 @@ const MEMBER_BIRTHDAYS = {
   // 서랍으로 판정한다 — 그러지 않으면 세로로 훑다가 서랍이 튀어나온다.
   let sx = 0, sy = 0, track = false;
   document.addEventListener('touchstart', e => {
-    if (e.touches.length !== 1 || innerWidth > 1200) { track = false; return; }
+    if (e.touches.length !== 1 || innerWidth > 950) { track = false; return; }
     sx = e.touches[0].clientX; sy = e.touches[0].clientY;
     track = sx > 20 && sx < innerWidth - 20;
   }, { passive: true });
@@ -3592,7 +3616,7 @@ function titleBadgeHtml(title) {
 // ── 말줄임 툴팁(2026-08-24) — 전수조사한 말줄임 클래스에서, 실제로 잘렸을 때만 hover 시 전체 텍스트를 네이티브 title로 ──
 // (종류 필터 버튼과 같은 문법. 잘림 판정: 가로 초과 = 1줄 ellipsis, 세로 +1px 초과 = 2줄 클램프 — +1은 라인하이트 반올림 오탐 방지.)
 // 안 잘린 요소는 title 제거(리사이즈로 풀린 경우 추종). 말줄임 클래스 신설 시 이 목록에 추가 — 누락은 dom 스위트가 CSS 대조로 잡는다.
-const ELLIPSIS_TIP_SEL = '.rk-name, .lrg-head-txt, .lrq-l1, .lrq-l2, .header-center-line, .card-name, .card-title, .event-member, .event-detail, .day-item-title, .chem-ndesc, .chem-member-name, .content-card-title, .vs-title, .ds-vod-tt';
+const ELLIPSIS_TIP_SEL = '.rk-name, .lrg-head-txt, .lrq-l1, .lrq-l2, .header-center-line, .card-name, .card-title, .event-member, .event-detail, .day-item-title, .chem-ndesc, .chem-member-name, .content-card-title, .vs-title, .ds-vod-tt, .sch-line-txt';
 document.addEventListener('mouseover', (e) => {
   const el = e.target.closest ? e.target.closest(ELLIPSIS_TIP_SEL) : null;
   if (!el) return;
@@ -4201,11 +4225,6 @@ function updatePageTitle() {
   if (lead) lead.innerHTML = celebrations.join('') + topbarLinksHtml();
   const auxContent = document.getElementById('auxContent');
   if (auxContent) auxContent.innerHTML = scheduleBtn;
-  const schBtn = document.getElementById('schBtn');
-  if (schBtn) {
-    schBtn.addEventListener('mouseenter', preloadSchedule);
-    schBtn.addEventListener('touchstart', preloadSchedule, { passive: true });
-  }
   refreshLikeDot();   // 상단바 innerHTML 재생성으로 클래스가 날아가므로 점 상태 재적용
 }
 
@@ -4623,17 +4642,20 @@ function scheduleBtnHTML() {
   scheduleSig = h.sig;
   // 버튼 상시 노출 — 데이터 로드 전 첫 페인트 순간만 셸(일정이 비는 경우는 전제상 없음).
   if (!h.vis.length) {
-    return `<button class="page-title-link sch-btn" id="schBtn" type="button" onclick="openSchedule()">${SVG_ICONS.calendar}<span class="sch-btn-dday">일정</span></button>`;
+    return `<span class="sch-line" id="schBtn">${SVG_ICONS.calendar}<span class="sch-line-txt">불러오는 중</span></span>`;
   }
   const head = h.vis[0];
   // 단일 일정 — 현행: 제목 + (당일부터 D-time, 그 전 D-day). 모바일은 항상 D-day.
   if (h.group.length < 2) {
-    return `<button class="page-title-link sch-btn" id="schBtn" type="button" onclick="openSchedule()">${SVG_ICONS.calendar}<span class="sch-btn-dday">${ddayText(head)}</span></button>`;
+    const when = (head.hasTime && ddayNum(head) === 0) ? dtimeText(head) : ddayText(head);
+    return `<span class="sch-line" id="schBtn">${SVG_ICONS.calendar}<span class="sch-line-txt">${escapeHtml(head.shortTitle)}</span><span class="sch-line-when">${when}</span></span>`;
   }
   // 같은 날 2건+: 종전엔 제목 열 + dtime 열을 격자로 폈지만, 보조바 칸이 92px이라 들어가지 않는다.
   // 건수만 덧붙이고 내용은 달력 탭에서 본다(버튼의 역할 = '언제'까지).
   const head2 = h.vis[0];
-  return `<button class="page-title-link sch-btn" id="schBtn" type="button" onclick="openSchedule()">${SVG_ICONS.calendar}<span class="sch-btn-dday">${ddayText(head2)}<span class="sch-more">+${h.group.length - 1}</span></span></button>`;
+  const when2 = (head2.hasTime && ddayNum(head2) === 0) ? dtimeText(head2) : ddayText(head2);
+  // +N = 같은 날 남은 일정 수. 없으면 그날 대표 일정이 하나라는 뜻.
+  return `<span class="sch-line" id="schBtn">${SVG_ICONS.calendar}<span class="sch-line-txt">${escapeHtml(head2.shortTitle)}</span><span class="sch-line-when">${when2}</span><span class="sch-more">+${h.group.length - 1}</span></span>`;
 }
 
 
@@ -4642,12 +4664,9 @@ function tickSchedule() {
   const h = scheduleHead();
   if (h.sig !== scheduleSig) { updatePageTitle(); return; }
   if (!h.vis.length) return;
-  const elM = document.querySelector('#schBtn .tb-t-mb');            // 모바일: 항상 가장 임박 일정의 D-day
-  if (elM) elM.textContent = ddayText(h.vis[0]);
-  const elS = document.querySelector('#schBtn .sch-btn-dday');       // 단일 일정(현행): D-time/D-day 한 칸
-  if (elS) elS.textContent = (h.vis[0].hasTime && ddayNum(h.vis[0]) === 0) ? dtimeText(h.vis[0]) : ddayText(h.vis[0]);
-  const cells = document.querySelectorAll('#schBtn .sch-btn-dtime'); // 그룹(C): 병합 1칸 또는 열별 N칸
-  cells.forEach((c, i) => { c.textContent = cells.length === 1 ? h.dtimes[0] : h.dtimes[i]; });
+  // 한 줄 표시(2026-08-31): 남은 시간 칸 하나만 갈아끼운다. 제목·+N은 구조가 바뀔 때 updatePageTitle이 다시 그린다.
+  const el = document.querySelector('#schBtn .sch-line-when');
+  if (el) el.textContent = (h.vis[0].hasTime && ddayNum(h.vis[0]) === 0) ? dtimeText(h.vis[0]) : ddayText(h.vis[0]);
 }
 
 async function loadSchedule() {
@@ -6465,7 +6484,8 @@ function periodSelectorHtml(includeAll) {
     <div class="stats-member-period">
       <div class="stats-detail-month">${chevPrev}<span class="stats-month-text">${year}년</span>${chevNext}</div>
       <div class="stats-period-wrap no-all">${btns.join('')}</div>
-    </div>`;
+    </div>
+    <div class="stats-period-year">${year}년</div>`;
   }
   return `
     <div class="stats-period-bar">
@@ -6937,7 +6957,6 @@ function renderStatsMember(body, memberId) {
   }
   body.innerHTML = `
     <div class="stats-member-header">
-      ${periodSelectorHtml(false)}
       <div class="stats-detail-summary">
         ${(() => {
           const md = (statsState.medals && statsState.medals[memberId]) || {};
@@ -6988,7 +7007,9 @@ function renderStatsMember(body, memberId) {
       ${heatHtml ? `<div class="toh-wrap">${heatHtml}</div>` : ''}
     </div>
   `;
-  bindPeriodSelector(body, false);
+  // 연/월은 본문이 아니라 우측 기둥에 그린다(2026-08-31) — 배선 대상도 그 칸이다
+  const periodSide = document.getElementById('statsPeriodSide');
+  if (periodSide) { periodSide.innerHTML = periodSelectorHtml(false); bindPeriodSelector(periodSide, false); }
   // 요약 항목 클릭 → 그 지표의 월별 추이 그래프 모달(카드 지표행과 동일 문법)
   body.querySelectorAll('.stats-summary-item[data-metric]').forEach(item => {
     item.addEventListener('click', () => openStatGraphModal(memberId, item.dataset.metric));
