@@ -407,6 +407,8 @@
      --funnel-fill = 켜진 비율(0~1)을 JS가 넣는다. 이 '채움' 장치는 아이콘 모양과 무관하게 재사용 가능하다. */
   .drawer-btn .funnel-fill { clip-path: inset(calc((1 - var(--funnel-fill, 1)) * 100%) 0 0 0); }
   .drawer-btn.filtered { color: var(--accent); border-color: var(--accent); }
+  .drawer-btn.fill-low .cb-check { fill: currentColor; }   /* 체크박스 3구간 중 마지막 — 빈 상자에 채운 체크 */
+  #drawerBtnR svg { width: 22px; height: 22px; }   /* 체크박스는 상자 2~22 + 22px(66번 확정) — 18px에선 상자가 좁게 읽혔다 */
   /* 드로어 뒤 가림막 — 누르면 닫힌다(우측 드로어의 유일한 닫기 경로이므로 값이 싸야 한다) */
   .drawer-scrim {
     position: fixed; inset: 0; background: rgba(0,0,0,0.55);
@@ -1240,7 +1242,7 @@
   .stats-tabs-members {
     display: contents;
   }
-  .stats-tab {
+  .stats-tab, .cal-tab {   /* .cal-tab = 달력 탭 멤버 스트립(2026-09-02). 같은 클래스를 쓰면 selectStatsTab이 문서 전체 .stats-tab의 활성을 갈아 끼운다 */
     position: relative;
     aspect-ratio: 1;
     background: var(--surface2);
@@ -1252,17 +1254,17 @@
     font-family: inherit;
     box-sizing: border-box;
   }
-  .stats-tab img {
+  .stats-tab img, .cal-tab img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
     transition: opacity 0.15s, filter 0.15s;
   }
-  .stats-tab:not(.active) img { opacity: 0.25; filter: grayscale(1); }
-  .stats-tab:not(.active) { border-color: transparent; }
-  .stats-tab.active { border-color: var(--accent); }
-  .stats-tab:hover { border-color: var(--accent); }
+  .stats-tab:not(.active) img, .cal-tab:not(.active) img { opacity: 0.25; filter: grayscale(1); }
+  .stats-tab:not(.active), .cal-tab:not(.active) { border-color: transparent; }
+  .stats-tab.active, .cal-tab.active { border-color: var(--accent); }
+  .stats-tab:hover, .cal-tab:hover { border-color: var(--accent); }
   /* .stats-tab-all 폐지(2026-08-31): 통합 칸이 통계 탭으로 옮겨가 지난 활동 스트립에서 사라졌다 */
 
   .stats-grid {
@@ -2009,12 +2011,18 @@
     display: flex; flex-direction: column;
     gap: 16px;
   }
-  /* ── 달력 탭 (2026-08-31) ─────────────────────────────────────────────────
-     좌 = 달력(칸에 제목 글자만) / 우 = 고른 날의 컨텐츠·일정 / 그 오른쪽 = 연/월 기둥.
-     칸에 썸네일을 넣지 않는 이유: 그러면 달력만 1450px를 요구해 그 폭을 못 만드는 화면에서 통째로 못 본다
-     (기록 탭에서 그 이유로 걷어낸 형태다). 그림은 눌렀을 때 옆 칸에 나온다. */
+  /* ── 달력 탭 (2026-08-31 신설 · 2026-09-02 썸네일 모아보기 이관) ──────────────────────────
+     좌 = 달력 / 우 = 기둥(멤버 스트립 크루+13 · 종류 필터 컨텐츠·다시보기·유튜브 · 연/월). 일정은 필터 대상이 아니다(항상).
+     두 폼 —
+       ① PC 모드(>1150)에서 본문 폭 934px 이상(칸 130px~)이면 7열 썸네일 칸. 칸 = 대표 그림 1장 + 종류별 개수 칩.
+          그림을 다 쌓지 않는 이유: 크루 전체는 하루 15~20장(2026-08 실측)이라 칸 하나가 2000px을 넘는다.
+          대표 = 그날 첫 방송의 첫 다시보기 → (다시보기를 끄면) 첫 유튜브 → 컨텐츠 이미지(옛 지난 활동 썸네일 폼 v5 규칙).
+          눌렀을 때 그날 전부는 그 주 바로 아래.
+       ② 그 밖(좁은 PC 창·태블릿·모바일)은 1열 목록: 행 = 날짜 · 대표 그림(작게) · 칩. 눌러야 그날 전부가 나온다 —
+          폭이 남으면 오른쪽 열, 좁으면 그 행 바로 아래(지난 활동 탭의 넓으면 옆·좁으면 아래 문법).
+     폭 상한을 두지 않는다(다른 탭의 1400은 그대로): 200px 칸 7열 = 1424px이라 1444 상한 아래선 어떤 화면에서도 7열이 못 섰다. */
   .cal-wrap {
-    padding: 20px 24px; max-width: 1444px; width: 100%; margin: 0 auto; flex: 1;
+    padding: 20px 24px; width: 100%; margin: 0 auto; flex: 1;
     display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 20px; align-items: start;
   }
   .calendar-grid + .calendar-grid { margin-top: 4px; }
@@ -2024,36 +2032,56 @@
   .cal-detail-week { background: var(--bg); padding: 16px; }
   .cal-di-none { color: var(--muted); font-size: 12px; text-align: center; padding: 24px 0; }
   .cal-detail + .calendar-grid { margin-top: 4px; }   /* 상세가 끼면 '격자+격자' 규칙이 안 걸려 아래 주가 붙어 버린다 */
-  /* 상세 자리 = 폭이 정한다. 기본(좁음) = 주 아래, 넉넉하면 오른쪽 열로 옮긴다.
-     기준 950px: 달력 7칸이 90px 아래로 좁아지지 않는 선(7×90 + 상세 320 + 간격 16). */
-  .cal-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
-  .cal-detail-side { display: none; margin: 0; }
-  @container (min-width: 950px) {
-    .cal-layout { grid-template-columns: minmax(0, 1fr) 320px; }   /* 자리는 늘 잡아 둔다 — 고른 날 유무로 폭이 바뀌지 않게 */
-    .cal-detail-week { display: none; }
-    .cal-detail-side { display: block; position: sticky; top: 20px; }
+  /* 폼 전환 — 두 폼을 다 그려 두고 CSS가 하나만 보인다(상세 두 자리 장치와 같은 태도). 기본 = 1열 목록. */
+  .cal-grid-form { display: none; max-width: 1450px; }   /* 200px 칸 ×7 + 간격 24 + .calendar 패딩 24 + 테두리 2(옛 폼 상한과 같은 값) — 본문이 더 넓어도 칸은 200에서 멈춘다 */
+  .cal-list-form { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+  .cal-list-side { display: none; margin: 0; }
+  @container (min-width: 720px) {   /* 목록 380 + 상세 320 + 간격 16 — 폭이 남으면 상세를 오른쪽 열로 */
+    .cal-list-form { grid-template-columns: minmax(0, 1fr) 320px; }
+    .cal-list-side { display: block; position: sticky; top: 20px; }
+    .cal-detail-row { display: none; }
   }
-  /* min-width: 0 — 없으면 칸이 제 안의 가장 긴 제목만큼 벌어져 7열 폭이 제각각이 된다(실사고).
-     칸 폭을 격자가 정하고 제목은 말줄임으로 맞춘다. */
-  .cal-cell { align-items: stretch; justify-content: flex-start; gap: 2px; padding: 4px; min-height: 78px; text-align: left; min-width: 0; overflow: hidden; }
-  .cal-titles { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-  /* 폭이 모자라면 제목 대신 개수만 — 칸에 글자를 욱여넣어 다 말줄임되느니 '몇 건'만 보이고 눌러서 본다 */
-  .cal-n { display: none; align-items: center; justify-content: center; gap: 2px; font-size: 11px; font-weight: 700; color: var(--accent); flex: 1; }
-  .cal-n svg { width: 11px; height: 11px; }
-  @container (max-width: 620px) {
-    .cal-cell .cal-titles { display: none; }
-    .cal-cell.has .cal-n { display: inline-flex; }
-    .cal-cell { min-height: 52px; }
+  @media (min-width: 1151px) {   /* PC 모드에서만 7열 — 태블릿은 폭이 남아도 1열(Crenop 지정: PC=썸네일 격자 / 태블릿·모바일=1열) */
+    @container (min-width: 934px) {   /* .calendar 안쪽 908 = 칸 약 126px. 1366 노트북(기둥 280 포함)에서 칸 약 132px — 피드백으로 조정하는 시작값 */
+      .cal-grid-form { display: block; }
+      .cal-list-form { display: none; }
+    }
   }
-  /* 두 줄까지 보인다(2026-09-01) — 컨텐츠 제목이 길어 한 줄이면 말줄임 투성이가 된다 */
-  .cal-t {
-    font-size: 11px;   /* 10px은 칸 안에서 안 읽혔다(2026-09-01) */ line-height: 1.3; color: var(--text);
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-  }
-  /* 미래 = 칸 테두리 점선. 제목 앞 표시는 폐지(2026-08-31) — 짧은 수직선이 뭘 뜻하는지 안 읽혔다 */
-  .cal-cell.future.has { border-style: dashed; }   /* 색은 그대로 — 민트는 '누를 수 있음/선택됨'의 색이라 '아직 안 왔음'에 쓰면 뜻이 겹친다(2026-09-01) */
+  /* 7열 칸 — 옛 지난 활동 썸네일 폼(2026-08-29 v5) 규격: 상단 [날짜 | 칩], 아래 16:9 그림 상자.
+     그림 없는 날도 상자를 예약해 행 높이가 안 흔들린다(목록 도착 전후·다시보기 없는 날 셀 크기 널뛰기 방지). */
+  .cal-cell { aspect-ratio: auto; align-items: stretch; justify-content: flex-start; gap: 4px; padding: 5px; text-align: left; min-width: 0; overflow: hidden; }
+  .cal-cell .cd-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 4px; width: 100%; }
+  .cal-cell .cd-top .calendar-daynum { line-height: 14px; }
+  .cal-cell .cd-chips { display: flex; flex-wrap: wrap; gap: 2px 6px; justify-content: flex-end; align-items: center; margin-top: 1px; min-width: 0; }
+  .cal-thumb { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; background: var(--surface); }
+  .cal-thumb:empty { background: transparent; }   /* 빈 상자는 높이만 잡고 음영 없이(옛 폼 v5 Crenop 지정) */
+  .cal-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  /* 그림이 없는 날에 일정만 있으면 상자 자리에 일정 제목 — 예정을 칩 하나로만 남기면 무엇인지 안 보인다 */
+  .cal-t { position: absolute; inset: 0; padding: 2px 3px; font-size: 11px; line-height: 1.3; color: var(--text); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  /* 미래 = 칸 테두리 점선. 색은 그대로 — 민트는 '누를 수 있음/선택됨'의 색이라 '아직 안 왔음'에 쓰면 뜻이 겹친다(2026-09-01) */
+  .cal-cell.future.has { border-style: dashed; }
   .cal-cell.has:hover { border-color: var(--accent); }
   .cal-cell.selected { border-color: var(--accent); background: var(--surface2); }
+  .cd-chip.content { color: var(--text2); }
+  .cd-chip.schedule { color: var(--muted); }
+  /* 1열 목록 행 — 기록이 있는 날만. 날짜 · 대표 그림 96px · 칩(+미래면 일정 제목) */
+  .cal-rows { display: flex; flex-direction: column; gap: 6px; }
+  .cal-row { display: flex; align-items: center; gap: 10px; width: 100%; background: var(--surface); border: 1px solid var(--border); padding: 6px 8px; cursor: pointer; color: inherit; font-family: inherit; text-align: left; min-width: 0; transition: border-color 0.15s; }
+  .cal-row.future { border-style: dashed; }
+  .cal-row:hover { border-color: var(--accent); }
+  .cal-row.selected { border-color: var(--accent); background: var(--surface2); }
+  .cal-row.today { box-shadow: inset 0 0 0 1.5px var(--time); }   /* 달력 칸의 오늘 표시(.calendar-day.today)와 같은 링 */
+  .cal-row-date { flex: none; width: 88px; font-size: 12px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+  .cal-row-date.sun { color: #f87171; }   /* 요일색 규칙(.calendar-daynum.sun/.sat)과 같은 값 */
+  .cal-row-date.sat { color: #60a5fa; }
+  .cal-row-thumb { flex: none; width: 96px; aspect-ratio: 16 / 9; overflow: hidden; background: var(--surface2); }
+  .cal-row-thumb:empty { background: transparent; }
+  .cal-row-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cal-row-body { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+  .cal-row .cd-chips { display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: center; min-width: 0; }
+  .cal-row-title { font-size: 12px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cal-detail-row { margin: 0; }
+  /* 상세 — 일정·컨텐츠 행(있으면) → 다시보기 타일 → 유튜브 타일. 타일은 일별 요약과 같은 200px 문법(.ds-vod), 크루 화면이라 멤버 이름줄을 위에 */
   .cal-di-list { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
   .cal-di { display: flex; gap: 10px; text-decoration: none; color: inherit; background: var(--surface2); border: 1px solid var(--border); padding: 8px; }
   .cal-di.schedule { border-style: dashed; }
@@ -2066,6 +2094,14 @@
   /* 인원이 많으면 두 줄로, 위아래 개수가 비슷하게 나눈다(한 명만 내려가는 모양 방지). 줄당 최대치는 JS가 --who-cols로 준다 */
   .cal-di-who { display: grid; grid-template-columns: repeat(var(--who-cols, 99), 18px); gap: 2px; }
   .cal-di-who img { width: 18px; height: 18px; }
+  .cal-di-sec { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--muted); margin-top: 14px; }
+  .cal-vods { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
+  .cal-vod { width: 200px; }
+  .cal-vod-who { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--text2); margin-bottom: 4px; }
+  .cal-vod-who img { width: 18px; height: 18px; display: block; }
+  /* 기둥의 종류 필터 아이콘 색 — 칩 색과 같게 */
+  .filter-type[data-type="vod"] .filter-icon { color: var(--accent); }
+  .filter-type[data-type="content"] .filter-icon { color: var(--text); }
   @media (max-width: 1150px) { .cal-wrap { grid-template-columns: 1fr; } }
   /* 좁은 폭(스마트폰)에서만: 요청 목록과 순위를 같이 쌓으면 화면이 길어져 '요청 ↔ 순위' 토글로 쓴다.
      태블릿까지 걸면 폭이 남는데도 목록이 사라진다(실사고 — 순위만 보이던 화면). */
@@ -3088,7 +3124,11 @@
       <div class="cal-main" id="contentBody">
         <div class="loading"><div class="spinner"></div><div>달력 불러오는 중...</div></div>
       </div>
+      <!-- 기둥(2026-09-02): 멤버 스트립(크루+13) · 종류 필터(컨텐츠·다시보기·유튜브, 일정은 항상) · 연/월.
+           스트립은 지난 활동 탭 문법(.stats-tabs-wrap 3열), 필터는 최근 활동 탭 문법(.filter-row + 모두 해제 슬롯). 내용은 renderCalSide()가 채운다. -->
       <aside class="side-pick">
+        <div><div class="filter-title">멤버</div><div class="stats-tabs-wrap" id="calMembersSide"></div></div>
+        <div><div class="filter-title">종류</div><div class="filter-row"><button class="filter-toggle-all" id="calTypeToggleAll">모두 해제</button><div class="filter-types" id="calTypesSide"></div></div></div>
         <div><div class="filter-title">기간</div><div id="calPeriodSide"></div></div>
       </aside>
     </div>
@@ -3156,7 +3196,7 @@
 </main>
 
 <script>
-const BUILD = '2026-09-02l';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
+const BUILD = '2026-09-02m';   // 배포 도장 — 이 파일을 고칠 때마다 갱신(같은 날 2회째부터 b,c…). 배포 확인 = F12 콘솔의 [build] 줄
 console.log('[build] front ' + BUILD);
 const WORKER_URL = 'https://chuntaverse.crenop.workers.dev';
 const BASE_TITLE = '천타버스';
@@ -3303,6 +3343,7 @@ const MEMBER_BIRTHDAYS = {
     const ratio = all.length ? on.length / all.length : 1;
     btnR.style.setProperty('--funnel-fill', String(ratio));
     btnR.classList.toggle('filtered', ratio < 1);
+    btnR.classList.toggle('fill-low', ratio <= 0.221);   // 체크박스: 채움선이 체크 아래로 내려간 구간 — 체크를 채운다(66번 확정 22.1%)
   };
   // 폭에 따라 실제로 요소를 옮긴다(CSS로는 부모를 못 바꾼다).
   //  PC   : [기념일·링크] [탭별 부속 11칸] [가이드]  — 보조바 한 줄
@@ -3706,16 +3747,17 @@ const SVG_ICONS = {
   // 종전엔 마크업에 직접 박아 넣었는데, 그러면 새 아이콘이 이 표에 없어 다음 사람이 못 찾는다.
   menu: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>`,
   close: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>`,
-  // 깔때기는 '얼마나 통과하는가'를 채움 높이로 보인다 — 아래 funnel-fill의 clip-path가 그 비율을 받는다.
-  // (이 자리 아이콘은 미확정 — 조작부가 필터와 선택기를 겸해 깔때기가 절반만 맞는다는 지적이 열려 있다)
-  funnel: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path class="funnel-fill" d="M3 5h18l-7 8v6l-4 2v-8z" fill="currentColor" stroke="none"/><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg>`,
+  // 서랍 우측 버튼 = 체크박스(2026-09-02, 66번 승인 개정 A — 깔때기 폐지). 상자 면이 켜진 비율만큼 아래에서 차오른다(.funnel-fill의
+  // clip-path 장치를 그대로 — 이름은 장치의 것이지 모양의 것이 아니다). 체크는 파낸 구멍이라 채움선이 지나는 동안 테두리만 보이고,
+  // 채움선이 체크 아래(22.1%)로 내려가면 JS가 fill-low를 붙여 체크를 채운다. 상자 테두리·체크 윤곽은 항상 그린다.
+  checkbox: `<svg viewBox="0 0 24 24" width="16" height="16"><path class="funnel-fill" d="M2 2h20v20H2z M9.20 18.70 21.03 7.78 21.03 7.51 19.16 5.50 9.40 14.47 6.14 10.96 5.89 10.96 3.74 12.98 9.20 18.70z" fill="currentColor" fill-rule="evenodd"/><path class="cb-check" d="M9.20 18.70 21.03 7.78 21.03 7.51 19.16 5.50 9.40 14.47 6.14 10.96 5.89 10.96 3.74 12.98 9.20 18.70z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><rect x="2" y="2" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"/></svg>`,
   // 달력 항목 종류(2026-09-01). 같은 규격: viewBox 24 · 16×16 · stroke 2 · round.
-  soccer: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5l4.2 3-1.6 5h-5.2l-1.6-5z" fill="currentColor" stroke="none"/><path d="M12 3v4.5M3.6 9.3l4.6 1.2M20.4 9.3l-4.6 1.2M7 20l2.4-4.5M17 20l-2.4-4.5"/></svg>`,
-  steam: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="15.5" cy="9" r="2.6"/><circle cx="8.5" cy="15" r="2.1" fill="currentColor" stroke="none"/><path d="M3.3 15.2l3.4 1.4M10.4 13.9l3.1-2.6"/></svg>`,
-  minecraft: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17"/><rect x="7" y="8" width="3.5" height="3.5" fill="currentColor" stroke="none"/><rect x="13.5" y="8" width="3.5" height="3.5" fill="currentColor" stroke="none"/><path d="M7 15.5h10"/></svg>`,
-  vrchat: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M2.5 8.5h19a1.5 1.5 0 0 1 1.5 1.5v4a1.5 1.5 0 0 1-1.5 1.5h-5.2l-2.1 2.4a2 2 0 0 1-3.4 0L8.7 15.5H2.5A1.5 1.5 0 0 1 1 14v-4a1.5 1.5 0 0 1 1.5-1.5z"/><circle cx="7.5" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="16.5" cy="12" r="1.6" fill="currentColor" stroke="none"/></svg>`,
+  soccer: `<svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 2.6999999999999993a9.3 9.3 0 1 1 -0.01 0z M9.62 11.23 10.53 14.02 13.47 14.02 14.38 11.23 12.00 9.50z M10.41 2.92 9.43 5.93 12.00 7.80 14.57 5.93 13.59 2.92z M2.87 10.70 5.44 12.57 8.01 10.70 7.02 7.68 3.85 7.68z M7.94 20.28 10.51 18.42 9.53 15.40 6.36 15.40 5.38 18.42z M18.62 18.42 17.64 15.40 14.47 15.40 13.49 18.42 16.06 20.28z M20.15 7.68 16.98 7.68 15.99 10.70 18.56 12.57 21.13 10.70z" fill="currentColor" fill-rule="evenodd"/></svg>`,   // 잔디(축구) — 채운 공에 오각형을 파냄(2026-09-02, 66번 승인. 64판 폐기)
+  steam: `<svg viewBox="0 0 24 24" width="16" height="16"><g transform="translate(-0.73 -2.63) scale(1.2103)"><path d="M9.12 19.29 7.98 19.29 7.02 18.94 6.02 18.02 5.54 16.85 1.79 15.36 1.57 15.06 1.22 13.40 1.22 11.39 6.67 13.62 7.90 13.18 8.68 13.18 11.43 9.21 11.43 8.51 11.69 7.55 12.31 6.50 12.96 5.85 13.92 5.23 15.23 4.88 16.54 4.97 17.85 5.50 19.03 6.59 19.73 7.98 19.81 9.90 19.38 11.13 19.03 11.65 17.85 12.74 16.63 13.27 15.49 13.35 11.83 15.97 11.61 16.19 11.52 17.15 11.08 18.02 10.08 18.94 9.12 19.29z M16.15 11.91 17.06 11.61 17.98 10.78 18.42 9.82 18.50 8.94 18.07 7.63 17.33 6.81 16.45 6.37 15.23 6.28 14.10 6.72 13.27 7.55 12.83 8.60 12.83 9.64 13.09 10.43 13.83 11.35 14.79 11.87 16.15 11.91z M15.84 11.26 15.06 11.17 14.27 10.73 13.79 10.17 13.53 9.47 13.62 8.51 13.96 7.81 14.53 7.33 15.58 6.98 16.28 7.07 16.89 7.42 17.46 7.98 17.72 8.60 17.72 9.64 17.46 10.25 16.80 10.91 15.84 11.26z M9.16 18.55 9.90 18.24 10.56 17.59 10.91 16.80 10.91 15.67 10.30 14.53 9.64 14.05 8.60 13.79 7.90 13.88 7.81 14.05 9.47 14.75 9.86 15.14 10.21 15.84 10.12 16.80 9.38 17.72 8.77 17.98 7.90 17.89 6.50 17.28 6.46 17.41 7.20 18.24 7.72 18.50 9.16 18.55z" fill="currentColor" fill-rule="evenodd"/></g></svg>`,   // 스팀 로고 추적본 22.5(66번 승인. 64판 폐기)
+  minecraft: `<svg viewBox="0 0 24 24" width="16" height="16"><path d="M21.10 17.75 19.72 17.71 19.69 16.05 18.03 16.02 18.03 7.63 16.37 7.59 16.30 5.90 7.91 5.90 7.84 4.21 6.18 4.17 6.22 2.80 7.88 2.76 7.91 1.11 16.02 1.11 16.05 2.76 17.75 2.83 17.75 6.15 21.10 6.18 21.13 7.84 22.82 7.91 22.82 16.02 21.17 16.05 21.10 17.75z M21.10 5.90 18.03 5.87 18.06 2.80 21.13 2.83 21.10 5.90z M4.17 22.82 1.14 22.82 1.11 19.76 2.76 19.72 2.80 18.06 4.46 18.03 4.49 16.37 6.15 16.34 6.18 14.68 7.84 14.64 7.88 12.99 9.53 12.95 9.57 11.29 11.22 11.26 11.26 9.60 12.92 9.57 12.95 7.91 14.61 7.88 14.64 6.22 16.02 6.18 16.05 7.84 17.71 7.88 17.75 9.25 16.09 9.29 16.05 10.94 14.40 10.98 14.33 12.67 12.71 12.67 12.67 14.33 11.01 14.36 10.98 16.02 9.32 16.05 9.25 17.75 7.63 17.75 7.59 19.40 5.90 19.47 5.87 21.13 4.21 21.17 4.17 22.82z" fill="currentColor" fill-rule="evenodd"/></svg>`,   // 마인크래프트 곡괭이 — 픽셀 추적, 같은 색끼리 이어 붙이고 머리·자루 사이 0.25(66번 승인. 64판 폐기)
+  vrchat: `<svg viewBox="0 0 24 24" width="16" height="16"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5h14a2.5 2.5 0 0 1 2.5 2.5v6a2.5 2.5 0 0 1-2.5 2.5h-1.2l1.9 4.7-6.1-4.7H5A2.5 2.5 0 0 1 2.5 13V7A2.5 2.5 0 0 1 5 4.5z"/><rect x="10.8" y="7" width="8.4" height="6" rx="1.6" fill="currentColor" stroke="none"/></g></svg>`,   // VRChat 말풍선 마크 v2(59번 생존분, 66번 승인. 64판 폐기)
   // 행성: 1시→7시 방향 보석이 가운데 박히고, 11시→5시 방향으로 고리가 두르는 모양
-  planet: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><path d="M15.2 8.8L12 15.2 8.8 8.8 12 6.6z" fill="currentColor" stroke="none"/><path d="M4.6 16.4c-1.9 1.1-2.9 2.3-2.4 3.1.7 1.2 4.3.4 8.1-1.8s6.3-5 5.6-6.2c-.4-.8-1.9-.8-3.9-.1" transform="rotate(-25 12 12)"/></svg>`,
+  planet: `<svg viewBox="0 0 24 24" width="16" height="16"><defs><clipPath id="plp"><path d="M0 0h24v24H0z M12 5.0a7.0 7.0 0 1 0 0.01 0z"/></clipPath></defs><path d="M12 5.0a7.0 7.0 0 1 0 0.01 0z M16.02 7.69 12.20 15.42 7.98 16.31 8.58 12.04z" fill="currentColor" fill-rule="evenodd"/><g clip-path="url(#plp)"><ellipse cx="12" cy="12" rx="10.6" ry="3.2" transform="rotate(30 12 12)" fill="none" stroke="currentColor" stroke-width="1.5"/></g></svg>`,   // 행성 — 채운 구체 + 결정 구멍, 고리는 구체 밖에서만(66번 승인. 64판 폐기)
   soop: `<svg viewBox="0 0 24 24"><path d="M17.43 18.27 16.03 18.27 14.41 17.86 13.13 17.17 12.09 16.18 10.52 17.40 9.30 17.98 7.97 18.27 6.11 18.21 3.96 17.40 2.92 16.59 1.90 15.34 1.09 13.36 1.03 10.81 1.49 9.42 2.13 8.31 3.79 6.72 5.06 6.08 6.63 5.73 8.31 5.79 9.59 6.14 10.98 6.89 11.97 7.82 13.60 6.54 15.63 5.79 17.83 5.79 18.82 6.02 20.04 6.60 20.74 7.07 21.81 8.20 22.62 9.65 23.03 11.33 22.97 13.13 22.16 15.28 21.03 16.64 19.23 17.80 17.43 18.27z M16.99 15.22 17.95 15.02 18.76 14.55 19.60 13.60 20.01 12.26 19.89 11.16 19.49 10.23 18.76 9.45 17.78 8.92 16.15 8.81 15.57 8.98 14.64 9.56 13.31 10.84 11.97 11.19 11.22 11.07 10.52 10.72 9.01 9.27 8.43 8.98 6.63 8.81 5.12 9.56 4.40 10.46 4.11 11.16 4.05 12.49 4.45 13.65 5.47 14.73 6.40 15.13 7.91 15.19 8.60 14.96 9.24 14.55 10.52 13.28 11.22 12.93 12.09 12.81 13.48 13.28 14.64 14.44 15.51 15.02 16.99 15.22z M4.31 13.22 4.31 13.22z M2.16 15.89 2.16 15.89z" fill="currentColor" fill-rule="evenodd"/></svg>`,   // SOOP 공식 마크(허리 잘록한 ∞) 픽셀 추적(2026-08-22) — 종전 원 두 개 근사를 실로고로 교체
   board: `<svg viewBox="0 0 24 24" width="14" height="14"><rect x="4" y="4" width="16" height="16" rx="2" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" mask="url(#micb)"/></svg>`,
   thumbsup: `<svg viewBox="0.18 0.60 24 24" width="14" height="14"><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H7V10h-.24a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><path d="M7 10H4a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
@@ -3769,7 +3811,14 @@ const SVG_ICONS = {
   // ── 산포 정리(2026-07-07): 아래 3종은 지역 상수(FAN_ICON·CELEB_SVG)에서 원문 그대로 이동 — 아이콘 관리 단일화. B열(상단바 시트)에서도 사용 가능해짐 ──
   fan: `<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="none"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`,
   birthday: `<svg viewBox="0 0 24 24"><g fill="currentColor" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" mask="url(#mica)"><rect x="3" y="16" width="18" height="6" rx="1.5"/><rect x="6" y="11" width="12" height="5" rx="1.5"/><line x1="12" y1="7" x2="12" y2="11"/><circle cx="12" cy="5.5" r="1.5"/></g></svg>`,
-  chuntaverse: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"/></svg>`,
+  chuntaverse: `<svg viewBox="0 0 24 24" width="16" height="16"><path d="M14.87 20.53 13.51 20.47 12.54 20.30 11.18 19.84 10.27 19.39 9.13 18.59 7.91 17.37 6.94 15.89 6.37 14.53 5.60 13.65 4.64 13.14 1.17 12.34 0.97 12.09 1.03 11.74 1.23 11.60 4.47 10.86 5.49 10.41 6.03 9.93 6.43 9.36 6.71 8.56 7.51 7.14 8.08 6.40 8.96 5.52 10.21 4.61 11.35 4.04 12.37 3.70 13.62 3.47 15.50 3.47 16.92 3.76 17.88 4.10 18.68 4.50 19.87 5.29 20.87 6.23 22.01 7.82 22.74 9.58 23.03 11.06 23.00 11.43 20.39 11.43 18.68 11.15 16.80 10.52 16.46 10.29 16.09 9.87 15.81 9.24 14.96 6.68 14.81 6.49 14.53 6.37 14.16 6.63 13.14 9.58 12.91 9.98 12.54 10.35 11.69 10.75 9.30 11.55 8.99 11.80 8.99 12.14 9.19 12.34 12.26 13.42 12.91 13.96 13.14 14.36 14.10 17.20 14.22 17.43 14.47 17.57 14.76 17.51 14.90 17.37 15.92 14.42 16.26 13.85 16.63 13.53 18.11 12.97 19.59 12.63 20.56 12.51 23.03 12.54 22.91 13.68 22.40 15.33 21.55 16.86 20.93 17.66 20.16 18.42 18.91 19.33 17.49 20.02 16.29 20.36 14.87 20.53z" fill="currentColor" fill-rule="evenodd"/></svg>`,   // 천타버스 로고 원본 추적(66번 승인. 스파클 대체본 폐기)
+  wak: `<svg viewBox="0 0 24 24" width="16" height="16"><path d="M11.28 20.07 10.68 20.07 10.15 19.53 9.25 15.29 6.62 17.80 6.02 18.04 5.24 17.50 5.12 16.78 5.66 12.06 2.08 13.73 1.36 13.61 0.94 13.08 1.06 12.24 3.93 4.95 4.17 4.47 4.83 3.93 5.42 4.05 5.84 4.47 5.96 4.95 3.57 10.92 6.50 9.55 7.34 9.67 7.76 10.33 7.34 14.57 8.71 13.20 7.88 9.01 7.99 8.29 8.29 7.99 9.01 7.88 12.12 9.79 13.91 7.88 14.27 7.64 14.99 7.64 15.41 8.05 15.53 8.65 13.61 10.80 14.87 11.82 16.96 6.86 17.62 6.08 18.22 6.08 18.76 6.62 18.76 7.34 16.96 11.40 22.52 11.34 22.94 11.76 22.94 12.48 22.40 13.02 17.26 13.26 18.76 14.51 18.88 15.11 18.34 15.77 17.26 15.53 12.24 12.18 10.74 13.67 11.82 18.93 11.82 19.53 11.28 20.07z" fill="currentColor" fill-rule="evenodd"/></svg>`,   // 왁타버스 로고 추적(66번 승인, 신규)
+  mocap: `<svg viewBox="0 0 24 24" width="16" height="16"><path d="M16.19 5.28 15.28 5.19 14.57 4.80 14.06 4.20 13.78 3.35 13.85 2.58 14.26 1.78 14.87 1.26 15.71 0.99 16.56 1.06 17.27 1.42 17.85 2.10 18.10 2.85 18.05 3.67 17.69 4.43 17.11 4.96 16.19 5.28z M15.42 23.01 15.10 23.01 13.27 22.51 12.85 22.20 12.71 21.86 12.80 21.26 14.47 16.31 10.30 13.71 9.85 13.18 9.69 12.70 9.69 12.17 9.83 11.71 11.95 7.31 9.86 7.29 8.02 9.96 7.60 10.26 7.08 10.31 6.85 10.24 6.49 9.96 6.36 9.70 6.31 9.25 6.45 8.86 8.62 5.73 9.04 5.40 9.29 5.33 14.02 5.33 14.71 5.49 15.28 5.81 15.75 6.25 17.65 9.37 20.12 7.73 20.56 7.68 20.81 7.75 21.16 8.01 21.34 8.33 21.37 8.84 21.04 9.37 17.91 11.50 17.56 11.63 17.01 11.59 16.55 11.23 15.26 9.14 13.48 12.63 16.69 14.83 16.98 15.16 17.14 15.58 17.07 16.26 14.95 21.29 14.96 21.37 15.71 21.71 15.98 22.11 15.93 22.61 15.74 22.85 15.42 23.01z M3.42 20.22 2.90 20.06 2.61 19.62 2.63 19.25 3.30 17.33 3.72 17.03 7.90 16.09 9.38 13.05 9.62 13.56 10.00 13.99 11.36 14.87 9.74 17.59 9.43 17.92 9.06 18.10 4.52 19.06 4.00 19.92 3.79 20.11 3.42 20.22z" fill="currentColor" fill-rule="evenodd"/></svg>`,   // 모션캡처 — 달리는 사람(66번 승인, 신규)
+  fulltrack: `<svg viewBox="0 0 24 24" width="16" height="16"><path d="M13.42 9.01 10.55 9.01 10.40 8.86 10.36 3.72 10.55 3.44 10.78 3.34 13.19 3.34 13.57 3.62 13.60 8.76 13.42 9.01z M21.46 11.18 21.11 10.66 20.05 9.76 19.61 9.06 18.99 8.44 18.29 7.94 16.42 7.11 15.22 6.81 13.95 6.64 13.94 4.62 15.42 4.81 17.19 5.34 18.53 6.01 19.56 6.78 20.45 7.76 21.01 8.73 21.38 9.93 21.46 11.18z M2.50 11.08 2.55 10.06 2.89 8.96 3.49 7.89 4.54 6.74 5.84 5.84 7.18 5.24 8.75 4.81 10.03 4.66 9.98 6.68 7.58 7.14 5.81 7.91 4.91 8.54 4.36 9.10 3.92 9.76 3.27 10.18 2.50 11.08z M21.60 12.75 20.83 11.92 19.73 11.38 18.13 11.12 15.62 11.02 8.21 11.02 5.07 11.18 4.10 11.38 3.30 11.72 2.22 12.67 2.55 11.67 3.05 10.86 3.80 10.21 4.81 9.78 6.04 9.55 7.81 9.41 15.19 9.38 18.09 9.58 19.06 9.78 20.03 10.18 20.50 10.51 21.05 11.17 21.41 11.93 21.60 12.75z M16.96 20.66 14.82 20.66 14.49 20.56 13.84 20.05 13.29 19.29 12.68 19.06 10.85 19.13 10.30 19.54 9.71 20.33 9.01 20.66 5.51 20.56 4.54 20.40 3.70 20.10 3.14 19.73 2.69 19.24 2.35 18.64 2.12 17.81 1.98 16.64 1.98 14.84 2.15 13.74 2.49 12.93 2.97 12.35 3.80 11.85 4.74 11.58 6.24 11.42 17.53 11.42 19.26 11.62 20.36 12.02 20.76 12.28 21.35 12.97 21.75 14.10 21.81 16.81 21.68 17.88 21.45 18.68 20.86 19.53 19.96 20.16 18.79 20.50 16.96 20.66z M1.63 16.69 1.23 16.66 0.98 16.51 0.98 12.27 1.33 12.05 2.03 12.05 1.68 13.77 1.63 16.69z M22.43 16.69 22.15 16.67 22.15 13.97 21.80 12.05 22.50 12.05 23.02 12.47 23.02 16.27 22.77 16.56 22.43 16.69z" fill="currentColor" fill-rule="evenodd"/></svg>`,   // 풀트래킹 — 헤드기어 + 손 트래커 둘(66번 승인, 신규)
+  pubg: `<svg viewBox="0 0 24 24" width="16" height="16"><path d="M21.01 18.40 20.11 18.40 19.96 18.33 15.64 18.36 15.55 18.31 15.60 18.21 15.49 18.21 15.45 18.36 14.59 18.33 14.52 18.40 12.60 18.40 12.15 18.33 9.94 18.36 9.82 18.29 9.71 18.36 9.18 18.36 9.15 18.29 8.81 18.40 5.02 18.40 4.00 18.33 2.99 18.36 2.28 18.25 2.03 18.01 1.92 17.59 1.99 16.58 1.96 16.09 1.26 16.11 1.06 16.02 0.98 15.75 1.02 14.93 1.26 14.76 1.96 14.74 1.96 9.26 1.09 9.22 1.13 9.11 0.98 9.00 0.98 8.17 1.11 8.19 1.02 8.06 1.30 7.93 1.41 8.00 1.60 7.93 1.86 8.04 1.96 7.98 1.92 6.29 1.99 5.92 2.20 5.71 2.61 5.60 4.23 5.60 4.38 5.67 8.70 5.64 8.79 5.69 8.73 5.79 8.88 5.79 8.83 5.73 8.88 5.64 10.72 5.64 10.76 5.79 10.87 5.79 10.82 5.69 10.91 5.64 14.03 5.64 14.22 5.75 14.48 5.64 15.15 5.64 15.19 5.79 15.27 5.64 16.02 5.60 18.61 5.60 18.83 5.67 19.17 5.60 19.85 5.60 20.22 5.67 20.56 5.64 20.90 5.75 21.50 5.71 21.65 5.79 21.85 5.99 21.97 6.41 22.01 7.98 22.17 8.04 22.36 7.93 22.55 8.00 22.74 7.93 22.85 8.00 22.92 7.96 23.02 8.10 22.91 8.13 23.02 8.17 23.02 9.03 22.91 9.11 22.94 9.18 22.02 9.24 21.97 9.63 22.04 9.78 21.97 10.01 22.08 9.97 22.01 10.35 22.01 13.43 22.08 13.99 22.01 14.22 22.08 14.40 22.01 14.52 22.01 14.74 22.06 14.80 22.94 14.82 22.91 14.89 23.02 14.97 23.02 15.87 22.92 15.81 22.91 15.90 23.02 15.94 22.92 16.07 22.77 16.04 22.74 16.11 22.66 16.04 22.08 16.02 22.12 17.03 22.04 17.93 21.97 18.08 21.65 18.33 21.01 18.40z M11.23 17.22 11.19 17.11 11.36 17.05 20.22 17.05 20.41 17.12 20.77 17.07 20.69 11.59 20.77 11.36 20.77 9.97 20.69 9.90 20.77 9.86 20.69 9.71 20.73 7.76 20.65 7.38 20.69 7.01 20.63 6.95 4.12 6.95 3.23 6.89 3.23 7.95 3.16 8.17 3.27 8.40 3.27 8.58 3.23 9.03 3.12 9.07 3.23 9.11 3.27 9.37 3.31 10.95 3.23 11.81 3.27 16.09 3.20 16.24 3.27 17.07 4.45 17.05 4.49 17.16 4.57 17.16 4.60 17.05 4.79 17.05 4.83 17.12 6.41 17.05 10.69 17.05 11.14 17.09 11.12 17.18 11.23 17.22z M18.95 15.92 16.99 15.92 16.73 15.81 16.45 15.45 16.41 12.60 16.49 11.25 16.41 10.95 16.45 10.12 16.37 9.71 16.41 8.70 16.52 8.36 16.84 8.08 18.95 8.04 19.25 8.11 19.49 8.36 19.49 9.90 19.43 9.99 18.49 9.99 18.44 9.94 18.48 9.22 18.38 9.13 17.67 9.13 17.61 9.18 17.73 11.44 17.65 13.24 17.69 14.59 17.63 14.76 18.31 14.83 18.40 14.74 18.33 13.73 18.36 12.45 18.31 12.32 18.06 12.19 18.06 11.55 18.14 11.21 19.43 11.16 19.56 11.40 19.56 15.27 19.49 15.57 19.25 15.81 18.95 15.92z M5.62 15.96 4.79 15.96 4.62 15.72 4.66 13.58 4.59 13.24 4.70 12.79 4.57 12.66 4.47 12.68 4.44 12.45 4.47 11.66 4.62 11.51 4.62 8.13 4.68 8.08 7.42 8.11 7.70 8.32 7.78 8.70 7.74 12.34 7.66 12.53 7.31 12.77 5.86 12.79 5.86 12.90 5.79 12.94 5.90 13.05 5.90 15.72 5.77 15.92 5.62 15.96z M11.02 15.92 10.95 15.85 9.15 15.92 8.81 15.85 8.60 15.64 8.53 15.34 8.53 10.05 8.56 9.33 8.70 9.35 8.72 9.26 8.56 9.26 8.53 8.28 8.56 8.13 8.66 8.08 9.41 8.08 9.75 8.23 9.80 8.32 9.77 10.20 9.84 10.61 9.84 12.38 9.77 12.64 9.84 13.58 9.73 14.67 9.90 14.83 10.09 14.72 10.39 14.72 10.33 14.82 10.42 14.87 10.59 14.78 10.59 13.46 10.70 13.43 10.59 13.31 10.67 13.09 10.67 12.15 10.59 11.74 10.59 8.43 10.63 8.28 10.74 8.25 10.72 8.15 11.62 8.15 11.83 8.25 11.79 8.32 11.87 8.43 11.79 8.66 11.87 8.70 11.87 8.81 11.79 9.07 11.87 9.22 11.91 10.72 11.83 15.34 11.72 15.60 11.51 15.81 11.02 15.92z M14.40 15.92 13.09 15.92 12.86 15.85 12.71 15.89 12.66 15.79 12.66 15.49 12.73 15.45 12.66 15.38 12.69 12.45 12.47 12.15 12.47 11.29 12.60 11.16 12.68 11.19 12.77 11.02 12.66 10.91 12.73 10.31 12.66 10.12 12.66 8.13 12.71 8.08 15.27 8.08 15.49 8.19 15.62 8.36 15.62 10.05 15.55 10.20 15.62 11.10 15.59 11.36 15.28 11.70 15.66 12.11 15.70 12.30 15.70 15.27 15.59 15.57 15.38 15.77 15.08 15.89 14.40 15.92z M14.35 11.25 14.46 11.17 14.46 9.18 13.91 9.13 13.86 9.18 13.82 9.94 13.86 10.27 13.75 10.35 13.86 10.42 13.86 11.17 14.10 11.27 14.35 11.25z M6.54 11.62 6.50 11.47 6.65 11.51 6.65 11.25 6.52 11.34 6.46 11.21 6.46 11.02 6.54 10.95 6.46 9.45 6.54 9.37 6.41 9.17 5.96 9.17 5.86 9.26 5.90 11.32 5.79 11.44 5.92 11.61 6.54 11.62z M4.74 10.20 4.75 9.95 4.70 9.97 4.74 10.20z M5.79 11.59 5.66 11.38 5.79 11.59z M14.38 14.85 14.50 14.74 14.42 14.63 14.42 14.10 14.50 14.03 14.42 13.91 14.42 12.38 14.18 12.39 14.14 12.32 13.99 12.32 13.86 12.41 13.82 12.56 13.86 14.44 13.78 14.74 13.95 14.87 14.38 14.85z M18.48 14.63 18.59 14.44 18.51 14.40 18.59 14.37 18.53 14.23 18.44 14.25 18.48 14.63z M10.03 18.27 9.97 18.14 9.84 18.12 9.86 18.21 9.90 18.14 9.95 18.27 10.03 18.27z" fill="currentColor" fill-rule="evenodd"/></svg>`,   // 배틀그라운드 — 상자 마크 추적(66번 승인, 신규)
+  overwatch: `<svg viewBox="0 0 24 24" width="16" height="16"><path d="M16.81 5.76 14.75 4.58 12.39 4.09 9.84 4.39 8.37 4.98 7.19 5.76 5.37 3.75 5.17 3.36 6.60 2.33 8.07 1.64 9.35 1.25 11.21 0.95 12.79 0.95 14.65 1.25 15.93 1.64 17.40 2.33 18.83 3.36 18.63 3.75 16.81 5.76z M13.08 23.05 10.92 23.05 9.64 22.85 7.78 22.26 5.91 21.28 3.70 19.37 2.42 17.60 1.74 16.22 1.34 15.14 0.95 13.18 0.95 10.82 1.15 9.64 1.54 8.27 2.42 6.40 3.21 5.22 4.44 3.90 6.55 6.21 6.55 6.40 5.76 7.19 5.17 8.07 4.68 9.05 4.19 10.92 4.19 13.08 4.68 14.95 5.12 15.78 9.50 11.61 11.07 8.07 11.46 7.29 11.66 7.19 11.56 14.16 7.33 18.19 8.07 18.83 9.94 19.61 10.92 19.81 13.08 19.81 15.14 19.22 16.67 18.29 12.44 14.06 12.49 7.14 14.60 11.71 18.88 15.78 19.42 14.65 19.81 13.08 19.81 10.92 19.12 8.66 18.24 7.19 17.45 6.40 17.45 6.21 19.56 3.90 20.99 5.52 22.26 7.78 22.95 10.13 23.05 13.08 22.46 15.73 21.28 18.09 19.46 20.20 17.60 21.58 15.14 22.66 13.08 23.05z" fill="currentColor" fill-rule="evenodd"/></svg>`,   // 오버워치 로고 추적(66번 승인, 신규)
+  lol: `<svg viewBox="0 0 24 24" width="16" height="16"><path d="M7.66 23.01 7.27 23.01 7.25 22.74 5.96 22.74 5.90 23.01 5.50 22.96 5.46 22.59 5.54 22.34 5.62 22.26 5.67 21.98 6.20 21.10 6.32 20.58 6.50 20.50 6.50 20.30 6.29 20.17 6.24 20.05 5.98 19.82 5.84 19.82 5.73 19.73 5.73 19.50 5.57 19.33 5.25 19.31 4.97 19.03 4.52 18.48 4.52 18.35 4.41 18.34 4.27 18.19 3.84 17.56 3.31 16.61 2.94 15.74 2.66 14.83 2.41 14.38 2.25 13.59 2.19 11.64 2.25 11.03 2.45 10.07 2.88 8.78 3.19 8.08 4.29 6.28 4.87 5.54 5.97 4.46 6.32 3.87 6.32 3.07 6.20 2.98 5.95 2.27 5.54 1.72 5.38 1.39 5.38 1.14 5.66 0.99 6.33 1.11 9.79 1.13 9.81 1.40 11.05 1.39 11.01 18.31 11.05 18.54 11.26 18.55 11.29 18.78 11.55 18.82 11.57 18.98 12.88 18.94 13.43 18.84 14.39 18.90 18.26 18.88 18.27 18.74 18.96 17.98 19.13 17.95 19.99 16.82 19.99 16.70 20.56 15.41 20.91 14.24 21.08 13.09 21.10 11.93 20.89 10.39 20.32 8.70 19.56 7.36 19.07 6.67 18.43 5.98 16.83 4.71 15.07 3.90 13.84 3.55 13.33 3.47 11.39 3.43 11.35 2.38 11.53 2.30 11.90 2.28 14.13 2.63 14.41 2.75 14.48 2.89 15.62 3.24 16.85 3.81 17.42 4.16 17.75 4.47 17.93 4.51 18.14 4.67 18.98 5.51 19.21 5.65 19.79 6.36 20.20 6.94 20.24 7.10 20.38 7.22 21.26 9.14 21.59 10.23 21.77 11.23 21.81 12.91 21.75 13.69 21.38 15.33 20.97 16.39 20.67 16.96 20.22 17.74 19.58 18.56 19.58 18.76 19.71 18.78 19.71 18.93 19.56 19.07 18.55 22.70 15.36 22.74 15.34 22.99 14.78 22.97 14.76 22.74 7.78 22.74 7.77 22.98 7.66 23.01z M6.67 19.25 6.65 13.24 6.93 13.22 6.93 10.46 6.67 10.45 6.67 5.79 6.47 5.78 6.39 5.84 6.06 5.84 5.24 6.71 4.42 7.88 3.91 8.90 3.62 9.66 3.35 10.78 3.25 11.48 3.23 12.97 3.48 14.59 3.78 15.51 4.25 16.55 4.99 17.72 5.63 18.50 6.37 19.20 6.67 19.25z" fill="currentColor" fill-rule="evenodd"/></svg>`,   // 리그오브레전드 로고 추적(66번 승인, 신규)
+  wow: `<svg viewBox="0 0 24 24" width="16" height="16"><path d="M12.86 23.07 11.01 23.07 8.90 22.67 7.06 22.01 5.61 21.09 2.91 21.02 2.91 18.26 2.25 17.34 1.33 15.10 0.93 12.99 0.93 11.01 1.59 8.11 2.25 6.66 2.91 5.74 2.98 2.91 5.74 2.91 7.19 2.12 8.11 1.33 8.38 1.33 8.38 1.59 10.09 1.07 12.99 0.93 14.31 1.20 14.57 1.07 15.36 1.46 15.49 1.33 16.15 1.59 16.41 1.86 16.81 1.59 16.94 1.86 17.40 1.92 16.94 1.99 16.94 2.12 17.73 2.38 18.26 2.91 20.89 2.91 21.02 2.78 21.22 2.98 21.09 3.11 21.09 5.74 21.62 6.27 22.01 7.06 22.67 8.90 23.07 11.01 23.07 13.51 22.67 14.70 22.80 15.23 22.41 15.62 22.54 16.02 22.34 15.95 22.14 16.28 22.41 16.81 21.09 18.26 21.09 21.02 18.39 21.09 16.94 21.88 16.68 22.28 16.54 22.14 14.57 22.80 12.86 23.07z M12.26 21.55 12.59 21.35 12.86 21.49 14.17 21.35 15.75 20.83 17.20 20.04 18.52 18.72 18.65 18.85 18.85 18.65 18.72 18.52 19.90 17.34 19.90 16.94 20.30 16.68 20.17 16.54 20.96 15.23 21.49 12.99 21.49 11.01 20.96 8.77 20.04 7.46 20.17 7.06 18.92 5.41 17.73 4.36 16.02 3.31 14.57 2.78 13.38 2.51 12.59 2.65 11.93 2.38 11.41 2.65 11.14 2.51 10.62 2.51 10.35 2.78 9.96 2.65 9.56 2.91 9.43 2.78 9.30 3.04 8.25 3.17 6.80 3.96 5.02 5.48 3.83 7.06 2.91 9.17 2.51 11.01 2.51 12.99 3.04 15.23 3.57 15.89 3.44 16.15 3.96 16.54 3.90 16.74 3.70 16.68 3.90 16.87 4.10 16.81 3.96 17.07 4.23 17.47 6.40 19.77 8.64 20.96 9.43 20.96 9.43 21.22 10.49 21.49 12.26 21.55z M15.89 18.19 12.53 18.13 12.66 16.68 12.26 14.31 12.07 13.98 11.34 16.81 11.47 18.13 8.05 18.13 8.57 17.34 8.57 16.81 7.52 12.07 6.47 8.38 6.47 7.85 5.87 6.86 9.23 6.93 9.10 7.32 9.23 9.17 9.63 11.41 10.35 13.98 11.93 7.52 12.13 7.59 12.26 7.98 12.79 10.49 13.78 13.71 14.90 7.59 14.50 6.93 18.06 6.80 18.06 7.06 17.40 7.85 17.14 8.51 16.48 12.46 16.22 13.12 16.22 13.91 15.69 16.28 15.69 17.47 15.89 18.19z" fill="currentColor" fill-rule="evenodd"/></svg>`,   // 월드오브워크래프트 로고 추적(66번 승인, 신규)
 };
 
 // ── 칩 합성 v12(2026-08-29): 숫자는 기존 자산 BADGE_GLYPHS(2026-07-13, 잉크 경계 동봉)로 그린다 ──
@@ -3916,7 +3965,7 @@ function titleBadgeHtml(title) {
 // ── 말줄임 툴팁(2026-08-24) — 전수조사한 말줄임 클래스에서, 실제로 잘렸을 때만 hover 시 전체 텍스트를 네이티브 title로 ──
 // (종류 필터 버튼과 같은 문법. 잘림 판정: 가로 초과 = 1줄 ellipsis, 세로 +1px 초과 = 2줄 클램프 — +1은 라인하이트 반올림 오탐 방지.)
 // 안 잘린 요소는 title 제거(리사이즈로 풀린 경우 추종). 말줄임 클래스 신설 시 이 목록에 추가 — 누락은 dom 스위트가 CSS 대조로 잡는다.
-const ELLIPSIS_TIP_SEL = '.rk-name, .lrg-head-txt, .lrq-l1, .lrq-l2, .header-center-line, .card-name, .card-title, .event-member, .event-detail, .day-item-title, .chem-ndesc, .chem-member-name, .content-card-title, .vs-title, .ds-vod-tt, .sch-line-txt, .cal-t';
+const ELLIPSIS_TIP_SEL = '.rk-name, .lrg-head-txt, .lrq-l1, .lrq-l2, .header-center-line, .card-name, .card-title, .event-member, .event-detail, .day-item-title, .chem-ndesc, .chem-member-name, .content-card-title, .vs-title, .ds-vod-tt, .sch-line-txt, .cal-t, .cal-row-title';
 document.addEventListener('mouseover', (e) => {
   const el = e.target.closest ? e.target.closest(ELLIPSIS_TIP_SEL) : null;
   if (!el) return;
@@ -4035,6 +4084,12 @@ function typeToCat(et) {
   if (et === 'chat' || et === 'chat_emoticon' || et === 'donation' || et === 'sanction' || et === 'mission_gift' || et === 'battle_notice') return 'chat';
   return 'soop';
 }
+
+// 다시보기 목록 상태(2026-08-29). 선언만 여기 — 달력 탭이 첫 화면(#content)일 때 applyHash → renderCalendarTab → ensureVodMonth가
+// 스크립트가 아래 선언부에 닿기 전에 실행되어 'vodState 초기화 전 접근'으로 죽었다(2026-09-02 실측). sheetPulled와 같은 TDZ 회피.
+// 동작 설명·함수(ensureVodMonth 등)는 원래 자리(VOD 상태 블록)에 그대로 있다.
+const vodState = { data: {}, loading: new Set() };
+const LS_VOD_PREFIX = 'chuntaverse_vods_v1_';
 
 const statsState = {
   tabsInited: false,
@@ -5338,7 +5393,7 @@ if (notifyBellEl) {
     navBannerIcon: SVG_ICONS.flag,
     navDiscoIcon: SVG_ICONS.music,
     navApplyIcon: SVG_ICONS.thumbsup,
-    drawerBtnL: SVG_ICONS.menu, drawerBtnR: SVG_ICONS.funnel,
+    drawerBtnL: SVG_ICONS.menu, drawerBtnR: SVG_ICONS.checkbox,   // 우측 = 체크박스(2026-09-02, 깔때기 폐지)
     drawerClose: SVG_ICONS.close, drawerCloseR: SVG_ICONS.close,
     navHallIcon: SVG_ICONS.barChart,   // 통계 탭(2026-08-31) — 트로피는 '명예의 전당'이던 시절의 그림
     notifyBell: SVG_ICONS.bell,
@@ -5413,33 +5468,93 @@ function renderDisco() {
 }
 
 
-// ══ 달력 탭 (2026-08-31) ═══════════════════════════════════════════════════
-// 구 컨텐츠 탭(카드 격자)을 달력으로 바꾸고 일정 모달을 여기로 흡수했다.
-// 한 시트의 앞뒤라 원래 한 화면에 있어야 했던 둘이다 — 지난 컨텐츠는 결과물, 다가올 일정은 예정.
-// 칸에는 제목 글자만 넣는다(썸네일 아님) — 그래야 달력 폭이 890px 남짓으로 끝나고, 그림은 눌렀을 때 옆 칸에 나온다.
-// 미래는 점선 + 민트: 색만 쓰면 색각 이상·흑백에서 사라지고, 안읽음 표시를 빌려 쓰면 '눌러서 지우는 것'과
-// '시간이 지나 사라지는 것'이 같은 모양이 되어 헷갈린다(알림 벨의 색+모양 이중 단서와 같은 문법).
-const calState = { year: 0, month: 0, selected: null };
+// ══ 달력 탭 (2026-08-31 신설 · 2026-09-02 썸네일 모아보기 이관) ═══════════════════════════
+// 구 컨텐츠 탭(카드 격자)을 달력으로 바꾸고 일정 모달을 흡수한 자리에, 지난 활동 탭에서 걷어낸 숲 다시보기·유튜브
+// 썸네일 모아보기가 들어왔다(2026-08-31 결정, 2026-09-02 구현). 지난 컨텐츠=결과물, 다가올 일정=예정, 거기에
+// 그날의 다시보기·유튜브 — 방송 썸네일은 결과물이 아니라 그 방송으로 들어가는 문이라 컨텐츠 옆이 제자리다.
+// 재료는 지난 활동 탭 것을 그대로 쓴다: 월 통계(/stats?month=, 13명 한 번에) · 다시보기 목록(/vods, 멤버·월별 —
+// 지난달은 브라우저 저장, 크루 화면은 달마다 13번) · 타일(vodTileHtml) · 유튜브 썸네일 주소(ytVideoId).
+// 두 폼(7열 썸네일 / 1열 목록)을 다 그려 두고 CSS가 폭에 따라 하나만 보인다 — 상세 세 자리(주 아래·행 아래·오른쪽 열)도 같은 태도.
+const CAL_TYPES = ['content', 'vod', 'youtube'];   // 종류 필터. 일정은 필터 대상이 아니다(항상 표시 — 2026-09-02 Crenop 지정)
+const CAL_TYPE_LABEL = { content: '컨텐츠', vod: '다시보기', youtube: '유튜브' };
+const CAL_TYPE_ICON = { content: 'tagFilled', vod: 'film', youtube: 'youtube' };   // 칩·필터 버튼 공용. film=다시보기(지난 활동 칩과 같은 그림)
+const calState = { year: 0, month: 0, selected: null, member: 'all', types: new Set(CAL_TYPES) };
 (function () { const n = kstNow(); calState.year = n.getUTCFullYear(); calState.month = n.getUTCMonth() + 1; })();
+function calYm() { return `${calState.year}-${String(calState.month).padStart(2, '0')}`; }
+function calMembers() { return calState.member === 'all' ? MEMBERS : MEMBERS.filter(m => m.id === calState.member); }
+// 멤버를 골랐을 때 시트 행(컨텐츠·일정)이 보이는지: 멤버 칸이 비어 있으면 크루 공통으로 보고 누구를 골라도 보인다
+function calRowVisible(it) {
+  if (calState.member === 'all' || !(it.members || []).length) return true;
+  const m = MEMBERS.find(x => x.id === calState.member);
+  return !!m && it.members.includes(m.name);
+}
 
-function calItemsByDate() {
-  const map = {};
-  const push = (d, it) => { (map[d] = map[d] || []).push(it); };
-  for (const c of contentData) {
-    const key = c.date && c.date.sort ? String(c.date.sort).slice(0, 6) : '';
-    if (key.length !== 6) continue;
-    push(`20${key.slice(0, 2)}-${key.slice(2, 4)}-${key.slice(4, 6)}`,
-      { kind: 'content', title: c.title || '컨텐츠', link: c.link, img: c.url, members: c.members || [] });
+// 보고 있는 달의 재료를 받는다 — 월 통계 1회 + 멤버별 다시보기 목록. 도착하면 각 로더가 다시 그린다.
+// loadingMonths 가드: 받는 중이면 다시 부르지 않는다(안 그러면 '즉시 반환 → 다시 그림 → 다시 요청'이 맴돈다).
+function ensureCalMonth() {
+  const ym = calYm();
+  if (!statsState.data[ym] && !statsState.loadingMonths.has(ym)) {
+    loadStatsMonth(ym).then(() => { if (currentPage === 'content') renderCalendarTab(); });
   }
-  for (const s of scheduleData) {
-    push(s.date, { kind: 'schedule', title: s.shortTitle || s.title, full: s.title, time: s.time, link: s.link, members: s.members || [] });
+  if (calState.types.has('vod')) calMembers().forEach(m => ensureVodMonth(m.id, ym));
+}
+
+// 날짜 → { content, schedule, vods:[{m,v,at}], youtube:[{m,y}], vodPending, count }. 꺼진 종류는 아예 담지 않는다(칩·대표 그림·상세 모두 제외).
+function calItemsByDate() {
+  const ym = calYm(), { year, month } = calState;
+  const map = {};
+  const day = d => (map[d] = map[d] || { content: [], schedule: [], vods: [], youtube: [], vodPending: false, count: 0 });
+  if (calState.types.has('content')) for (const c of contentData) {
+    const key = c.date && c.date.sort ? String(c.date.sort).slice(0, 6) : '';
+    if (key.length !== 6 || !calRowVisible(c)) continue;
+    day(`20${key.slice(0, 2)}-${key.slice(2, 4)}-${key.slice(4, 6)}`).content.push(c);
+  }
+  for (const s of scheduleData) if (calRowVisible(s)) day(s.date).schedule.push(s);
+  const monthData = statsState.data[ym];
+  if (monthData) for (const m of calMembers()) {
+    const sum = computeMonthSummary(monthData[m.id], year, month);
+    if (calState.types.has('vod')) for (const [dk, sessions] of Object.entries(sum.sessionsByDate)) {
+      const d = day(dk); const seen = new Set(d.vods.map(x => x.v.title_no));
+      for (const s of sessions) {
+        const parts = vodsForBroad(m.id, ym, s.broad_no);   // null = 목록 미도착 → 칩·그림 보류, 도착 시 재렌더로 채움
+        if (parts === null) { d.vodPending = true; continue; }
+        const at = new Date(s.start).getTime();
+        for (const v of parts) if (!seen.has(v.title_no)) { seen.add(v.title_no); d.vods.push({ m, v, at }); }
+      }
+    }
+    if (calState.types.has('youtube')) for (const [dk, ys] of Object.entries(sum.youtubeByDate)) {
+      for (const y of ys) day(dk).youtube.push({ m, y, at: new Date(y.time).getTime() });
+    }
+  }
+  for (const d of Object.values(map)) {
+    // 대표 = 그날 가장 이른 방송의 첫 파트 — 멤버 순서가 아니라 시각순(크루 화면은 13명이 섞인다)
+    d.vods.sort((a, b) => a.at - b.at || (a.v.part || 0) - (b.v.part || 0));
+    d.youtube.sort((a, b) => a.at - b.at);
+    d.count = d.content.length + d.schedule.length + d.vods.length + d.youtube.length;
   }
   return map;
 }
 
+// 대표 그림 — 다시보기 → 유튜브 → 컨텐츠 이미지. 꺼진 종류는 map에 없으므로 '다시보기를 끄면 유튜브'가 저절로 된다(옛 폼 규칙).
+function calRepImg(d) {
+  if (d.vods.length && d.vods[0].v.thumb) return escapeHtml(d.vods[0].v.thumb);
+  if (d.youtube.length) { const id = ytVideoId(d.youtube[0].y.url); if (id) return `https://i.ytimg.com/vi/${id}/mqdefault.jpg`; }
+  if (d.content.length && d.content[0].url) return escapeHtml(d.content[0].url);
+  return '';
+}
+function calChips(d) {
+  const c = [];
+  if (d.vods.length) c.push(chipHtml('vod', 'film', d.vods.length));
+  if (d.youtube.length) c.push(chipHtml('youtube', 'youtube', d.youtube.length));
+  if (d.content.length) c.push(chipHtml('content', 'tagFilled', d.content.length));
+  if (d.schedule.length) c.push(chipHtml('schedule', 'hourglass', d.schedule.length));
+  return c.join('');
+}
+function calSchedTitles(d) { return d.schedule.map(s => escapeHtml(s.shortTitle || s.title)).join(' · '); }
+
 function calPeriodHtml() {
   const now = kstNow();
-  const curY = now.getUTCFullYear(), curM = now.getUTCMonth() + 1;
+  const curY = now.getUTCFullYear();
   const prevDis = calState.year <= STATS_START_YEAR ? 'disabled' : '';
   const nextDis = calState.year >= curY ? 'disabled' : '';
   const btns = [];
@@ -5451,77 +5566,135 @@ function calPeriodHtml() {
     <div class="stats-period-row"><button class="stats-month-btn" data-calydir="prev" ${prevDis}>${SVG_ICONS.chevronLeft}</button><div class="stats-period-wrap no-all">${btns.join('')}</div><button class="stats-month-btn" data-calydir="next" ${nextDis}>${SVG_ICONS.chevronRight}</button></div>`;
 }
 
+// 고른 날의 전부 — 일정·컨텐츠 행 → 다시보기 타일 → 유튜브 타일. 크루 화면이라 타일마다 누구 것인지 이름줄을 위에 둔다.
 function calDetailHtml(items) {
-  if (!calState.selected) return '<div class="day-detail-empty">달력에서 날짜를 선택하면<br>그날의 컨텐츠와 일정을 볼 수 있습니다</div>';
-  const list = items[calState.selected] || [];
-  if (!list.length) return '<div class="day-detail-empty">그날 기록이 없습니다</div>';
-  const head = `<div class="day-detail-title"><span class="ddt-date">${calState.selected}</span></div>`;
-  const rows = list.map(it => {
-    const who = it.members.map(n => MEMBERS.find(m => m.name === n)).filter(Boolean)
-      .map(m => `<img src="${m.img}" alt="${escapeHtml(m.name)}" title="${escapeHtml(m.name)}">`).join('');
-    const img = it.kind === 'content' && it.img ? `<div class="cal-di-img"><img src="${escapeHtml(it.img)}" alt="" loading="lazy"></div>` : '';
+  const d = items[calState.selected];
+  if (!d || !d.count) return `<div class="day-detail-title"><span class="ddt-date">${calState.selected}</span></div><div class="day-detail-empty">그날 기록이 없습니다</div>`;
+  const whoImgs = names => (names || []).map(n => MEMBERS.find(m => m.name === n)).filter(Boolean)
+    .map(m => `<img src="${m.img}" alt="${escapeHtml(m.name)}" title="${escapeHtml(m.name)}">`).join('');
+  const whoCols = names => { const n = (names || []).length || 1; return Math.max(1, Math.ceil(n / (n > 7 ? 2 : 1))); };
+  const rows = [
+    ...d.schedule.map(s => ({ kind: 'schedule', title: s.title, time: s.time, link: s.link, img: '', members: s.members })),
+    ...d.content.map(c => ({ kind: 'content', title: c.title || '컨텐츠', time: '', link: c.link, img: c.url, members: c.members })),
+  ].map(it => {
+    const img = it.img ? `<div class="cal-di-img"><img src="${escapeHtml(it.img)}" alt="" loading="lazy"></div>` : '';
     const when = it.time ? `<span class="cal-di-time">${escapeHtml(it.time)}</span>` : '';
-    const inner = `${img}<div class="cal-di-body"><div class="cal-di-title">${escapeHtml(it.full || it.title)}</div><div class="cal-di-meta">${when}<span class="cal-di-who" style="--who-cols:${Math.max(1, Math.ceil(((it.members || []).length || 1) / (((it.members || []).length || 1) > 7 ? 2 : 1)))}">${who}</span></div></div>`;
+    const inner = `${img}<div class="cal-di-body"><div class="cal-di-title">${escapeHtml(it.title)}</div><div class="cal-di-meta">${when}<span class="cal-di-who" style="--who-cols:${whoCols(it.members)}">${whoImgs(it.members)}</span></div></div>`;
     return it.link
       ? `<a class="cal-di ${it.kind}" href="${escapeHtml(it.link)}" target="_blank" rel="noopener">${inner}</a>`
       : `<div class="cal-di ${it.kind}">${inner}</div>`;
   }).join('');
-  return head + `<div class="cal-di-list">${rows}</div>`;
+  const whoLine = m => `<span class="cal-vod-who"><img src="${m.img}" alt="">${escapeHtml(m.name)}</span>`;
+  const vods = d.vods.map(({ m, v }) => `<div class="cal-vod">${whoLine(m)}${vodTileHtml(v)}</div>`).join('');
+  const yts = d.youtube.map(({ m, y }) => {
+    const id = ytVideoId(y.url);
+    return `<div class="cal-vod">${whoLine(m)}<a class="ds-vod" href="${escapeHtml(y.url)}" target="_blank" rel="noopener">` +
+      `<span class="ds-vod-thumb">${id ? `<img src="https://i.ytimg.com/vi/${id}/mqdefault.jpg" alt="" loading="lazy">` : ''}</span>` +
+      `<span class="ds-vod-title"><span class="ds-vod-tt">${escapeHtml(y.title || '')}</span></span></a></div>`;
+  }).join('');
+  const sec = (label, inner) => inner ? `<div class="cal-di-sec">${label}</div>${inner}` : '';
+  const vodBlock = vods ? `<div class="cal-vods">${vods}</div>` : (d.vodPending ? '<div class="ds-vod-none">다시보기 목록 불러오는 중</div>' : '');
+  return `<div class="day-detail-title"><span class="ddt-date">${calState.selected}</span></div>`
+    + (rows ? `<div class="cal-di-list">${rows}</div>` : '')
+    + sec('다시보기', vodBlock)
+    + sec('유튜브', yts ? `<div class="cal-vods">${yts}</div>` : '');
 }
 
 function renderCalendarTab() {
   const body = document.getElementById('contentBody');
   if (!body) return;
+  ensureCalMonth();
   const items = calItemsByDate();
   const { year, month } = calState;
+  const ym = calYm();
   const t = kstNow();
   const todayKey = `${t.getUTCFullYear()}-${String(t.getUTCMonth() + 1).padStart(2, '0')}-${String(t.getUTCDate()).padStart(2, '0')}`;
   const first = new Date(Date.UTC(year, month - 1, 1));
   const lead = first.getUTCDay();
   const days = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const WD = ['일', '월', '화', '수', '목', '금', '토'];
+  // 고른 날이 없어도 상세 자리는 늘 잡아 둔다 — 누를 때마다 폭이 변하면 칸이 움직인다(오른쪽 열일 때).
+  const detail = calState.selected ? calDetailHtml(items) : '<div class="cal-di-none">날짜를 누르면 그날의 활동이 나옵니다.</div>';
+  const stateCls = (key, d) => [d && d.count ? 'has' : '', key > todayKey ? 'future' : '', calState.selected === key ? 'selected' : '', key === todayKey ? 'today' : ''].filter(Boolean).join(' ');
+
+  // ① 7열 썸네일 칸 — 상단 [날짜 | 칩], 아래 16:9 대표 그림(없고 일정만 있으면 그 자리에 일정 제목)
   const cells = [];
-  for (let i = 0; i < lead; i++) cells.push('<div class="calendar-day outside"></div>');
-  for (let d = 1; d <= days; d++) {
-    const key = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-    const dow = (lead + d - 1) % 7;
-    const list = items[key] || [];
-    const future = key > todayKey;
-    const cls = ['calendar-day', 'cal-cell'];
-    if (list.length) cls.push('has');
-    if (future) cls.push('future');
-    if (calState.selected === key) cls.push('selected');
-    if (key === todayKey) cls.push('today');
-    // 상한 없음: 칸 높이가 넉넉해 다 들어간다. 넘치면 그 칸만 세로로 늘어난다.
-    const titles = list.map(it => `<span class="cal-t ${it.kind}">${escapeHtml(it.title)}</span>`).join('');
-    const nChip = list.length ? `<span class="cal-n">${SVG_ICONS.film}${list.length}</span>` : '';
-    cells.push(`<button class="${cls.join(' ')}" data-caldate="${key}"><span class="calendar-daynum${dow === 0 ? ' sun' : dow === 6 ? ' sat' : ''}">${d}</span><span class="cal-titles">${titles}</span>${nChip}</button>`);
+  // 앞쪽 빈칸도 .cal-cell — .calendar-day의 정사각 비율(aspect-ratio 1)이 남으면 첫 주 행이 그 높이로 늘어난다(2026-09-02 실측)
+  for (let i = 0; i < lead; i++) cells.push('<div class="calendar-day cal-cell outside"></div>');
+  for (let dn = 1; dn <= days; dn++) {
+    const key = `${ym}-${String(dn).padStart(2, '0')}`;
+    const dow = (lead + dn - 1) % 7;
+    const d = items[key];
+    const img = d ? calRepImg(d) : '';
+    const box = img ? `<img src="${img}" alt="" loading="lazy">` : (d && d.schedule.length ? `<span class="cal-t">${calSchedTitles(d)}</span>` : '');
+    cells.push(`<button class="calendar-day cal-cell ${stateCls(key, d)}" data-caldate="${key}"><span class="cd-top"><span class="calendar-daynum${dow === 0 ? ' sun' : dow === 6 ? ' sat' : ''}">${dn}</span><span class="cd-chips">${d ? calChips(d) : ''}</span></span><span class="cal-thumb">${box}</span></button>`);
   }
-  // 상세를 놓는 자리는 폭이 정한다(2026-09-01 재수정 — Crenop 지시 복구).
-  //   넉넉하면 달력 오른쪽 열, 좁으면 고른 날이 속한 주 바로 아래.
-  // 두 자리 모두에 같은 내용을 넣어 두고 컨테이너 질의(.cal-main 폭)가 하나만 보인다 —
-  // 창 크기 변화에 다시 그릴 필요가 없고, 상세 안은 전부 링크뿐이라 두 벌이어도 배선이 겹치지 않는다.
   const weeks = [];
   for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
-  const selIdx = calState.selected ? Math.floor((lead + Number(calState.selected.slice(8)) - 1) / 7) : -1;
-  // 고른 날이 없어도 상세 자리는 늘 잡아 둔다 — 누를 때마다 달력 폭이 변하면 칸이 움직인다.
-  const detail = selIdx >= 0 ? calDetailHtml(items) : '<div class="cal-di-none">날짜를 누르면 그날의 활동이 나옵니다.</div>';
-  const rows = weeks.map((w, i) => {
+  const selIdx = calState.selected && calState.selected.startsWith(ym) ? Math.floor((lead + Number(calState.selected.slice(8)) - 1) / 7) : -1;
+  const weekRows = weeks.map((w, i) => {
     const grid = `<div class="calendar-grid">${w.join('')}</div>`;
-    return i === selIdx ? grid + `<div class="cal-detail cal-detail-week">${detail}</div>` : grid;   // 좁은 폭에서만 보이는 자리
+    return i === selIdx ? grid + `<div class="cal-detail cal-detail-week">${detail}</div>` : grid;   // 고른 날이 속한 주 바로 아래
   }).join('');
-  body.innerHTML = `
-    <div class="cal-layout">
-      <div class="calendar">
-        <div class="calendar-grid cal-head">${['일','월','화','수','목','금','토'].map((w, i) => `<div class="calendar-weekday${i === 0 ? ' sun' : i === 6 ? ' sat' : ''}">${w}</div>`).join('')}</div>
-        ${rows}
-      </div>
-      <div class="cal-detail cal-detail-side">${detail}</div>
-    </div>`;
-  body.querySelectorAll('.cal-cell').forEach(btn => btn.addEventListener('click', () => {
-    const d = btn.dataset.caldate;
-    calState.selected = (calState.selected === d) ? null : d;
+  const gridForm = `<div class="cal-grid-form"><div class="calendar">`
+    + `<div class="calendar-grid cal-head">${WD.map((w, i) => `<div class="calendar-weekday${i === 0 ? ' sun' : i === 6 ? ' sat' : ''}">${w}</div>`).join('')}</div>`
+    + weekRows + `</div></div>`;
+
+  // ② 1열 목록 — 기록이 있는 날만 한 행씩. 눌러야 그날 전부(좁으면 그 행 아래, 폭이 남으면 오른쪽 열)
+  const dayKeys = Object.keys(items).filter(k => k.startsWith(ym) && items[k].count).sort();
+  const listRows = dayKeys.map(key => {
+    const d = items[key]; const dn = Number(key.slice(8)); const dow = (lead + dn - 1) % 7;
+    const img = calRepImg(d);
+    const row = `<button class="cal-row ${stateCls(key, d)}" data-caldate="${key}">`
+      + `<span class="cal-row-date${dow === 0 ? ' sun' : dow === 6 ? ' sat' : ''}">${month}월 ${dn}일 (${WD[dow]})</span>`
+      + `<span class="cal-row-thumb">${img ? `<img src="${img}" alt="" loading="lazy">` : ''}</span>`
+      + `<span class="cal-row-body"><span class="cd-chips">${calChips(d)}</span>${d.schedule.length ? `<span class="cal-row-title">${calSchedTitles(d)}</span>` : ''}</span></button>`;
+    return row + (key === calState.selected ? `<div class="cal-detail cal-detail-row">${detail}</div>` : '');   // 좁은 폭에서만 보이는 자리
+  }).join('');
+  const listForm = `<div class="cal-list-form"><div class="cal-rows">${listRows || '<div class="cal-di-none">이 달에는 기록이 없습니다.</div>'}</div><div class="cal-detail cal-list-side">${detail}</div></div>`;
+
+  body.innerHTML = gridForm + listForm;
+  body.querySelectorAll('[data-caldate]').forEach(btn => btn.addEventListener('click', () => {
+    const k = btn.dataset.caldate;
+    calState.selected = (calState.selected === k) ? null : k;
     renderCalendarTab();
   }));
+  renderCalSide();
+}
+
+// 기둥 — 멤버 스트립(크루+13, 한 번만 만들고 활성만 갱신) · 종류 필터(이벤트 탭 필터 문법) · 연/월(달마다 다시 그림)
+function renderCalSide() {
+  const mBox = document.getElementById('calMembersSide');
+  if (mBox && !mBox.dataset.inited) {
+    mBox.dataset.inited = '1';
+    // 크루 칸은 Favicon.webp — 음악 탭의 크루 칸과 같은 그림(가로형 로고는 정사각 줄에서 혼자 튄다)
+    mBox.innerHTML = [{ id: 'all', name: '크루', img: 'Favicon.webp' }].concat(MEMBERS).map(m =>
+      `<button class="cal-tab" data-member="${m.id}" title="${escapeHtml(m.name)}"><img src="${m.img}" alt="${escapeHtml(m.name)}"></button>`).join('');
+    mBox.querySelectorAll('.cal-tab').forEach(b => b.addEventListener('click', () => {
+      calState.member = b.dataset.member;
+      renderCalendarTab();
+    }));
+  }
+  if (mBox) mBox.querySelectorAll('.cal-tab').forEach(b => b.classList.toggle('active', b.dataset.member === calState.member));
+  const tBox = document.getElementById('calTypesSide');
+  const tAll = document.getElementById('calTypeToggleAll');
+  if (tBox && !tBox.dataset.inited) {
+    tBox.dataset.inited = '1';
+    tBox.innerHTML = CAL_TYPES.map(t => `<button class="filter-type" data-type="${t}" title="${CAL_TYPE_LABEL[t]}"><span class="filter-icon">${SVG_ICONS[CAL_TYPE_ICON[t]]}</span><span class="filter-lbl">${CAL_TYPE_LABEL[t]}</span></button>`).join('');
+    tBox.querySelectorAll('.filter-type').forEach(b => b.addEventListener('click', () => {
+      const t = b.dataset.type;
+      if (calState.types.has(t)) calState.types.delete(t); else calState.types.add(t);
+      renderCalendarTab();
+      if (window.syncDrawerFilterBtn) syncDrawerFilterBtn();
+    }));
+    if (tAll) tAll.addEventListener('click', () => {
+      calState.types = calState.types.size === CAL_TYPES.length ? new Set() : new Set(CAL_TYPES);
+      renderCalendarTab();
+      if (window.syncDrawerFilterBtn) syncDrawerFilterBtn();
+    });
+  }
+  if (tBox) tBox.querySelectorAll('.filter-type').forEach(b => b.classList.toggle('on', calState.types.has(b.dataset.type)));
+  if (tAll) tAll.textContent = calState.types.size === CAL_TYPES.length ? '모두 해제' : '모두 선택';
   const side = document.getElementById('calPeriodSide');
   if (side) {
     side.innerHTML = calPeriodHtml();
@@ -6801,8 +6974,7 @@ function bindPeriodSelector(body, includeAll, onChange) {
 // ── VOD 상태(2026-08-29): 워커 /vods 프록시 응답을 멤버|월 키로 보관 ──
 // 달력 썸네일·일별 요약이 공유. 지난달은 사실상 불변이라 localStorage 캐시(통계 월 캐시와 같은 태도),
 // 현재월은 메모리만(신선도는 워커 엣지캐시 5분이 담당). 도착하면 renderStatsBody 재호출로 썸네일이 채워진다.
-const vodState = { data: {}, loading: new Set() };
-const LS_VOD_PREFIX = 'chuntaverse_vods_v1_';
+// (vodState·LS_VOD_PREFIX 선언은 statsState 옆으로 — 2026-09-02, 아래 TDZ 주석 참조)
 function vodKey(memberId, ym) { return memberId + '|' + ym; }
 function ensureVodMonth(memberId, ym) {
   if (!memberId || !ym) return;
@@ -6822,6 +6994,7 @@ function ensureVodMonth(memberId, ym) {
         vodState.data[key] = j.vods;
         if (!cur) lsSet(LS_VOD_PREFIX + key, JSON.stringify(j.vods));
         if (currentPage === 'stats') renderStatsBody();
+        else if (currentPage === 'content') renderCalendarTab();   // 달력 탭(2026-09-02): 크루 썸네일 모아보기가 같은 목록을 쓴다
       }
     })
     .catch(() => { vodState.loading.delete(key); });   // 실패는 조용히 — 다음 진입 때 재시도(통계 월 로딩과 같은 태도)
