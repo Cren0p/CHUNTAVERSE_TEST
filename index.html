@@ -513,7 +513,16 @@
   .fav-pick { display: grid; grid-template-columns: repeat(7, 52px); gap: 6px; justify-content: center; padding: 8px 16px 12px; }
   .fav-pick-foot { display: flex; justify-content: center; padding: 0 16px 16px; }
   button.page-title-link#favBtn { cursor: pointer; font-family: inherit; }   /* 다른 button.page-title-link과 같은 초기화(.rank-btn·.tbm-btn 규칙과 동일) */
-  #favBtn.on { color: var(--accent); border-color: rgba(97,255,236,0.5); background: rgba(97,255,236,0.10); }   /* 설정됨 = 민트(켜짐 문법 — 알림 종의 켬/끔과 같은 뜻) */
+  /* 최애 버튼 색 = 인라인 --fav-rgb(설정 전 노랑, 설정 후 멤버 고유색) — 시트 버튼(.tb-sheet-btn)과 같은 바탕/테두리 비율 */
+  #favBtn { background: rgba(var(--fav-rgb), 0.12); border-color: rgba(var(--fav-rgb), 0.4); }
+  #favBtn:hover { background: rgba(var(--fav-rgb), 0.22); border-color: rgba(var(--fav-rgb), 0.7); }
+  #favBtn svg { fill: currentColor; }
+  .fav-lbl { display: inline-grid; }   /* 겹친 후보 글자 중 가장 넓은 것이 칸 폭 — 실제 글자는 왼쪽 정렬로 그 안에 */
+  .fav-lbl > span { grid-area: 1 / 1; white-space: nowrap; }
+  .fav-lbl > .fav-lbl-w { visibility: hidden; }
+  /* 최애 강조(세션 70 2단계): 그 멤버의 자리에 멤버 고유색 외곽선(--fav-color 인라인). 민트가 아닌 이유 — 생방송 카드의 민트 테두리는 '방송 중'이라 겹치면 뜻이 섞인다.
+     최애 = 멤버 고유색이라는 규칙은 최애 버튼과 같다. 자동 스크롤은 붙어 있는 머리 아래에 서도록 scroll-margin */
+  .fav-here { outline: 1.5px solid var(--fav-color, var(--accent)); outline-offset: -1.5px; scroll-margin-top: calc(var(--head-h, 0px) + 20px); }
   /* 좋아요 순위 모달 — lr-panel 골격 재사용. 행은 grid로 열을 고정(flex는 값 길이에 따라 열이 흔들려 눈금이 안 맞음) */
   .rk-ev { padding: 12px 16px; border-bottom: 1px solid var(--border); }
   .rk-ev:last-child { border-bottom: none; }
@@ -2061,7 +2070,12 @@
   .cal-thumb img.tall, .cal-row-thumb img.tall { object-position: top; }   /* 세로로 긴 그림(셀 전용 -t가 없을 때)은 맨 위 — 포스터 제목 띠(2026-09-02) */
   /* 그림이 없는 날에 일정만 있으면 상자 자리에 일정 제목 — 예정을 칩 하나로만 남기면 무엇인지 안 보인다 */
   .cal-t { position: absolute; inset: 0; padding: 2px 3px; font-size: 12px; line-height: 1.3; color: var(--text); display: flex; flex-direction: column; gap: 1px; overflow: hidden; }   /* 12px(구 11): 가독성(2026-09-02 Crenop) */
-  .cal-tl { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }   /* 제목은 최대 2줄(2026-09-03 Crenop — 한 줄은 너무 짧다). 상자 높이를 넘는 줄은 잘린다 */
+  .cal-tl { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+  .cal-tl-yt { display: inline-block; vertical-align: -2px; color: var(--ev-youtube); }   /* 편집본 있음 마크 — 유튜브 종류 색(칩·종류 버튼과 같음) */
+  .cal-tl-yt svg { width: 12px; height: 12px; display: block; }
+  /* 링크 둘 이상일 때 제목·그림이 버튼(고르기 모달) — <a>일 때와 같은 모양 */
+  button.cal-di-title, button.cal-di-img { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; }
+  button.cal-di-title:hover { color: var(--accent); }   /* 제목은 최대 2줄(2026-09-03 Crenop — 한 줄은 너무 짧다). 상자 높이를 넘는 줄은 잘린다 */
   /* 멤버 색 사각(2026-09-03): 10px 정사각·간격 2px, 글자 줄 아래 자기 줄에 왼쪽 정렬(글자와 같은 왼쪽 선). 넘치면 두 줄 균등(--who-cols는 JS) */
   .cal-faces { display: grid; grid-template-columns: repeat(var(--who-cols, 99), 10px); gap: 2px; justify-content: start; margin: 2px 0 4px; }
   .cal-face { width: 10px; height: 10px; display: block; }
@@ -5205,12 +5219,43 @@ function scheduleBtnHTML() {
 // 다가올 일정 목록 모달(2026-09-02) — 옛 일정 모달의 '목록 보기'가 달력 탭으로 오면서 사라졌던 것. 달력 탭은 달 단위라
 // "앞으로 뭐가 있나"를 한 화면에 못 모은다(Crenop 지적). 월 구분 없이 아직 안 지난 일정 전부, 여는 곳은 보조바의 일정 한 줄 자체
 // (종전 일정 버튼이 있던 자리 — 새 버튼을 늘리지 않는다). 모달 판정: 없어져도 되는 것 + 짧음 + 보던 자리 보존.
+// ── 최애 강조·자동 스크롤(세션 70 2단계) ──
+// 멤버별 구획이 세로로 늘어서는 탭에서 최애의 자리에 멤버 고유색 외곽선(.fav-here)을 두르고, 탭에 들어와 처음 그려졌을 때 한 번 그 자리로 내려간다.
+// 자리 표시: data-member(통계 지표 카드·시간대 칸·음악 구획·생방송 카드) 또는 data-members(케미 카드, 쉼표 나열 — 최애가 든 조합 전부).
+// 스크롤은 사용자가 아직 안 내렸을 때(맨 위)만 — 자료가 늦게 와서 그려질 때 보던 화면을 잡아채지 않는다. 배치는 그대로(자리만 알려 준다).
+const FAV_SCROLL_PAGES = ['hall', 'disco', 'live', 'chemistry'];
+let favScrollPending = '';
+function applyFavMark(root) {
+  const fav = favMemberId();
+  const scope = root || document;
+  scope.querySelectorAll('.fav-here').forEach(el => { el.classList.remove('fav-here'); el.style.removeProperty('--fav-color'); });
+  if (!fav) { favScrollPending = ''; return; }
+  const color = MEMBER_BY_ID[fav].color;
+  scope.querySelectorAll('[data-member], [data-members]').forEach(el => {
+    const one = el.dataset.member, many = el.dataset.members;
+    const hit = one ? one === fav : (many || '').split(',').includes(fav);
+    if (!hit) return;
+    el.classList.add('fav-here'); el.style.setProperty('--fav-color', color);
+  });
+  if (favScrollPending && favScrollPending === currentPage) {
+    favScrollPending = '';
+    const page = document.getElementById('page-' + currentPage);
+    const first = page && page.querySelector('.fav-here');
+    if (first && window.scrollY === 0) first.scrollIntoView({ block: 'start' });
+  }
+}
 // ── 최애 고르기 모달(세션 70) — 얼굴 13개(프로필 기둥의 .members-tab 그대로) + 해제 ──
+const FAV_DEFAULT_HEX = '#fbbf24';   // 설정 전 = 노랑(알림 종 켬과 같은 앰버 계열, Crenop 지정 '노란색'). 설정 후 = 멤버 고유색
 function syncFavBtn() {
   const b = document.getElementById('favBtn'); if (!b) return;
   const m = MEMBER_BY_ID[favMemberId()];
-  b.textContent = m ? `최애 ${m.name}` : '최애 설정';
+  const hex = m ? m.color : FAV_DEFAULT_HEX;
+  b.style.cssText = `--fav-rgb:${hexToRgb(hex)};color:${hex}`;
+  // 폭 고정(Crenop 지정): 글자가 '최애 설정'↔'최애 김웰로'로 바뀌어도 버튼 폭이 안 변하게, 가능한 글자 전부를 같은 칸에 겹쳐(보이지 않게) 두어 가장 넓은 것이 폭을 정한다
+  const cands = ['최애 설정'].concat(MEMBERS.map(x => '최애 ' + x.name));
+  b.innerHTML = `${SVG_ICONS.fan}<span class="fav-lbl">${cands.map(t => `<span class="fav-lbl-w" aria-hidden="true">${escapeHtml(t)}</span>`).join('')}<span class="fav-lbl-t">${m ? '최애 ' + escapeHtml(m.name) : '최애 설정'}</span></span>`;
   b.classList.toggle('on', !!m);
+  fitBtnIcons(b.parentNode || b);   // 새로 그린 아이콘 여백을 그림 기준으로
 }
 function openFavPicker() {
   const head = document.getElementById('lrHead'), body = document.getElementById('lrBody');
@@ -5316,7 +5361,7 @@ let bannerData = [];
 let _bannerRenderSig = null;   // 더티 플래그: 직전 렌더 데이터 시그니처(length|최신날짜). 같으면 탭 재진입 시 재구축 생략
 
 const CONTENT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1HfDukpvqq9UfFYpT0JMTlX6V0UK95kimxP8EuABERr4/export?format=csv&gid=2043421724';
-const LS_CONTENT_CACHE = 'chuntaverse_content_cache_v2';   // v2: F=종류 신설(2026-09-02) — 구 캐시엔 tags가 없고 멤버 열이 다르다
+const LS_CONTENT_CACHE = 'chuntaverse_content_cache_v3';   // v3: C=링크 여러 개(links, 2026-09-03 세션 70) — 구 캐시엔 links가 없다. v2: F=종류 신설(2026-09-02)
 let contentData = [];
 let _contentRenderSig = null;   // 더티 플래그: 직전 렌더 데이터 시그니처(length|최신날짜). 같으면 탭 재진입 시 재구축 생략
 
@@ -5363,7 +5408,10 @@ function lsSet(k, v) {
 // 최애 멤버 저장·읽기(세션 70). 상수는 반드시 여기(첫 사용처인 calState 초기화보다 앞)에 — const는 선언 줄이 실행되기 전에 읽으면 부팅이 멈춘다(2026-09-03 실사고: 테스트 레포 무한 로딩).
 const LS_FAV_MEMBER = 'chuntaverse_fav_member';
 function favMemberId() { const id = lsGet(LS_FAV_MEMBER, ''); return MEMBER_BY_ID[id] ? id : ''; }
-function setFavMember(id) { if (id && MEMBER_BY_ID[id]) lsSet(LS_FAV_MEMBER, id); else { try { localStorage.removeItem(LS_FAV_MEMBER); } catch (e) {} } syncFavBtn(); }
+function setFavMember(id) {
+  if (id && MEMBER_BY_ID[id]) lsSet(LS_FAV_MEMBER, id); else { try { localStorage.removeItem(LS_FAV_MEMBER); } catch (e) {} }
+  syncFavBtn();
+}
 
 function getLastSeenTime() {
   const v = lsGet(LS_LAST_SEEN, null);
@@ -5692,7 +5740,7 @@ function renderDisco() {
   const el = document.getElementById('discoBody');
   if (!el) return;
   // 크루 칸은 Favicon.webp — 멤버 칸이 정사각 얼굴이라 가로형 로고(CHUNTAVERSE.webp)는 줄에서 혼자 튄다
-  const targets = [{ name: '천타버스', img: 'Favicon.webp', color: '' }].concat(MEMBERS.map(m => ({ name: m.name, img: m.img, color: m.color })));
+  const targets = [{ id: '', name: '천타버스', img: 'Favicon.webp', color: '' }].concat(MEMBERS.map(m => ({ id: m.id, name: m.name, img: m.img, color: m.color })));
   // 우상단 붙박이 버튼 — 곡이 없어도 남는다(자료가 아니라 이 탭이 늘 가진 링크다).
   // 첫 이름 행(맨 위 묶음의 제목 줄) 오른쪽 끝에 같은 행으로 선다(2026-09-02 Crenop 지정 — 종전엔 이름 위 별도 줄).
   const btn = `<a class="page-title-link tb-sheet-btn disco-playlist" href="${DISCO_PLAYLIST_URL}" target="_blank" rel="noopener"`
@@ -5703,11 +5751,12 @@ function renderDisco() {
     if (!strips) return '';
     const color = t.color ? ` style="color:${t.color}"` : '';
     const tail = placed ? '' : btn; placed = true;
-    return `<section class="disco-member"><h2 class="disco-member-name"><img src="${escapeHtml(t.img)}" alt="" onerror="this.style.display='none'"><span${color}>${escapeHtml(t.name)}</span>${tail}</h2>${strips}</section>`;
+    return `<section class="disco-member"><h2 class="disco-member-name"${t.id ? ` data-member="${t.id}"` : ''}><img src="${escapeHtml(t.img)}" alt="" onerror="this.style.display='none'"><span${color}>${escapeHtml(t.name)}</span>${tail}</h2>${strips}</section>`;
   }).join('');
   el.innerHTML = html || `<div class="disco-head">${btn}</div><div class="lr-msg">등록된 곡이 없습니다.</div>`;   // 곡이 하나도 없을 때만 버튼이 홀로 선다
   bindVideoStrips(el);   // 좌우 화살표는 이 배선이 넘침을 재서 켠다 — 프로필에서 옮겨올 때 빠졌다(2026-09-01)
   fitBtnIcons(el);       // 우상단 플레이리스트 버튼도 같은 규칙
+  applyFavMark(el);      // 최애 구획 이름줄 표시 + 첫 진입 스크롤(세션 70)
 }
 
 
@@ -5904,8 +5953,10 @@ function calFaces(members) {
 }
 function calAllTextLines(d, key) {
   const byName = names => (names || []).map(n => MEMBERS.find(m => m.name === n)).filter(Boolean);
-  const line = (tags, title, members) => `<span class="cal-tl">${tagIconsHtml(tags)}${escapeHtml(title)}</span>${calFaces(byName(members))}`;
-  const items = d ? d.schedule.map(s => line(s.tags, s.title, s.members)).concat(d.content.map(c => line(c.tags, c.title || '컨텐츠', c.members))).join('') : '';   // 일정도 E(상세) — D는 보조바 전용
+  // 컨텐츠 제목 뒤 유튜브 마크(세션 70 Crenop): 편집본(C열 링크)이 있다는 유/무 표시 — 개수는 안 센다. 상세의 제목 끝은 종전대로 externalLink(바깥으로 나감)
+  const line = (tags, title, members, tail) => `<span class="cal-tl">${tagIconsHtml(tags)}${escapeHtml(title)}${tail || ''}</span>${calFaces(byName(members))}`;
+  const ytMark = c => ((c.links || (c.link ? [c.link] : [])).length ? ` <span class="cal-tl-yt">${SVG_ICONS.youtube}</span>` : '');
+  const items = d ? d.schedule.map(s => line(s.tags, s.title, s.members)).concat(d.content.map(c => line(c.tags, c.title || '컨텐츠', c.members, ytMark(c)))).join('') : '';   // 일정도 E(상세) — D는 보조바 전용
   const t = kstNow(), todayKey = `${t.getUTCFullYear()}-${String(t.getUTCMonth() + 1).padStart(2, '0')}-${String(t.getUTCDate()).padStart(2, '0')}`;
   if (!key || key >= todayKey || !statsState.data[calYm()]) return items;   // 지난 날만
   const assigned = new Set(d ? d.schedule.concat(d.content).flatMap(x => byName(x.members).map(m => m.id)) : []);
@@ -5959,7 +6010,7 @@ function calDetailHtml(items) {
   const whoCols = names => { const n = (names || []).length || 1; return Math.max(1, Math.ceil(n / (n > 7 ? 2 : 1))); };
   const rows = [
     ...d.schedule.map(s => ({ kind: 'schedule', title: s.title, time: s.time, link: s.link, img: '', members: s.members, tags: s.tags })),
-    ...d.content.map(c => ({ kind: 'content', title: c.title || '컨텐츠', time: '', link: c.link, img: c.url, members: c.members, tags: c.tags })),
+    ...d.content.map(c => ({ kind: 'content', title: c.title || '컨텐츠', time: '', link: c.link, links: c.links || (c.link ? [c.link] : []), img: c.url, members: c.members, tags: c.tags })),
   ];
   // 컨텐츠 상자(2026-09-03 Crenop 지정): 그림은 칸 썸네일보다 크게(240px), 그 컨텐츠에 참여한 멤버의 다시보기는 상자 안(제목·참여자 아래)에,
   // 나머지 멤버의 다시보기는 상자 밖 '다시보기' 줄에 종전처럼. 타일은 같은 것이고 자리만 다르다. 상자 전체를 링크로 만들면 안의 타일 링크와
@@ -5969,7 +6020,10 @@ function calDetailHtml(items) {
   const inContent = new Set();
   const rowsHtml = rows.map(it => {
     const link = it.link ? escapeHtml(it.link) : '';
-    const wrap = (cls, inner) => link ? `<a class="${cls}" href="${link}" target="_blank" rel="noopener">${inner}</a>` : `<div class="${cls}">${inner}</div>`;
+    // 링크가 둘 이상(컨텐츠 C열, 세션 70): 제목·그림을 누르면 바깥으로 바로 가지 않고 고르기 모달(최근 활동의 다시보기 고르기와 같은 틀). 하나면 종전대로 바로 링크
+    const multi = (it.links || []).length >= 2 ? escapeHtml(JSON.stringify(it.links)) : '';
+    const wrap = (cls, inner) => multi ? `<button class="${cls}" type="button" data-links="${multi}" data-ltitle="${escapeHtml(it.title)}">${inner}</button>`
+      : link ? `<a class="${cls}" href="${link}" target="_blank" rel="noopener">${inner}</a>` : `<div class="${cls}">${inner}</div>`;
     // 제목 줄 끝 externalLink = 링크 있음(2026-09-03 세션 70) — 일정 목록(.sch-item-title)·상단바 시트 모달(.tbm-title)과 같은 표시.
     // 남은 링크가 유튜브뿐이라도 유튜브 마크를 쓰지 않는다: 시트 링크 칸은 어떤 주소든 올 수 있고, 사이트 문법은 '바깥으로 나감' 하나다.
     const title = wrap('cal-di-title', `${tagIconsHtml(it.tags)}${escapeHtml(it.title)}${link ? ' ' + SVG_ICONS.externalLink : ''}`);
@@ -6073,7 +6127,27 @@ function renderCalendarTab() {
     calState.selected = (calState.selected === k) ? null : k;
     renderCalendarTab();
   }));
+  body.querySelectorAll('[data-links]').forEach(el => el.addEventListener('click', () => {   // 링크 둘 이상 — 고르기 모달(세션 70)
+    let links = []; try { links = JSON.parse(el.dataset.links); } catch (e) {}
+    openLinkPickModal(links, el.dataset.ltitle || '');
+  }));
   renderCalSide();
+}
+// 링크 고르기 모달(세션 70) — 최근 활동의 다시보기 고르기(openVodPickModal)와 같은 패널·타일. 유튜브면 썸네일, 아니면 빈 틀 + 주소의 사이트 이름
+function openLinkPickModal(links, title) {
+  const head = document.getElementById('lrHead'), body = document.getElementById('lrBody');
+  if (!head || !body) return;
+  modalPanel('vod-pick-panel');
+  head.innerHTML = `<span>영상 선택${title ? ` — ${escapeHtml(title)}` : ''}</span><button class="lr-close" type="button" onclick="closeModal()">✕</button>`;
+  const tiles = (links || []).map((u, i) => {
+    const id = ytVideoId(u);
+    let host = ''; try { host = new URL(u).hostname.replace(/^www\./, ''); } catch (e) {}
+    const label = id ? `유튜브 ${i + 1}` : (host || `링크 ${i + 1}`);
+    return `<a class="ds-vod" href="${escapeHtml(u)}" target="_blank" rel="noopener"><span class="ds-vod-thumb">${id ? `<img src="https://i.ytimg.com/vi/${id}/mqdefault.jpg" alt="" loading="lazy">` : ''}</span>`
+      + `<span class="ds-vod-title"><span class="ds-vod-tt">${escapeHtml(label)}</span></span></a>`;
+  }).join('');
+  body.innerHTML = tiles ? `<div class="ds-vods">${tiles}</div>` : '<div class="vod-pick-empty">링크가 없습니다.</div>';
+  showModal();
 }
 
 // 기둥 — 멤버 스트립(크루+13, 한 번만 만들고 활성만 갱신) · 종류 버튼(통계 탭 종류 버튼 문법, 한 번만 만들고 활성만 갱신) · 연/월(달마다 다시 그림)
@@ -6225,6 +6299,16 @@ function switchPage(page, opts) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
   updateHeaderCenter();
+  // 최애 기본 선택(세션 70, Crenop 확정): 탭에 들어올 때마다 최애로 맞춘다 — 손으로 다른 멤버를 골랐어도 나갔다 돌아오면 다시 최애.
+  // 예외는 명시 주소(#members:crew·#stats:chebi 등 공유 링크·뒤로가기)뿐. 최애가 없으면 종전 기본값 그대로.
+  const favNow = favMemberId(), keepPick = !!(opts && opts.fromHash && opts.explicit);
+  if (favNow && !keepPick) {
+    if (page === 'members') membersState.selectedTab = favNow;
+    if (page === 'stats' && statsState.selectedTab !== favNow) selectStatsTab(favNow, { fromHash: true });   // 그 멤버의 최근 활동 달·날짜도 같이 잡는다
+    if (page === 'content') calState.member = favNow;
+  }
+  // 최애 강조·자동 스크롤(2단계): 멤버별 구획이 늘어서는 탭은 그려진 뒤 최애 자리로 한 번 내려간다(favScrollPending)
+  favScrollPending = favNow && FAV_SCROLL_PAGES.includes(page) ? page : '';
   if (page === 'stats' && !statsState.tabsInited) {
     initStatsTabs();
     statsState.tabsInited = true;
@@ -6318,14 +6402,14 @@ function parseHash(hash) {
   const raw = decodeURIComponent((hash || '').replace('#', ''));
   const i = raw.indexOf(':');
   const page = (i === -1 ? raw : raw.slice(0, i)) || 'live';
-  if (i === -1 || !SUBTAB_PAGES[page]) return { page, subTab: defaultSubTab(page), legacy: false };
+  if (i === -1 || !SUBTAB_PAGES[page]) return { page, subTab: defaultSubTab(page), legacy: false, explicit: false };
   const key = raw.slice(i + 1).trim();
   const lower = key.toLowerCase();
-  if (!key) return { page, subTab: defaultSubTab(page), legacy: false };
-  if (lower === SUBTAB_PAGES[page]) return { page, subTab: SUBTAB_PAGES[page], legacy: false };   // #members:crew — 최애가 있어도 크루로(명시 접미사)
-  if (MEMBER_BY_EN[lower]) return { page, subTab: MEMBER_BY_EN[lower].id, legacy: lower !== key };
-  if (MEMBER_BY_ID[key]) return { page, subTab: key, legacy: true };   // 옛 아이디 형식 — 뜬 뒤 주소 교체
-  return { page, subTab: defaultSubTab(page), legacy: true };          // 알 수 없는 값은 기본 하위탭으로
+  if (!key) return { page, subTab: defaultSubTab(page), legacy: false, explicit: false };
+  if (lower === SUBTAB_PAGES[page]) return { page, subTab: SUBTAB_PAGES[page], legacy: false, explicit: true };   // #members:crew — 최애가 있어도 크루로(명시 접미사)
+  if (MEMBER_BY_EN[lower]) return { page, subTab: MEMBER_BY_EN[lower].id, legacy: lower !== key, explicit: true };
+  if (MEMBER_BY_ID[key]) return { page, subTab: key, legacy: true, explicit: true };   // 옛 아이디 형식 — 뜬 뒤 주소 교체
+  return { page, subTab: defaultSubTab(page), legacy: true, explicit: false };         // 알 수 없는 값은 기본 하위탭으로
 }
 
 // 현재 화면(탭 + 하위탭)에 해당하는 주소 문자열. 하위탭이 기준값이면 접미사를 붙이지 않는다 —
@@ -6351,12 +6435,13 @@ function syncHash(push) {
 // #members:dalta 에서 #members 로 뒤로 갔을 때 크루 탭으로 돌아오지 않던 문제.
 function applyHash(h) {
   const sub = h.subTab || SUBTAB_PAGES[h.page] || null;
+  // 명시 접미사(#members:crew·#stats:chebi)는 최애보다 우선(세션 70) — switchPage에 explicit을 넘겨 진입 시 최애로 되돌리지 않게 한다
   if (h.page === 'members') {
     membersState.selectedTab = sub;            // 상태를 먼저 — switchPage의 초기화·렌더가 이 값을 읽는다
-    switchPage(h.page, { fromHash: true });
+    switchPage(h.page, { fromHash: true, explicit: !!h.explicit });
     syncSubTabActive('.members-tab', sub);     // 남은 건 버튼 활성 표시뿐(다시 그리지 않음)
   } else if (h.page === 'stats') {
-    switchPage(h.page, { fromHash: true });
+    switchPage(h.page, { fromHash: true, explicit: !!h.explicit });
     selectStatsTab(sub, { fromHash: true });   // 멤버별 최근 활동월·날짜를 잡아주는 로직이 여기 있어 그대로 태운다
   } else {
     switchPage(h.page, { fromHash: true });
@@ -8550,6 +8635,7 @@ function renderLiveGrid(infoMap, sorted) {
   sorted.forEach(m => grid.appendChild(buildCard(m, infoMap[m.id] || { id: m.id, live: false })));
   app.innerHTML = '';
   app.appendChild(grid);
+  applyFavMark(app);   // 최애 카드 표시(멤버색 외곽선 — 방송 중 민트 테두리와 구분) + 첫 진입 스크롤(세션 70)
 }
 
 async function loadFeed() {
@@ -9182,11 +9268,13 @@ async function loadContent() {
     const rows = parseCSV(csv);
     contentData = rows.filter(r => r[0] && r[0].startsWith('http')).map(r => {
       const url = r[0];
-      const link = (r[2] || '').trim();        // C=링크 (B는 일정 전용 시간칸 — 컨텐츠 행은 비움)
+      // C=링크 — 여러 개 가능(2026-09-03 세션 70, Crenop): 공백·줄바꿈·쉼표로 나눈 http 주소들. link = 첫 링크(카드 등 종전 소비처), links = 전부(달력 상세: 둘 이상이면 고르기 모달)
+      const links = (r[2] || '').split(/[\s,]+/).map(x => x.trim()).filter(x => /^https?:\/\//i.test(x));
+      const link = links[0] || '';
       const title = (r[4] || '').trim();       // E=제목 (D는 일정 전용 간략제목칸 — 컨텐츠 행은 비움)
       const tags = parseTags(r[5]);                          // F=종류(2026-09-02 신설) — 일정 행과 같은 열
       const members = r.slice(6).filter(c => c.length > 0);  // G~ 멤버
-      return { url, link, title, tags, members, date: parseContentDate(url) };
+      return { url, link, links, title, tags, members, date: parseContentDate(url) };
     });
     contentData.sort((a, b) => (b.date?.sort || '').localeCompare(a.date?.sort || ''));
     lsSet(LS_CONTENT_CACHE, JSON.stringify(contentData));
@@ -9355,7 +9443,7 @@ function renderChemistry() {
     const entries = CHEM_NAMES[`${p.m1.id}:${p.m2.id}`];
     const fallback = `<div class="chem-name chem-name-fallback">${escapeHtml(p.m1.name)} × ${escapeHtml(p.m2.name)}</div>`;   // 폴백은 켬 상태에서도 그대로(숨길 2열 변형이 없다)
     return `
-    <div class="chem-card">
+    <div class="chem-card" data-members="${p.m1.id},${p.m2.id}">
       <div class="chem-head">${nameRowHtml(entries) || fallback}</div>
       <div class="chem-body">
         <div class="chem-member">
@@ -9382,7 +9470,7 @@ function renderChemistry() {
     }).join('');
     const memN = g.members.length;
     const memCls = memN >= 7 ? ' large' : memN === 6 ? ' large cols3' : memN === 4 ? ' large n4' : '';
-    return `<div class="chem-card"><div class="chem-head">${nameRowHtml(g.entries) || ''}</div><div class="chem-body"><div class="chem-group-members${memCls}">${membersHtml}</div></div></div>`;
+    return `<div class="chem-card" data-members="${g.members.join(',')}"><div class="chem-head">${nameRowHtml(g.entries) || ''}</div><div class="chem-body"><div class="chem-group-members${memCls}">${membersHtml}</div></div></div>`;
   };
 
   // 섹션 조립(2026-08-09 통일): secBlock = 라벨 + 카드 묶음(.chem-group-grid)을 한 상자에 — 라벨 sticky가 붙을 구간.
@@ -9564,6 +9652,7 @@ function renderChemistry() {
       Object.keys(maxByKind).forEach(k => { maxByKind[k] += headMax; });
       cards.forEach(c => { c.style.minHeight = maxByKind[kindOf(c)] + 'px'; });
     }
+    applyFavMark(grid);   // 최애가 든 조합 카드 전부 표시(data-members) + 첫 진입은 첫 카드로 스크롤(세션 70)
   }
 }
 
@@ -9730,6 +9819,7 @@ function renderHallStats() {
     kindBox.querySelectorAll('.hall-kind-btn').forEach(b => b.addEventListener('click', () => {
       if (b.dataset.kind === hallKind) return;
       hallKind = b.dataset.kind;
+      if (favMemberId()) { favScrollPending = 'hall'; window.scrollTo(0, 0); }   // 종류를 바꾸면 그 종류의 최애 자리로 다시 한 번(지표·시간대 — 명전엔 자리가 없다)
       renderHallStats();
       if (hallKind === 'hall') renderHall();
     }));
@@ -9791,10 +9881,11 @@ function renderHallStats() {
       const h = renderTimeOfDayHeatmap(year, month, sum, isCur);
       const ts = computeMonthTimeStats(sum, computeTimeOfDayMinutes(sum.sessionsByDate, year, month, isCur), year, month, isCur);
       const stats = ts ? `<span class="hall-heat-stats"><span>${ts.line1}</span><span>${ts.line2}</span></span>` : '';   // 툴팁 없음(사이트 규칙: 마우스 오버 글상자는 말줄임된 글의 전문일 때만 — 2026-09-03 Crenop)
-      return h ? `<div class="hall-heat-cell"><div class="hall-heat-name"><img src="${m.img}" alt="${escapeHtml(m.name)}"><span style="color:${m.color}">${escapeHtml(m.name)}</span>${stats}</div>${h}</div>` : '';
+      return h ? `<div class="hall-heat-cell" data-member="${m.id}"><div class="hall-heat-name"><img src="${m.img}" alt="${escapeHtml(m.name)}"><span style="color:${m.color}">${escapeHtml(m.name)}</span>${stats}</div>${h}</div>` : '';
     }).filter(Boolean).join('');
     heat.innerHTML = cells ? `<div class="hall-heat-grid${heatShowStats ? ' show-stats' : ''}">${cells}</div>` : '<div class="lr-msg">그 달의 방송 기록이 없습니다.</div>';
   }
+  applyFavMark(document.getElementById('page-hall'));   // 지표 카드(data-member)·시간대 칸 — 최애 자리 표시 + 첫 진입 스크롤
 }
 
 function renderHall() {
