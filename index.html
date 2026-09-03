@@ -242,15 +242,16 @@
     transition: color 0.15s;
     /* 상자(2026-09-03 Crenop): 같은 줄의 다른 버튼(.page-title-link)과 같은 옷 — 테두리는 앰버로 고정, 켬/끔은 종 색과 바탕색(무채↔앰버 반투명) */
     padding: 5px 8px;
+    --btn-rgb: 251,191,36;         /* 앰버 — 테두리 비율(40%)은 다른 버튼과 공통 */
     background: var(--surface2);   /* 끔: 무채 바탕(Crenop 지정) */
-    border: 1px solid rgba(251,191,36,0.4);
+    border: 1px solid rgba(var(--btn-rgb), 0.4);
     font-size: 11px; line-height: 1.4;   /* .page-title-link과 같은 글줄 → 상자 높이가 같다(아래 ::after의 빈 글줄이 높이를 만든다) */
   }
   .nav-notify-bell::after { content: '\200B'; }   /* 글자 없는 상자에 글줄 하나를 세워 .page-title-link과 높이를 맞춘다(어느 배치에서나 같은 규칙으로 따라간다) */
   .nav-notify-bell svg { width: 16px; height: 16px; display: block; overflow: visible; margin-top: -1px; }   /* 16px(구 20): 상자 안 다른 아이콘과 같은 크기. -1px: .page-title-link svg와 같은 되감기 */
   /* ON/OFF를 색(앰버↔무채)·모양(웨이브 선 유무)으로 구별 + 켤 때 1회 애니메이션 */
   .nav-notify-bell .ring-wave { opacity: 0; }                   /* OFF: 양옆 웨이브 선 숨김 (모양 단서) */
-  .nav-notify-bell.on { color: #fbbf24; background: rgba(251,191,36,0.12); }   /* ON: 종·바탕 앰버(색 단서, 민트 아닌 별도색) */
+  .nav-notify-bell.on { color: #fbbf24; background: rgba(var(--btn-rgb), 0.12); }   /* ON: 종·바탕 앰버(색 단서, 민트 아닌 별도색) */
   .nav-notify-bell.on .ring-wave { opacity: 1; }                /* ON 정지: 양옆 웨이브 선 정적 표시 (currentColor=앰버) */
   .nav-notify-bell:not(.on):hover { color: var(--text); }
   /* 클릭으로 켤 때 1회만 (.ringing은 JS가 붙였다 뗌) — 상시 흔들리지 않음 */
@@ -427,8 +428,11 @@
     gap: 10px;   /* 내부 간격 일원화(2026-08-09 비교 확정): 좌경계~아이콘~텍스트~우경계 전부 10px. 바 레벨(경계·버튼 사이)은 12px 별도. 모바일은 세로 미니 별도 규칙 */
     padding: 5px 10px;   /* 위/아래 대칭(2026-09-02 실측 확정). 구 6/4(한글 1px 하향 보정, 2026-08-09)는 Crenop Windows 100% 스크린샷 실측에서
                             글자가 1px 아래로 치우쳐 철회 — 잉크 9행이 안쪽 25px에 위8/아래8이 되려면 밀지 않는 것이 맞다. 같은 스크린샷으로 아이콘도 잼(아래 svg) */
-    background: rgba(96,165,250,0.12);
-    border: 1px solid rgba(96,165,250,0.4);
+    /* 버튼 색은 한 변수로(2026-09-04 세션 70 일괄화): --btn-rgb 하나에 바탕 12%·테두리 40%·호버 22%/70%. 변형(일정 민트·좋아요 에메랄드·시트 버튼·기념일·최애)은
+       색 변수와 글자색만 바꾼다 — 종전엔 변형마다 네 줄씩 같은 비율을 따로 적어 새 버튼을 만들 때마다 어긋났다 */
+    --btn-rgb: 96,165,250;   /* 기본 파랑 */
+    background: rgba(var(--btn-rgb), 0.12);
+    border: 1px solid rgba(var(--btn-rgb), 0.4);
     color: #93c5fd;
     text-decoration: none;
     font-size: 11px;
@@ -437,7 +441,7 @@
     transition: background 0.15s, border-color 0.15s;
     flex-shrink: 0;
   }
-  .page-title-link:hover { background: rgba(96,165,250,0.22); border-color: rgba(96,165,250,0.7); }
+  .page-title-link:hover, .celebration-box:hover { background: rgba(var(--btn-rgb), 0.22); border-color: rgba(var(--btn-rgb), 0.7); }
   /* margin-top -2px: 위 6/아래 4 비대칭 패딩(한글 텍스트 광학 보정)이 콘텐츠 중심을 테두리 중심보다 1px 내리는데,
      아이콘까지 딸려 내려가 위 여백이 2px 더 넓어진다 — 아이콘만 상쇄해 테두리 기준 정중앙(텍스트 보정은 유지). 모바일은 패딩 대칭이라 리셋 */
   .page-title-link svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: -1px; }   /* 아이콘 그림이 16px 상자 아래쪽에 치우쳐 있어(실측: 잉크 14행이 위 1.3/아래 0.7) 1px 되감음 — 구 -2px는 6/4 패딩 시절 값(2026-09-02 재실측) */
@@ -446,15 +450,13 @@
   #guideIcon { display: contents; }
   /* 좋아요 요청 모아보기 버튼: page-title-link 골격에 comment_recommend 색(에메랄드, --ev-post 계열) 적용 */
   button.page-title-link.like-req-btn {
-    background: rgba(52,211,153,0.12);
-    border: 1px solid rgba(52,211,153,0.4);
+    --btn-rgb: 52,211,153;
     color: #6ee7b7;
     cursor: pointer;
     font-family: inherit;
     text-align: left;
     position: relative;
   }
-  button.page-title-link.like-req-btn:hover { background: rgba(52,211,153,0.22); border-color: rgba(52,211,153,0.7); }
   /* 안 본 새 좋아요 요청이 있으면 버튼 우상단 빨간 점 */
   .like-req-btn.has-new::after {
     content: ''; position: absolute; top: -3px; right: -3px;
@@ -464,21 +466,13 @@
   /* 일정 버튼: 천타버스 메인 민트(--accent) 박스 — 좋아요(에메랄드)·블루발(파랑)과 색으로 구분.
      2026-08-31 표시화로 잠시 안 쓰이다 2026-09-02 목록 모달 버튼으로 복원 */
   button.page-title-link.sch-btn {
-    background: rgba(97,255,236,0.12);
-    border: 1px solid rgba(97,255,236,0.4);
+    --btn-rgb: 97,255,236;
     color: var(--accent);
     cursor: pointer;
     font-family: inherit;
     text-align: left;
   }
-  button.page-title-link.sch-btn:hover { background: rgba(97,255,236,0.22); border-color: rgba(97,255,236,0.7); }
-  /* 두번째 커버곡 버튼: 핑크(#ec4899 계열) — 첫 커버곡(파랑)·좋아요(에메랄드)·일정(민트)과 구분 */
-  /* 시트 기반 상단바 버튼(구 cover2-btn 대체): 색은 F열 hex → --tb-rgb 인라인 변수, 배경 12%·테두리 40%·호버 22%/70% */
-  .page-title-link.tb-sheet-btn {
-    background: rgba(var(--tb-rgb), 0.12);
-    border: 1px solid rgba(var(--tb-rgb), 0.4);
-  }
-  .page-title-link.tb-sheet-btn:hover { background: rgba(var(--tb-rgb), 0.22); border-color: rgba(var(--tb-rgb), 0.7); }
+  /* 시트 기반 상단바 버튼(구 cover2-btn 대체): 색은 F열 hex → 인라인 --btn-rgb·color(topbarLinksHtml). 비율은 .page-title-link 공통 */
   .lr-overlay {
     position: fixed; inset: 0; z-index: 1000;
     background: rgba(0,0,0,0.65);
@@ -513,16 +507,15 @@
   .fav-pick { display: grid; grid-template-columns: repeat(7, 52px); gap: 6px; justify-content: center; padding: 8px 16px 12px; }
   .fav-pick-foot { display: flex; justify-content: center; padding: 0 16px 16px; }
   button.page-title-link#favBtn { cursor: pointer; font-family: inherit; }   /* 다른 button.page-title-link과 같은 초기화(.rank-btn·.tbm-btn 규칙과 동일) */
-  /* 최애 버튼 색 = 인라인 --fav-rgb(설정 전 노랑, 설정 후 멤버 고유색) — 시트 버튼(.tb-sheet-btn)과 같은 바탕/테두리 비율 */
-  #favBtn { background: rgba(var(--fav-rgb), 0.12); border-color: rgba(var(--fav-rgb), 0.4); }
-  #favBtn:hover { background: rgba(var(--fav-rgb), 0.22); border-color: rgba(var(--fav-rgb), 0.7); }
+  /* 최애 버튼 색 = 인라인 --btn-rgb·color(설정 전 노랑, 설정 후 멤버 고유색) — 비율은 .page-title-link 공통 */
   #favBtn svg { fill: currentColor; }
-  .fav-lbl { display: inline-grid; }   /* 겹친 후보 글자 중 가장 넓은 것이 칸 폭 — 실제 글자는 왼쪽 정렬로 그 안에 */
+  .fav-lbl { display: inline-grid; justify-items: center; }   /* 겹친 후보 글자 중 가장 넓은 것이 칸 폭 — 실제 글자는 그 가운데(남는 폭이 양쪽에 고르게) */
   .fav-lbl > span { grid-area: 1 / 1; white-space: nowrap; }
   .fav-lbl > .fav-lbl-w { visibility: hidden; }
-  /* 최애 강조(세션 70 2단계): 그 멤버의 자리에 멤버 고유색 외곽선(--fav-color 인라인). 민트가 아닌 이유 — 생방송 카드의 민트 테두리는 '방송 중'이라 겹치면 뜻이 섞인다.
-     최애 = 멤버 고유색이라는 규칙은 최애 버튼과 같다. 자동 스크롤은 붙어 있는 머리 아래에 서도록 scroll-margin */
-  .fav-here { outline: 1.5px solid var(--fav-color, var(--accent)); outline-offset: -1.5px; scroll-margin-top: calc(var(--head-h, 0px) + 20px); }
+  /* 최애 도착 표시(세션 70 2단계, 2026-09-04 개정): 탭에 들어와 최애 자리로 내려간 뒤 1.4초 강조하고 사라진다 — 케미의 '관련 케미로 이동'(.chem-flash)과 같은 문법.
+     상시 외곽선은 폐지(음악 이름줄처럼 감쌀 범위가 애매한 곳에서 넓거나 좁게 보였다). 색은 멤버 고유색 — 생방송 카드의 민트 테두리(방송 중)와 섞이지 않게. 붙어 있는 머리 아래에 서도록 scroll-margin */
+  [data-member] { scroll-margin-top: calc(var(--head-h, 0px) + 20px); }
+  .fav-flash { outline: 1.5px solid var(--fav-color, var(--accent)); outline-offset: -1.5px; transition: outline-color 0.35s; }
   /* 좋아요 순위 모달 — lr-panel 골격 재사용. 행은 grid로 열을 고정(flex는 값 길이에 따라 열이 흔들려 눈금이 안 맞음) */
   .rk-ev { padding: 12px 16px; border-bottom: 1px solid var(--border); }
   .rk-ev:last-child { border-bottom: none; }
@@ -749,11 +742,10 @@
     flex-shrink: 0;
     text-decoration: none;
     cursor: pointer;
-    background: rgba(var(--cb-rgb), 0.12);
-    border: 1px solid rgba(var(--cb-rgb), 0.4);
+    background: rgba(var(--btn-rgb), 0.12);   /* 색은 인라인 --btn-rgb(멤버색) — .page-title-link과 같은 비율표, 호버도 공통 규칙 */
+    border: 1px solid rgba(var(--btn-rgb), 0.4);
     transition: background 0.15s, border-color 0.15s;
   }
-  .celebration-box:hover { background: rgba(var(--cb-rgb), 0.22); border-color: rgba(var(--cb-rgb), 0.7); }
   .celebration-box svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: -1px; }   /* .page-title-link svg와 동일 사유 */
   /* 보조바 버튼의 PC↔모바일 변형 토글 (기본=PC 긴 라벨, 짧은 라벨은 1100px 미디어쿼리에서 표시).
      함께 있던 .nav-label-mb·.nav-live-dot-m은 탐색 UI 맞바꾸기로 쓰임이 사라져 폐지(2026-08-31). */
@@ -2574,6 +2566,7 @@
     margin: 0 auto; max-width: 1200px;
   }
   .disco-member-name img { width: 32px; height: 32px; object-fit: cover; flex: none; }
+  .disco-member-id { display: inline-flex; align-items: center; gap: 10px; padding: 2px 8px 2px 2px; margin: -2px -8px -2px -2px; }   /* 최애 도착 강조가 이름(사진+글자)만 감싸게 — 이름줄 전체는 폭이 넓어 어색했다(2026-09-04 Crenop) */
   .disco-member .video-strip-section { margin-top: 12px; }
   /* 화살표를 absolute로 띄워 스트립 폭 바깥에 세운다 — flex 형제로 두면 등장/퇴장할 때마다
      스크롤 영역 폭이 변해 타일이 흔들린다. 이제 .vs-scroll은 항상 온전한 폭을 쓴다. */
@@ -2873,7 +2866,7 @@
     .subbar-lead, .tab-aux { flex: none; justify-content: flex-end; }
     /* 보조바 오른쪽 묶음(시트 오른쪽 버튼·최애·가이드)은 탭 목록 아래 마지막 줄 — 어느 탭에도 속하지 않는 것들이라 관련 링크 행에서 뗐다(세션 70).
        PC 띠의 '오른쪽 끝'이 세로 목록에선 '끝'이다. 탭과 조금 띄워(6px) 다른 종류의 줄임을 보인다 */
-    .subbar-right { grid-row: 13; grid-column: 1; justify-self: end; align-self: center; flex: none; height: var(--nav-row-h); padding-right: var(--aux-right-gap); margin-top: 6px; max-width: 100%; }
+    .subbar-right { grid-row: 13; grid-column: 1; justify-self: end; align-self: start; flex: none; flex-direction: column; align-items: flex-end; gap: 6px; height: auto; padding: 4px var(--aux-right-gap) 6px 0; margin-top: 6px; max-width: 100%; }   /* 세로 쌓기(Crenop): 위→아래 = 시트 오른쪽 버튼·최애·가이드(가이드가 맨 아래) */
     .tab-aux { height: var(--nav-row-h); }
     /* 일정 줄은 흐름 안으로 되돌린다 — 가로 보조바에서 '양옆 빈 탭 자리를 빌리는' 절대배치가
        세로 목록에도 남아 있어 줄이 칸 밖으로 나가 사이드 목록을 넘쳤다(반복 지적된 자리). */
@@ -4449,7 +4442,7 @@ const CELEB_SVG = {
 function celebBox(svg, pcText, mbName, mbType, hexColor, hash) {
   const rgb = hexToRgb(hexColor);
   // 아이콘 PC·모바일 공통. PC: 전체 문구 / 모바일: "이름 종류" 한 줄(C안 — 높이는 다른 버튼과 동일, 폭만 가변)
-  return `<a class="celebration-box" href="#${hash}" style="--cb-rgb:${rgb};color:${hexColor}">${svg}<span class="tb-t-pc">${pcText}</span><span class="tb-t-mb">${mbName} ${mbType}</span></a>`;
+  return `<a class="celebration-box" href="#${hash}" style="--btn-rgb:${rgb};color:${hexColor}">${svg}<span class="tb-t-pc">${pcText}</span><span class="tb-t-mb">${mbName} ${mbType}</span></a>`;
 }
 
 function getTodayCelebrations() {
@@ -4543,7 +4536,7 @@ function topbarLinksHtml(side) {
     const pc = escapeHtml(b.l1);   // 라벨 한 줄(2026-09-02 E열 삭제) — 두 줄짜리 버튼은 사이트 어디에도 없다
     const tx = lightenForText(b.hex);   // 아이콘은 지정색 원본, 글자만 보정 — 순위 버튼과 동일 규칙(2026-08-04 일괄 적용)
     const inner = `${SVG_ICONS[b.icon] || SVG_ICONS.link}<span class="tb-t-pc" style="color:${tx}">${pc}</span><span class="tb-t-mb" style="color:${tx}">${escapeHtml(b.mb)}</span>`;
-    const style = `--tb-rgb:${hexToRgb(b.hex)};color:${b.hex}`;
+    const style = `--btn-rgb:${hexToRgb(b.hex)};color:${b.hex}`;   // 버튼 색 공통 변수(2026-09-04)
     return b.gid
       ? `<button class="page-title-link tb-sheet-btn tbm-btn" type="button" onclick="openSheetModal('${escapeHtml(b.gid)}')" style="${style}">${inner}</button>`
       : `<a class="page-title-link tb-sheet-btn" href="${escapeHtml(b.url)}" target="_blank" rel="noopener" style="${style}">${inner}</a>`;
@@ -5219,30 +5212,31 @@ function scheduleBtnHTML() {
 // 다가올 일정 목록 모달(2026-09-02) — 옛 일정 모달의 '목록 보기'가 달력 탭으로 오면서 사라졌던 것. 달력 탭은 달 단위라
 // "앞으로 뭐가 있나"를 한 화면에 못 모은다(Crenop 지적). 월 구분 없이 아직 안 지난 일정 전부, 여는 곳은 보조바의 일정 한 줄 자체
 // (종전 일정 버튼이 있던 자리 — 새 버튼을 늘리지 않는다). 모달 판정: 없어져도 되는 것 + 짧음 + 보던 자리 보존.
-// ── 최애 강조·자동 스크롤(세션 70 2단계) ──
-// 멤버별 구획이 세로로 늘어서는 탭에서 최애의 자리에 멤버 고유색 외곽선(.fav-here)을 두르고, 탭에 들어와 처음 그려졌을 때 한 번 그 자리로 내려간다.
-// 자리 표시: data-member(통계 지표 카드·시간대 칸·음악 구획·생방송 카드) 또는 data-members(케미 카드, 쉼표 나열 — 최애가 든 조합 전부).
-// 스크롤은 사용자가 아직 안 내렸을 때(맨 위)만 — 자료가 늦게 와서 그려질 때 보던 화면을 잡아채지 않는다. 배치는 그대로(자리만 알려 준다).
-const FAV_SCROLL_PAGES = ['hall', 'disco', 'live', 'chemistry'];
-let favScrollPending = '';
+// ── 최애 도착(세션 70 2단계, 2026-09-04 개정) ──
+// 멤버별 구획이 세로로 늘어서는 탭에 들어와 처음 그려지면, 최애의 자리로 내려가 1.4초 강조하고 사라진다(케미 '관련 케미로 이동'과 같은 문법). 상시 표시는 없다.
+// 자리 = data-member(통계 지표 카드·시간대 칸·음악 이름·생방송 카드·관련 링크 세로 상자). 케미 탭은 대상이 아니다(강조 '문법'만 빌려 왔다 — 2026-09-04 Crenop 정정).
+// 실행 시점: 탭 전환은 마지막에 맨 위로 올리므로(switchPage 끝의 scrollTo) 그 뒤로 미뤄서(setTimeout 0) 내려간다 — 종전엔 내려간 뒤 맨 위로 되돌려져 '안 움직이는' 것처럼 보였다(실사고).
+// 사용자가 그 사이 직접 움직였으면(휠·터치·키) 잡아채지 않는다. 배치는 그대로(자리만 알려 준다).
+const FAV_SCROLL_PAGES = ['hall', 'disco', 'live', 'links'];
+let favScrollPending = '', favUserMoved = false;
+['wheel', 'touchmove', 'keydown'].forEach(ev => window.addEventListener(ev, () => { favUserMoved = true; }, { passive: true }));
+function favArm(page) { favScrollPending = page; favUserMoved = false; }
 function applyFavMark(root) {
   const fav = favMemberId();
-  const scope = root || document;
-  scope.querySelectorAll('.fav-here').forEach(el => { el.classList.remove('fav-here'); el.style.removeProperty('--fav-color'); });
-  if (!fav) { favScrollPending = ''; return; }
+  if (!fav || !favScrollPending || favScrollPending !== currentPage) return;
+  favScrollPending = '';
   const color = MEMBER_BY_ID[fav].color;
-  scope.querySelectorAll('[data-member], [data-members]').forEach(el => {
-    const one = el.dataset.member, many = el.dataset.members;
-    const hit = one ? one === fav : (many || '').split(',').includes(fav);
-    if (!hit) return;
-    el.classList.add('fav-here'); el.style.setProperty('--fav-color', color);
-  });
-  if (favScrollPending && favScrollPending === currentPage) {
-    favScrollPending = '';
-    const page = document.getElementById('page-' + currentPage);
-    const first = page && page.querySelector('.fav-here');
-    if (first && window.scrollY === 0) first.scrollIntoView({ block: 'start' });
-  }
+  const scope = root || document.getElementById('page-' + currentPage) || document;
+  const target = [...scope.querySelectorAll('[data-member]')].find(el => el.dataset.member === fav);
+  if (!target) return;
+  setTimeout(() => {
+    if (favUserMoved) return;
+    target.scrollIntoView({ block: 'start' });
+    target.style.setProperty('--fav-color', color);
+    target.classList.remove('fav-flash'); void target.offsetWidth;   // 연타 시 강조 재시작(케미와 같은 수법)
+    target.classList.add('fav-flash');
+    setTimeout(() => { target.classList.remove('fav-flash'); target.style.removeProperty('--fav-color'); }, 1400);
+  }, 0);
 }
 // ── 최애 고르기 모달(세션 70) — 얼굴 13개(프로필 기둥의 .members-tab 그대로) + 해제 ──
 const FAV_DEFAULT_HEX = '#fbbf24';   // 설정 전 = 노랑(알림 종 켬과 같은 앰버 계열, Crenop 지정 '노란색'). 설정 후 = 멤버 고유색
@@ -5250,7 +5244,7 @@ function syncFavBtn() {
   const b = document.getElementById('favBtn'); if (!b) return;
   const m = MEMBER_BY_ID[favMemberId()];
   const hex = m ? m.color : FAV_DEFAULT_HEX;
-  b.style.cssText = `--fav-rgb:${hexToRgb(hex)};color:${hex}`;
+  b.style.cssText = `--btn-rgb:${hexToRgb(hex)};color:${hex}`;
   // 폭 고정(Crenop 지정): 글자가 '최애 설정'↔'최애 김웰로'로 바뀌어도 버튼 폭이 안 변하게, 가능한 글자 전부를 같은 칸에 겹쳐(보이지 않게) 두어 가장 넓은 것이 폭을 정한다
   const cands = ['최애 설정'].concat(MEMBERS.map(x => '최애 ' + x.name));
   b.innerHTML = `${SVG_ICONS.fan}<span class="fav-lbl">${cands.map(t => `<span class="fav-lbl-w" aria-hidden="true">${escapeHtml(t)}</span>`).join('')}<span class="fav-lbl-t">${m ? '최애 ' + escapeHtml(m.name) : '최애 설정'}</span></span>`;
@@ -5744,14 +5738,14 @@ function renderDisco() {
   // 우상단 붙박이 버튼 — 곡이 없어도 남는다(자료가 아니라 이 탭이 늘 가진 링크다).
   // 첫 이름 행(맨 위 묶음의 제목 줄) 오른쪽 끝에 같은 행으로 선다(2026-09-02 Crenop 지정 — 종전엔 이름 위 별도 줄).
   const btn = `<a class="page-title-link tb-sheet-btn disco-playlist" href="${DISCO_PLAYLIST_URL}" target="_blank" rel="noopener"`
-    + ` style="--tb-rgb:${hexToRgb(DISCO_PLAYLIST_HEX)};color:${DISCO_PLAYLIST_HEX}">${SVG_ICONS.youtube}<span>천타버스 플레이리스트</span></a>`;
+    + ` style="--btn-rgb:${hexToRgb(DISCO_PLAYLIST_HEX)};color:${DISCO_PLAYLIST_HEX}">${SVG_ICONS.youtube}<span>천타버스 플레이리스트</span></a>`;
   let placed = false;
   const html = targets.map(t => {
     const strips = renderVideoStrips(t.name, t.img, 1200);
     if (!strips) return '';
     const color = t.color ? ` style="color:${t.color}"` : '';
     const tail = placed ? '' : btn; placed = true;
-    return `<section class="disco-member"><h2 class="disco-member-name"${t.id ? ` data-member="${t.id}"` : ''}><img src="${escapeHtml(t.img)}" alt="" onerror="this.style.display='none'"><span${color}>${escapeHtml(t.name)}</span>${tail}</h2>${strips}</section>`;
+    return `<section class="disco-member"><h2 class="disco-member-name"><span class="disco-member-id"${t.id ? ` data-member="${t.id}"` : ''}><img src="${escapeHtml(t.img)}" alt="" onerror="this.style.display='none'"><span${color}>${escapeHtml(t.name)}</span></span>${tail}</h2>${strips}</section>`;
   }).join('');
   el.innerHTML = html || `<div class="disco-head">${btn}</div><div class="lr-msg">등록된 곡이 없습니다.</div>`;   // 곡이 하나도 없을 때만 버튼이 홀로 선다
   bindVideoStrips(el);   // 좌우 화살표는 이 배선이 넘침을 재서 켠다 — 프로필에서 옮겨올 때 빠졌다(2026-09-01)
@@ -6308,7 +6302,7 @@ function switchPage(page, opts) {
     if (page === 'content') calState.member = favNow;
   }
   // 최애 강조·자동 스크롤(2단계): 멤버별 구획이 늘어서는 탭은 그려진 뒤 최애 자리로 한 번 내려간다(favScrollPending)
-  favScrollPending = favNow && FAV_SCROLL_PAGES.includes(page) ? page : '';
+  if (favNow && FAV_SCROLL_PAGES.includes(page)) favArm(page); else favScrollPending = '';
   if (page === 'stats' && !statsState.tabsInited) {
     initStatsTabs();
     statsState.tabsInited = true;
@@ -8968,7 +8962,7 @@ function renderLinks() {
   const mobileBlocks = MEMBERS.map(m => {
     const lb = memberLinkButtons(m);
     return `
-    <div class="links-m-block">
+    <div class="links-m-block" data-member="${m.id}">
       <div class="links-m-head">
         <img class="links-m-avatar" src="${m.img}" alt="${escapeHtml(m.name)}">
         <span class="links-m-name" style="color: ${m.color}">${escapeHtml(m.name)}</span>
@@ -8998,6 +8992,7 @@ function renderLinks() {
       <div class="links-mobile">${mobileBlocks}</div>
     </div>
   `;
+  applyFavMark(body);   // 세로 배치의 멤버 상자로 최애 도착(가로 표는 열이 한 화면에 다 보여 안 움직인다) — 세션 70
 }
 
 renderLinks();
@@ -9443,7 +9438,7 @@ function renderChemistry() {
     const entries = CHEM_NAMES[`${p.m1.id}:${p.m2.id}`];
     const fallback = `<div class="chem-name chem-name-fallback">${escapeHtml(p.m1.name)} × ${escapeHtml(p.m2.name)}</div>`;   // 폴백은 켬 상태에서도 그대로(숨길 2열 변형이 없다)
     return `
-    <div class="chem-card" data-members="${p.m1.id},${p.m2.id}">
+    <div class="chem-card">
       <div class="chem-head">${nameRowHtml(entries) || fallback}</div>
       <div class="chem-body">
         <div class="chem-member">
@@ -9470,7 +9465,7 @@ function renderChemistry() {
     }).join('');
     const memN = g.members.length;
     const memCls = memN >= 7 ? ' large' : memN === 6 ? ' large cols3' : memN === 4 ? ' large n4' : '';
-    return `<div class="chem-card" data-members="${g.members.join(',')}"><div class="chem-head">${nameRowHtml(g.entries) || ''}</div><div class="chem-body"><div class="chem-group-members${memCls}">${membersHtml}</div></div></div>`;
+    return `<div class="chem-card"><div class="chem-head">${nameRowHtml(g.entries) || ''}</div><div class="chem-body"><div class="chem-group-members${memCls}">${membersHtml}</div></div></div>`;
   };
 
   // 섹션 조립(2026-08-09 통일): secBlock = 라벨 + 카드 묶음(.chem-group-grid)을 한 상자에 — 라벨 sticky가 붙을 구간.
@@ -9652,7 +9647,6 @@ function renderChemistry() {
       Object.keys(maxByKind).forEach(k => { maxByKind[k] += headMax; });
       cards.forEach(c => { c.style.minHeight = maxByKind[kindOf(c)] + 'px'; });
     }
-    applyFavMark(grid);   // 최애가 든 조합 카드 전부 표시(data-members) + 첫 진입은 첫 카드로 스크롤(세션 70)
   }
 }
 
@@ -9819,7 +9813,7 @@ function renderHallStats() {
     kindBox.querySelectorAll('.hall-kind-btn').forEach(b => b.addEventListener('click', () => {
       if (b.dataset.kind === hallKind) return;
       hallKind = b.dataset.kind;
-      if (favMemberId()) { favScrollPending = 'hall'; window.scrollTo(0, 0); }   // 종류를 바꾸면 그 종류의 최애 자리로 다시 한 번(지표·시간대 — 명전엔 자리가 없다)
+      if (favMemberId()) { favArm('hall'); window.scrollTo(0, 0); }   // 종류를 바꾸면 그 종류의 최애 자리로 다시 한 번(지표·시간대 — 명전엔 자리가 없다)
       renderHallStats();
       if (hallKind === 'hall') renderHall();
     }));
