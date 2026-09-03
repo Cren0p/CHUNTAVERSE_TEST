@@ -5360,6 +5360,10 @@ function lsGet(k, fallback) {
 function lsSet(k, v) {
   try { localStorage.setItem(k, v); } catch (e) {}
 }
+// 최애 멤버 저장·읽기(세션 70). 상수는 반드시 여기(첫 사용처인 calState 초기화보다 앞)에 — const는 선언 줄이 실행되기 전에 읽으면 부팅이 멈춘다(2026-09-03 실사고: 테스트 레포 무한 로딩).
+const LS_FAV_MEMBER = 'chuntaverse_fav_member';
+function favMemberId() { const id = lsGet(LS_FAV_MEMBER, ''); return MEMBER_BY_ID[id] ? id : ''; }
+function setFavMember(id) { if (id && MEMBER_BY_ID[id]) lsSet(LS_FAV_MEMBER, id); else { try { localStorage.removeItem(LS_FAV_MEMBER); } catch (e) {} } syncFavBtn(); }
 
 function getLastSeenTime() {
   const v = lsGet(LS_LAST_SEEN, null);
@@ -6308,9 +6312,6 @@ const SUBTAB_PAGES = { members: 'crew', stats: MEMBERS[0].id };   // 하위탭�
 // 효과(1단계): 한 명을 고르는 화면의 첫 선택이 최애가 된다 — 지난 활동(구 첫 멤버 고정)·프로필(구 크루)·달력(구 전체).
 // 주소로 들어온 지정(공유 링크 #stats:chebi 등)은 최애보다 우선. 최애가 크루에서 빠지면 없는 것으로 본다.
 // 2단계(예정): 멤버별 구획이 세로로 늘어서는 화면(통계 지표·시간대·음악·생방송·케미)에서 그 자리 강조 + 자동 스크롤.
-const LS_FAV_MEMBER = 'chuntaverse_fav_member';
-function favMemberId() { const id = lsGet(LS_FAV_MEMBER, ''); return MEMBER_BY_ID[id] ? id : ''; }
-function setFavMember(id) { if (id && MEMBER_BY_ID[id]) lsSet(LS_FAV_MEMBER, id); else { try { localStorage.removeItem(LS_FAV_MEMBER); } catch (e) {} } syncFavBtn(); }
 // 하위탭의 '기본값' = 최애가 있으면 최애, 없으면 주소 문법의 기준값. 접미사 없는 주소(#stats·#members)와 첫 진입이 이걸 쓴다.
 function defaultSubTab(page) { const fav = favMemberId(); return (fav && SUBTAB_PAGES[page]) ? fav : (SUBTAB_PAGES[page] || null); }
 function parseHash(hash) {
