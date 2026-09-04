@@ -368,6 +368,9 @@
   .sch-line-txt, .sch-line-shell { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .sch-line-when, .sch-line-mb { flex: none; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
   .sch-line-mb { display: none; }   /* 세로 배치 전용 D-day 칸 — 기념일의 PC 문구/약식 문구와 같은 갈아끼우기 문법 */
+  /* 일정 버튼의 종류 그림(2026-09-04): 달력 칸의 태그 그림(.cal-tag — 태그별 고유색)을 그대로 쓰되, 버튼 안에서는 다른 버튼 아이콘과 같은 자리·크기(16px·-1px 되감기·gap 10) */
+  .sch-btn .cal-tag { display: contents; }
+  .sch-btn .cal-tag svg { width: 16px; height: 16px; margin-top: -1px; flex-shrink: 0; }
   /* 일정 줄은 좌우 한 칸씩 더 쓴다 — 양옆 탭(통계·현수막)은 보조바를 안 쓰므로 자리가 비어 있고,
      제목이 잘리면 표시의 뜻이 사라진다. 흐름에서 빼내야(absolute) 칸 폭(64px)에 눌리지 않는다. */
   /* 기념일은 프로필 칸의 오른쪽 끝에 붙는다 — 오른쪽 경계가 프로필 탭의 오른쪽 경계와 일치한다.
@@ -2866,7 +2869,7 @@
     .subbar-lead, .tab-aux { flex: none; justify-content: flex-end; }
     /* 보조바 오른쪽 묶음(시트 오른쪽 버튼·최애·가이드)은 탭 목록 아래 마지막 줄 — 어느 탭에도 속하지 않는 것들이라 관련 링크 행에서 뗐다(세션 70).
        PC 띠의 '오른쪽 끝'이 세로 목록에선 '끝'이다. 탭과 조금 띄워(6px) 다른 종류의 줄임을 보인다 */
-    .subbar-right { grid-row: 13; grid-column: 1; justify-self: end; align-self: start; flex: none; flex-direction: column; align-items: flex-end; gap: 6px; height: auto; padding: 4px var(--aux-right-gap) 6px 0; margin-top: 6px; max-width: 100%; }   /* 세로 쌓기(Crenop): 위→아래 = 시트 오른쪽 버튼·최애·가이드(가이드가 맨 아래) */
+    .subbar-right { grid-row: 13; grid-column: 1; justify-self: end; align-self: start; display: grid; grid-auto-rows: var(--nav-row-h); row-gap: 2px; justify-items: end; align-items: center; margin-top: 2px; padding: 0 var(--aux-right-gap) 0 0; max-width: 100%; overflow: visible; }   /* 세로 쌓기(Crenop): 위→아래 = 시트 오른쪽 버튼·최애·가이드(가이드가 맨 아래). 줄 높이·간격은 탭 줄과 같게 이어 붙인다(2026-09-04) */
     .tab-aux { height: var(--nav-row-h); }
     /* 일정 줄은 흐름 안으로 되돌린다 — 가로 보조바에서 '양옆 빈 탭 자리를 빌리는' 절대배치가
        세로 목록에도 남아 있어 줄이 칸 밖으로 나가 사이드 목록을 넘쳤다(반복 지적된 자리). */
@@ -5161,23 +5164,21 @@ function ddayText(item) {
   const d = ddayNum(item);
   return d <= 0 ? 'D-DAY' : `D-${d}`;
 }
-// D-time: 당일에만 호출(남은 시간 < 24h) → D-HH:MM:SS. D-day와 머리글자('D-') 통일.
-function dtimeText(item) {
-  let sec = Math.floor((item.target - Date.now()) / 1000);
-  if (sec <= 0) return 'D-DAY';
-  const h = Math.floor(sec / 3600); sec -= h * 3600;
-  const m = Math.floor(sec / 60); sec -= m * 60;
-  return `D-${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+// (D-time 'D-HH:MM:SS' 카운트다운은 2026-09-04 폐지 — 보조바·세로 배치 모두 D-day만. Crenop 지정)
+// 일정 버튼 왼쪽 그림(2026-09-04 Crenop): 달력 그림 대신 그 일정의 종류 그림(시트 F열 첫 태그, 달력 칸의 태그 그림과 같은 색). 종류가 없으면 달력.
+function schKindSvg(item) {
+  const key = (item.tags || []).map(t => CAL_TAG_LOOKUP[String(t).toLowerCase()]).find(Boolean);
+  return key ? `<span class="cal-tag" data-tag="${key}">${SVG_ICONS[key]}</span>` : SVG_ICONS.calendar;
 }
 
-// 가장 임박한 날짜의 일정 묶음 + 표기 상태(버튼·틱 공통). dtime이 전부 같으면 병합(M), 다르면 분리(S).
-// sig엔 카운트다운 숫자(매초 변동) 대신 묶음 구성·단일(1)/병합/분리만 담아 → 구조가 바뀔 때만 재렌더.
+// 가장 임박한 날짜의 일정 묶음 + 표기 상태(버튼·틱 공통). 표기(D-day)가 전부 같으면 병합(M), 다르면 분리(S) — D-time 폐지(2026-09-04) 뒤엔 같은 날이면 늘 같다.
+// sig엔 묶음 구성·단일(1)/병합/분리만 담아 → 구조가 바뀔 때만 재렌더.
 function scheduleHead() {
   const vis = visibleSchedule();
   if (!vis.length) return { vis, group: [], dtimes: [], allSame: true, sig: '∅' };
   const d0 = vis[0].date;
   const group = vis.filter(s => s.date === d0);   // vis는 정렬됨 → 같은 날짜는 시간순 prefix
-  const dtimes = group.map(e => (e.hasTime && ddayNum(e) === 0) ? dtimeText(e) : ddayText(e));
+  const dtimes = group.map(e => ddayText(e));
   const allSame = dtimes.every(x => x === dtimes[0]);
   const state = group.length >= 2 ? (allSame ? 'M' : 'S') : '1';
   const sig = group.map(e => `${e.date}T${e.time}`).join(',') + '|' + state;
@@ -5193,18 +5194,18 @@ function scheduleBtnHTML() {
     return `<button class="page-title-link sch-btn sch-line" id="schBtn" type="button" onclick="openScheduleList()">${SVG_ICONS.calendar}<span class="sch-line-shell">불러오는 중</span></button>`;
   }
   const head = h.vis[0];
-  // 단일 일정 — 가로 배치: 제목 + (당일부터 D-time, 그 전 D-day). 세로 배치: D-day만(.sch-line-mb, CSS가 갈아 끼운다).
+  // 단일 일정 — 가로 배치: 종류 그림 + 제목 + D-day. 세로 배치: 종류 그림 + D-day만(.sch-line-mb, CSS가 갈아 끼운다).
   if (h.group.length < 2) {
-    const when = (head.hasTime && ddayNum(head) === 0) ? dtimeText(head) : ddayText(head);
-    return `<button class="page-title-link sch-btn sch-line" id="schBtn" type="button" onclick="openScheduleList()">${SVG_ICONS.calendar}<span class="sch-line-txt">${escapeHtml(head.shortTitle)}</span><span class="sch-line-when">${when}</span><span class="sch-line-mb">${ddayText(head)}</span></button>`;
+    const when = ddayText(head);
+    return `<button class="page-title-link sch-btn sch-line" id="schBtn" type="button" onclick="openScheduleList()">${schKindSvg(head)}<span class="sch-line-txt">${escapeHtml(head.shortTitle)}</span><span class="sch-line-when">${when}</span><span class="sch-line-mb">${ddayText(head)}</span></button>`;
   }
   // 같은 날 2건+: 종전엔 제목 열 + dtime 열을 격자로 폈지만, 보조바 칸이 92px이라 들어가지 않는다.
   // 건수만 덧붙이고 내용은 달력 탭에서 본다(버튼의 역할 = '언제'까지).
   // 같은 날 2건+라도 가장 임박한 하나만 보인다(2026-09-01). +N은 무엇을 세는지 안 읽혔고,
   // 자세한 것은 달력 탭이 담당하므로 보조바는 '다음이 언제인가'만 알려주면 된다.
   const head2 = h.vis[0];
-  const when2 = (head2.hasTime && ddayNum(head2) === 0) ? dtimeText(head2) : ddayText(head2);
-  return `<button class="page-title-link sch-btn sch-line" id="schBtn" type="button" onclick="openScheduleList()">${SVG_ICONS.calendar}<span class="sch-line-txt">${escapeHtml(head2.shortTitle)}</span><span class="sch-line-when">${when2}</span><span class="sch-line-mb">${ddayText(head2)}</span></button>`;
+  const when2 = ddayText(head2);
+  return `<button class="page-title-link sch-btn sch-line" id="schBtn" type="button" onclick="openScheduleList()">${schKindSvg(head2)}<span class="sch-line-txt">${escapeHtml(head2.shortTitle)}</span><span class="sch-line-when">${when2}</span><span class="sch-line-mb">${ddayText(head2)}</span></button>`;
 }
 
 
@@ -5309,9 +5310,9 @@ function tickSchedule() {
   const h = scheduleHead();
   if (h.sig !== scheduleSig) { updatePageTitle(); return; }
   if (!h.vis.length) return;
-  // 한 줄 표시(2026-08-31): 남은 시간 칸 하나만 갈아끼운다. 제목·+N은 구조가 바뀔 때 updatePageTitle이 다시 그린다.
+  // 한 줄 표시(2026-08-31): D-day 칸만 갈아끼운다(자정을 넘기면 D-3 → D-2). 제목·그림은 구조가 바뀔 때 updatePageTitle이 다시 그린다.
   const el = document.querySelector('#schBtn .sch-line-when');
-  if (el) el.textContent = (h.vis[0].hasTime && ddayNum(h.vis[0]) === 0) ? dtimeText(h.vis[0]) : ddayText(h.vis[0]);
+  if (el) el.textContent = ddayText(h.vis[0]);
   const mb = document.querySelector('#schBtn .sch-line-mb');   // 세로 배치 칸 — 자정을 넘기면 D-3 → D-2로 바뀐다
   if (mb) mb.textContent = ddayText(h.vis[0]);
 }
